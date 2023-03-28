@@ -1,0 +1,25 @@
+
+删除工程里的.vscode 文件夹，如果存在该文件夹，会覆盖掉vscode idf插件的全局设置，导致编译出错
+删除 .component_hash 文件
+
+
+
+IDF_PATH 的路径
+....\Espressif\frameworks\esp-idf-v5.0.1
+
+
+
+Git 可执行路径
+....\Espressif\tools\tools\idf-git\2.30.1\cmd\git.exe
+
+
+
+项目构建使用的 Python 解释器的绝对路径
+....\Espressif\python_env\idf5.0_py3.8_env\Scripts\python.exe
+
+
+
+IDF_TOOLS_PATH 的路径
+....\Espressif
+
+
