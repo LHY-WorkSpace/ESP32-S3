@@ -556,8 +556,9 @@ e.g. "stm32f769xx.h" or "stm32f429xx.h" */
 #ifndef LV_USE_PERF_MONITOR
 #  ifdef CONFIG_LV_USE_PERF_MONITOR
 #    define LV_USE_PERF_MONITOR CONFIG_LV_USE_PERF_MONITOR
+
 #  else
-#    define  LV_USE_PERF_MONITOR     0
+#    define  LV_USE_PERF_MONITOR     1
 #  endif
 #endif
 
