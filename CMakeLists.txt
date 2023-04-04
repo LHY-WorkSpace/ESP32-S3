@@ -1,8 +1,6 @@
-cmake_minimum_required(VERSION 3.5)
+# The following lines of boilerplate have to be in your project's
+# CMakeLists in this exact order for cmake to work correctly
+cmake_minimum_required(VERSION 3.16)
 
-if (NOT DEFINED PROJECT_NAME)
-    include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-    project(lvgl-demo)
-else()
-    message(FATAL_ERROR "LV PORT ESP32: This must be a project's main CMakeLists.txt.")
-endif()
+include($ENV{IDF_PATH}/tools/cmake/project.cmake)
+project(lvgl_v8)
