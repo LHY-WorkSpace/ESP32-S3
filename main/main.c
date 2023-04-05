@@ -1,9 +1,3 @@
-/*
- * SPDX-FileCopyrightText: 2010-2022 Espressif Systems (Shanghai) CO LTD
- *
- * SPDX-License-Identifier: CC0-1.0
- */
-
 #include <stdio.h>
 #include <inttypes.h>
 #include "sdkconfig.h"
@@ -12,7 +6,8 @@
 #include "lv_demos.h"
 #include "lv_port_disp.h"
 #include "lvgl.h"
-#include "esp_timer.h"
+#include "Timer.h"
+#include "driver/gpio.h"
 
 //旋转半径
 #define R_LEN (42)
@@ -303,7 +298,7 @@ void Face_Create()
 //调整轨迹动画回调
 static void Eye_BodyAnimPath_CB(void *var, int32_t v)
 {
-    uint8_t i,j;
+    uint8_t i;
     int16_t x1,y1;
 
     lv_obj_t *Eye_tmp = (lv_obj_t *)var;
@@ -312,6 +307,7 @@ static void Eye_BodyAnimPath_CB(void *var, int32_t v)
     {
         if(Eye_tmp == Eye_Group[i])
         {
+
 			if( RotateDir == 1)
 			{
 				//顺时针
@@ -324,6 +320,7 @@ static void Eye_BodyAnimPath_CB(void *var, int32_t v)
 				x1=(Eye_Position[Eye_Position[i][2]][0])*FastCos(DEGTORAD(v))+(Eye_Position[Eye_Position[i][2]][1])*FastSin(DEGTORAD(v));
 				y1=(Eye_Position[Eye_Position[i][2]][1])*FastCos(DEGTORAD(v))-(Eye_Position[Eye_Position[i][2]][0])*FastSin(DEGTORAD(v));  
 			}
+
 
 			lv_obj_align_to(Eye_Group[i],Face,LV_ALIGN_CENTER,x1,y1);
 
@@ -344,7 +341,7 @@ static void Eye_BodyAnimPath_CB(void *var, int32_t v)
 //调整焦距动画回调
 static void ChangeEyeFocalize_CB(void *var, int32_t v)
 {
-	uint8_t i,j;
+	uint8_t i;
     int16_t x1,y1;
 
     lv_obj_t *Eye_tmp = (lv_obj_t *)var;
@@ -438,8 +435,8 @@ void Eye_BodyAnimPath()
         lv_anim_init(&EyeBodyPath_Anim[i]);
         lv_anim_set_var(&EyeBodyPath_Anim[i],Eye_Group[i]);
         lv_anim_set_values(&EyeBodyPath_Anim[i],0,90);
-        lv_anim_set_time(&EyeBodyPath_Anim[i], 500);
-		lv_anim_set_delay(&EyeBodyPath_Anim[i], 500);
+        lv_anim_set_time(&EyeBodyPath_Anim[i], 300);
+		lv_anim_set_delay(&EyeBodyPath_Anim[i], 400);
         lv_anim_set_exec_cb(&EyeBodyPath_Anim[i], Eye_BodyAnimPath_CB);
         lv_anim_set_path_cb(&EyeBodyPath_Anim[i],lv_anim_path_ease_in_out);
         lv_anim_set_repeat_delay(&EyeBodyPath_Anim[i],200);
@@ -534,12 +531,40 @@ void Eye_Main()
 
 }
 
-#define LV_TICK_PERIOD_MS 1
-static void lv_tick_task(void *arg)
- {
-    (void) arg;
-    lv_tick_inc(LV_TICK_PERIOD_MS);
+
+
+
+
+
+void lvgl_Task()
+{
+    TickType_t Time;
+
+    Time=xTaskGetTickCount();
+    while (1)
+    {    lv_tick_inc(1);
+		lv_task_handler();
+        // vTaskDelayUntil(&Time,5/portTICK_PERIOD_MS);
+    }
 }
+
+void LED_Task()
+{
+    TickType_t Time;	
+    Time=xTaskGetTickCount();
+
+    while (1)
+    {
+		gpio_set_level(1,0);
+        vTaskDelayUntil(&Time,30/portTICK_PERIOD_MS);
+		gpio_set_level(1,1);
+        vTaskDelayUntil(&Time,30/portTICK_PERIOD_MS);
+    }
+} 
+
+
+
+
 
 
 
@@ -547,15 +572,17 @@ void app_main(void)
 {
     printf("Hello world!\n");
 
-
-    const esp_timer_create_args_t periodic_timer_args = {
-        .callback = &lv_tick_task,
-        .name = "periodic_gui"
+	const   gpio_config_t test = 
+	{
+        .pin_bit_mask = ((1ULL << (uint8_t)(1))),
+        .mode = GPIO_MODE_OUTPUT,
+        .pull_up_en = 1,
+        .pull_down_en = 0,
+        .intr_type = GPIO_INTR_DISABLE,
     };
-    esp_timer_handle_t periodic_timer;
-    ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &periodic_timer));
-    ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, LV_TICK_PERIOD_MS * 1000));
-
+    
+   gpio_config(&test);
+	Timer_Init();
 
     lv_init();
     lv_port_disp_init();
@@ -564,12 +591,46 @@ void app_main(void)
     Face_Create();
     Eye_Main();
 
-    while (1)
-    {
-        lv_task_handler();
-        // vTaskDelay(5 / portTICK_PERIOD_MS);
-    }
+	xTaskCreate( (TaskFunction_t)lvgl_Task,"LVGL",4500,NULL,11,NULL);
+	// xTaskCreate( (TaskFunction_t)LED_Task,"led",2000,NULL,10,NULL);
+
+    // while (1)
+    // {
+	// 	lv_task_handler();
+	// 	// gpio_set_level(1,0);
+    //     // vTaskDelayUntil(&Time,20/portTICK_PERIOD_MS);
+	// 	// gpio_set_level(1,1);
+    //     // vTaskDelayUntil(&Time,20/portTICK_PERIOD_MS);
+    // }
+
+
+    // while (1)
+    // {
+	// 	lv_task_handler();
+	// 	vTaskDelayUntil(&Time,10/portTICK_PERIOD_MS);
+    //     // vTaskDelay(10 / portTICK_PERIOD_MS);
+
+	// 	// gpio_set_level(1,0);
+	// 	// vTaskDelay(20 / portTICK_PERIOD_MS);
+	// 	// gpio_set_level(1,1);
+	// 	// vTaskDelay(20 / portTICK_PERIOD_MS);
+    // }
 
 
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

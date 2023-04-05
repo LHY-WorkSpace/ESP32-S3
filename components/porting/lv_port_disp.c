@@ -81,13 +81,13 @@ void lv_port_disp_init(void)
 
 
     /* Example for 1) */
-    // static lv_disp_draw_buf_t draw_buf_dsc_1;
-    // // static lv_color_t buf_1[DISP_BUF_SIZE];                          /*A buffer for 10 rows*/
+    static lv_disp_draw_buf_t draw_buf_dsc_1;
+    // static lv_color_t buf_1[DISP_BUF_SIZE];                          /*A buffer for 10 rows*/
 
-    // lv_color_t* buf_1 = heap_caps_malloc(DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
-    // assert(buf_1 != NULL);
+    lv_color_t* buf_1 = heap_caps_malloc(DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
+    assert(buf_1 != NULL);
 
-    // lv_disp_draw_buf_init(&draw_buf_dsc_1, buf_1, NULL, DISP_BUF_SIZE);   /*Initialize the display buffer*/
+    lv_disp_draw_buf_init(&draw_buf_dsc_1, buf_1, NULL, DISP_BUF_SIZE);   /*Initialize the display buffer*/
 
 
 
@@ -96,23 +96,23 @@ void lv_port_disp_init(void)
 
 
     /* Example for 2) */
-    static lv_disp_draw_buf_t draw_buf_dsc_2;
+    // static lv_disp_draw_buf_t draw_buf_dsc_2;
 
     // static lv_color_t buf_2_1[DISP_BUF_SIZE];                        /*A buffer for 10 rows*/
     // static lv_color_t buf_2_2[DISP_BUF_SIZE];                        /*An other buffer for 10 rows*/
-    lv_color_t* buf_1 = heap_caps_malloc(DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
-    assert(buf_1 != NULL);
-    lv_color_t* buf_2 = heap_caps_malloc(DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
-    assert(buf_2 != NULL);
-    lv_disp_draw_buf_init(&draw_buf_dsc_2, buf_1, buf_2,DISP_BUF_SIZE);   /*Initialize the display buffer*/
+    // lv_color_t* buf_1 = heap_caps_malloc(DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
+    // assert(buf_1 != NULL);
+    // lv_color_t* buf_2 = heap_caps_malloc(DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
+    // assert(buf_2 != NULL);
+    // lv_disp_draw_buf_init(&draw_buf_dsc_2, buf_1, buf_2,DISP_BUF_SIZE);   /*Initialize the display buffer*/
 
 
  
 
     /* Example for 3) also set disp_drv.full_refresh = 1 below*/
     // static lv_disp_draw_buf_t draw_buf_dsc_3;
-    // static lv_color_t buf_3_1[LV_HOR_RES_MAX * LV_VER_RES_MAX];            /*A screen sized buffer*/
-    // static lv_color_t buf_3_2[LV_HOR_RES_MAX * LV_VER_RES_MAX];            /*Another screen sized buffer*/
+    // // static lv_color_t buf_3_1[DISP_BUF_SIZE];            /*A screen sized buffer*/
+    // // static lv_color_t buf_3_2[DISP_BUF_SIZE];            /*Another screen sized buffer*/
 
     // lv_color_t* buf_1 = heap_caps_malloc(DISP_BUF_SIZE * sizeof(lv_color_t), MALLOC_CAP_SPIRAM);
     // assert(buf_1 != NULL);
@@ -137,7 +137,7 @@ void lv_port_disp_init(void)
     disp_drv.flush_cb = disp_driver_flush;
 
     /*Set a display buffer*/
-    disp_drv.draw_buf = &draw_buf_dsc_2;
+    disp_drv.draw_buf = &draw_buf_dsc_1;
 
     /*Required for Example 3)*/
     // disp_drv.full_refresh = 1;
