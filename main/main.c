@@ -7,7 +7,8 @@
 #include "lv_port_disp.h"
 #include "lvgl.h"
 #include "Timer.h"
-#include "driver/gpio.h"
+#include "LVGL_UI.h"
+#include "GPIO.h"
 
 //Ðý×ª°ë¾¶
 #define R_LEN (42)
@@ -533,21 +534,6 @@ void Eye_Main()
 
 
 
-
-
-
-void lvgl_Task()
-{
-    TickType_t Time;
-
-    Time=xTaskGetTickCount();
-    while (1)
-    {    lv_tick_inc(1);
-		lv_task_handler();
-        // vTaskDelayUntil(&Time,5/portTICK_PERIOD_MS);
-    }
-}
-
 void LED_Task()
 {
     TickType_t Time;	
@@ -555,12 +541,13 @@ void LED_Task()
 
     while (1)
     {
-		gpio_set_level(1,0);
-        vTaskDelayUntil(&Time,30/portTICK_PERIOD_MS);
-		gpio_set_level(1,1);
+		// gpio_set_level(1,0);
+        // vTaskDelayUntil(&Time,30/portTICK_PERIOD_MS);
+		// gpio_set_level(1,1);
         vTaskDelayUntil(&Time,30/portTICK_PERIOD_MS);
     }
-} 
+}
+
 
 
 
@@ -570,53 +557,19 @@ void LED_Task()
 
 void app_main(void)
 {
-    printf("Hello world!\n");
+    printf("System Online !\n");
 
-	const   gpio_config_t test = 
-	{
-        .pin_bit_mask = ((1ULL << (uint8_t)(1))),
-        .mode = GPIO_MODE_OUTPUT,
-        .pull_up_en = 1,
-        .pull_down_en = 0,
-        .intr_type = GPIO_INTR_DISABLE,
-    };
-    
-   gpio_config(&test);
+	// GPIO_Init();
 	Timer_Init();
 
-    lv_init();
-    lv_port_disp_init();
-    // lv_demo_benchmark();
+	lv_init();
+	lv_port_disp_init();
+	// lv_demo_benchmark();
+	Face_Create();
+	Eye_Main();
+	// MainUICreate();
 
-    Face_Create();
-    Eye_Main();
-
-	xTaskCreate( (TaskFunction_t)lvgl_Task,"LVGL",4500,NULL,11,NULL);
-	// xTaskCreate( (TaskFunction_t)LED_Task,"led",2000,NULL,10,NULL);
-
-    // while (1)
-    // {
-	// 	lv_task_handler();
-	// 	// gpio_set_level(1,0);
-    //     // vTaskDelayUntil(&Time,20/portTICK_PERIOD_MS);
-	// 	// gpio_set_level(1,1);
-    //     // vTaskDelayUntil(&Time,20/portTICK_PERIOD_MS);
-    // }
-
-
-    // while (1)
-    // {
-	// 	lv_task_handler();
-	// 	vTaskDelayUntil(&Time,10/portTICK_PERIOD_MS);
-    //     // vTaskDelay(10 / portTICK_PERIOD_MS);
-
-	// 	// gpio_set_level(1,0);
-	// 	// vTaskDelay(20 / portTICK_PERIOD_MS);
-	// 	// gpio_set_level(1,1);
-	// 	// vTaskDelay(20 / portTICK_PERIOD_MS);
-    // }
-
-
+	xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL);
 
 }
 

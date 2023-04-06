@@ -6,4 +6,5 @@ idf_component_register(SRCS "main.c"
                             porting
                             driver
                             Drivers
+                            Main_UI
                     )
