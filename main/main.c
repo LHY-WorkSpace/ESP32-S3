@@ -9,7 +9,7 @@
 #include "Timer.h"
 #include "LVGL_UI.h"
 #include "GPIO.h"
-
+#include "led_strip.h"
 //Ðý×ª°ë¾¶
 #define R_LEN (42)
 
@@ -542,9 +542,11 @@ void LED_Task()
     while (1)
     {
 		// gpio_set_level(1,0);
-        // vTaskDelayUntil(&Time,30/portTICK_PERIOD_MS);
+		LED_ON();
+        vTaskDelayUntil(&Time,500/portTICK_PERIOD_MS);
+		LED_OFF();
 		// gpio_set_level(1,1);
-        vTaskDelayUntil(&Time,30/portTICK_PERIOD_MS);
+        vTaskDelayUntil(&Time,500/portTICK_PERIOD_MS);
     }
 }
 
@@ -561,16 +563,17 @@ void app_main(void)
 
 	// GPIO_Init();
 	Timer_Init();
+	LED_Init();
 
-	lv_init();
-	lv_port_disp_init();
+	// lv_init();
+	// lv_port_disp_init();
 	// lv_demo_benchmark();
-	Face_Create();
-	Eye_Main();
+	// Face_Create();
+	// Eye_Main();
 	// MainUICreate();
 
-	xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL);
-
+	// xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL);
+	xTaskCreate( (TaskFunction_t)LED_Task,"LVGL_Task",2000,NULL,12,NULL);
 }
 
 
