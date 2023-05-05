@@ -137,9 +137,9 @@ void LVGL_Task()
     while (1)
     {    
 		lv_task_handler();
-        // vTaskDelayUntil(&Time,5/portTICK_PERIOD_MS);
+        vTaskDelayUntil(&Time,5/portTICK_PERIOD_MS);
     }
-
+	vTaskDelete(NULL);
 }
 
 

@@ -67,9 +67,9 @@ void LED_Init()
 
 }
 
-void LED_ON()
+void LED_ON(uint32_t red, uint32_t green, uint32_t blue)
 {
-    led_strip_set_pixel(led_strip, 0, 16, 16, 16);
+    led_strip_set_pixel(led_strip, 0, red, green, blue);
     led_strip_refresh(led_strip);
 }
 

@@ -541,17 +541,17 @@ void LED_Task()
 
     while (1)
     {
-		// gpio_set_level(1,0);
-		LED_ON();
-        vTaskDelayUntil(&Time,500/portTICK_PERIOD_MS);
+		LED_ON(10,10,10);
+		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
 		LED_OFF();
-		// gpio_set_level(1,1);
-        vTaskDelayUntil(&Time,500/portTICK_PERIOD_MS);
+		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
+		LED_ON(10,10,10);
+		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
+		LED_OFF();
+		vTaskDelayUntil(&Time,1500/portTICK_PERIOD_MS);
     }
+	vTaskDelete(NULL);
 }
-
-
-
 
 
 
@@ -565,15 +565,20 @@ void app_main(void)
 	Timer_Init();
 	LED_Init();
 
-	// lv_init();
-	// lv_port_disp_init();
-	// lv_demo_benchmark();
+	lv_init();
+	lv_port_disp_init();
+	lv_demo_benchmark();
 	// Face_Create();
 	// Eye_Main();
 	// MainUICreate();
 
-	// xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL);
-	xTaskCreate( (TaskFunction_t)LED_Task,"LVGL_Task",2000,NULL,12,NULL);
+
+
+	// xTaskCreatePinnedToCore( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL,0);
+	// xTaskCreatePinnedToCore( (TaskFunction_t)LED_Task,"LED_Task",4000,NULL,12,NULL,0);
+
+	xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL);
+	xTaskCreate( (TaskFunction_t)LED_Task,"LED_Task",4000,NULL,12,NULL);
 }
 
 
