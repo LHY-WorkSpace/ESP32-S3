@@ -637,8 +637,8 @@ void MainUICreate(void)
     // lv_meter_1();
     // MeterTest();
     // Eye_Main();
-    lv_demo_benchmark();
-    // lv_demo_music();
+    // lv_demo_benchmark();
+    lv_demo_music();
 
 }
 

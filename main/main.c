@@ -3,7 +3,6 @@
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-
 #include "Timer.h"
 #include "LVGL_UI.h"
 #include "GPIO.h"
