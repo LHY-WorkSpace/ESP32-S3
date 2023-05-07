@@ -4,7 +4,7 @@
 
 void MainUICreate(void);
 void LVGL_Task(void);
-
+void LVGL_Init(void);
 
 
 
