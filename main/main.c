@@ -7,7 +7,7 @@
 #include "LVGL_UI.h"
 #include "GPIO.h"
 #include "led_strip.h"
-
+#include "FOC.h"
 
 
 void LED_Task()
@@ -32,7 +32,7 @@ void LED_Task()
 
 
 
-
+// https://blog.csdn.net/m0_50064262/article/details/120250151
 void app_main(void)
 {
     printf("System Online !\n");
@@ -40,17 +40,18 @@ void app_main(void)
 	// GPIO_Init();
 	Timer_Init();
 	LED_Init();
-	LVGL_Init();
+	// LVGL_Init();
 
-	MainUICreate();
+	// MainUICreate();
 
 
 
 	// xTaskCreatePinnedToCore( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL,0);
 	// xTaskCreatePinnedToCore( (TaskFunction_t)LED_Task,"LED_Task",4000,NULL,12,NULL,0);
-
-	xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL);
-	xTaskCreate( (TaskFunction_t)LED_Task,"LED_Task",4000,NULL,12,NULL);
+	FOC_main();
+	// xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL);
+	xTaskCreate( (TaskFunction_t)LED_Task,"LED_Task",4096,NULL,12,NULL);
+	
 }
 
 
