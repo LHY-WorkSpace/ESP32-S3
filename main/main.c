@@ -8,7 +8,7 @@
 #include "GPIO.h"
 #include "led_strip.h"
 #include "FOC.h"
-
+#include "HTTP_Server.h"
 
 void LED_Task()
 {
@@ -40,6 +40,7 @@ void app_main(void)
 	// GPIO_Init();
 	Timer_Init();
 	LED_Init();
+	WIFI_Init();
 	// LVGL_Init();
 
 	// MainUICreate();
@@ -48,7 +49,7 @@ void app_main(void)
 
 	// xTaskCreatePinnedToCore( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL,0);
 	// xTaskCreatePinnedToCore( (TaskFunction_t)LED_Task,"LED_Task",4000,NULL,12,NULL,0);
-	FOC_main();
+	// FOC_main();
 	// xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL);
 	xTaskCreate( (TaskFunction_t)LED_Task,"LED_Task",4096,NULL,12,NULL);
 	

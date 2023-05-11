@@ -11,7 +11,7 @@
 
 
 void HTTP_Server_Init(void);
-
+void WIFI_Init(void);
 
 
 #endif
