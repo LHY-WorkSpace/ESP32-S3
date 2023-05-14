@@ -23,6 +23,108 @@ static EventGroupHandle_t s_wifi_event_group;
 static const char *TAG = "wifi station + AP";
 static int s_retry_num = 0;
 
+
+
+
+
+// https://www.cnblogs.com/kerwincui/p/13958590.html
+/* URI 处理函数，在客户端发起 GET /uri 请求时被调用 */
+esp_err_t get_handler(httpd_req_t *req)
+{
+    /* 发送回简单的响应数据包 */
+    const char resp[] = "URI GET Response";
+    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
+/* URI 处理函数，在客户端发起 POST/uri 请求时被调用 */
+esp_err_t post_handler(httpd_req_t *req)
+{
+    /* 定义 HTTP POST 请求数据的目标缓存区
+     * httpd_req_recv() 只接收 char* 数据，但也可以是
+     * 任意二进制数据（需要类型转换）
+     * 对于字符串数据，null 终止符会被省略，
+     * content_len 会给出字符串的长度 */
+    char content[100];
+
+    /* 如果内容长度大于缓冲区则截断 */
+    size_t recv_size = MIN(req->content_len, sizeof(content));
+
+    int ret = httpd_req_recv(req, content, recv_size);
+    if (ret <= 0) {  /* 返回 0 表示连接已关闭 */
+        /* 检查是否超时 */
+        if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
+            /* 如果是超时，可以调用 httpd_req_recv() 重试
+             * 简单起见，这里我们直接
+             * 响应 HTTP 408（请求超时）错误给客户端 */
+            httpd_resp_send_408(req);
+        }
+        /* 如果发生了错误，返回 ESP_FAIL 可以确保
+         * 底层套接字被关闭 */
+        return ESP_FAIL;
+    }
+
+    /* 发送简单的响应数据包 */
+    const char resp[] = "URI POST Response";
+    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
+    return ESP_OK;
+}
+
+/* GET /uri 的 URI 处理结构 */
+httpd_uri_t uri_get = {
+    .uri      = "/uri",
+    .method   = HTTP_GET,
+    .handler  = get_handler,
+    .user_ctx = NULL
+};
+
+/* POST/uri 的 URI 处理结构 */
+httpd_uri_t uri_post = {
+    .uri      = "/uri",
+    .method   = HTTP_POST,
+    .handler  = post_handler,
+    .user_ctx = NULL
+};
+
+/* 启动 Web 服务器的函数 */
+httpd_handle_t start_webserver(void)
+{
+    /* 生成默认的配置参数 */
+    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+
+    /* 置空 esp_http_server 的实例句柄 */
+    httpd_handle_t server = NULL;
+
+    /* 启动 httpd server */
+    if (httpd_start(&server, &config) == ESP_OK) {
+        /* 注册 URI 处理程序 */
+        httpd_register_uri_handler(server, &uri_get);
+        httpd_register_uri_handler(server, &uri_post);
+    }
+    /* 如果服务器启动失败，返回的句柄是 NULL */
+    return server;
+}
+
+/* 停止 Web 服务器的函数 */
+void stop_webserver(httpd_handle_t server)
+{
+    if (server) {
+        /* 停止 httpd server */
+        httpd_stop(server);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
 static void wifi_event_handler(void* arg, esp_event_base_t event_base,
                                     int32_t event_id, void* event_data)
 {
@@ -159,7 +261,7 @@ void WIFI_Init()
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
 
-
+    start_webserver();
 
     // esp_wifi_start();
 
@@ -185,91 +287,7 @@ void HTTP_Server_Init(void)
 
 
 
-/* URI 处理函数，在客户端发起 GET /uri 请求时被调用 */
-esp_err_t get_handler(httpd_req_t *req)
-{
-    /* 发送回简单的响应数据包 */
-    const char resp[] = "URI GET Response";
-    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
-    return ESP_OK;
-}
 
-/* URI 处理函数，在客户端发起 POST/uri 请求时被调用 */
-esp_err_t post_handler(httpd_req_t *req)
-{
-    /* 定义 HTTP POST 请求数据的目标缓存区
-     * httpd_req_recv() 只接收 char* 数据，但也可以是
-     * 任意二进制数据（需要类型转换）
-     * 对于字符串数据，null 终止符会被省略，
-     * content_len 会给出字符串的长度 */
-    char content[100];
-
-    /* 如果内容长度大于缓冲区则截断 */
-    size_t recv_size = MIN(req->content_len, sizeof(content));
-
-    int ret = httpd_req_recv(req, content, recv_size);
-    if (ret <= 0) {  /* 返回 0 表示连接已关闭 */
-        /* 检查是否超时 */
-        if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
-            /* 如果是超时，可以调用 httpd_req_recv() 重试
-             * 简单起见，这里我们直接
-             * 响应 HTTP 408（请求超时）错误给客户端 */
-            httpd_resp_send_408(req);
-        }
-        /* 如果发生了错误，返回 ESP_FAIL 可以确保
-         * 底层套接字被关闭 */
-        return ESP_FAIL;
-    }
-
-    /* 发送简单的响应数据包 */
-    const char resp[] = "URI POST Response";
-    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
-    return ESP_OK;
-}
-
-/* GET /uri 的 URI 处理结构 */
-httpd_uri_t uri_get = {
-    .uri      = "/uri",
-    .method   = HTTP_GET,
-    .handler  = get_handler,
-    .user_ctx = NULL
-};
-
-/* POST/uri 的 URI 处理结构 */
-httpd_uri_t uri_post = {
-    .uri      = "/uri",
-    .method   = HTTP_POST,
-    .handler  = post_handler,
-    .user_ctx = NULL
-};
-
-/* 启动 Web 服务器的函数 */
-httpd_handle_t start_webserver(void)
-{
-    /* 生成默认的配置参数 */
-    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-
-    /* 置空 esp_http_server 的实例句柄 */
-    httpd_handle_t server = NULL;
-
-    /* 启动 httpd server */
-    if (httpd_start(&server, &config) == ESP_OK) {
-        /* 注册 URI 处理程序 */
-        httpd_register_uri_handler(server, &uri_get);
-        httpd_register_uri_handler(server, &uri_post);
-    }
-    /* 如果服务器启动失败，返回的句柄是 NULL */
-    return server;
-}
-
-/* 停止 Web 服务器的函数 */
-void stop_webserver(httpd_handle_t server)
-{
-    if (server) {
-        /* 停止 httpd server */
-        httpd_stop(server);
-    }
-}
 
 
 

@@ -1,10 +1,10 @@
-// #include <stdio.h>
-// #include <inttypes.h>
-// #include "sdkconfig.h"
-// #include "freertos/FreeRTOS.h"
-// #include "freertos/task.h"
-// #include "driver/mcpwm.h"
-
+#include <stdio.h>
+#include <inttypes.h>
+#include "sdkconfig.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/mcpwm.h"
+#include "MathFun.h"
 
 
 //     MCPWM0A = 0,        /*!<PWM0A output pin*/
@@ -30,7 +30,7 @@
 
 
 
-#if 1
+#if 0
 
 /* brushed dc motor control example
 
@@ -131,5 +131,10 @@ void FOC_main()
 }
 
 #endif
+
+
+
+
+
 
 
