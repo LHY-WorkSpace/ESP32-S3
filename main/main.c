@@ -13,6 +13,74 @@
 #include "MathFun.h"
 
 
+#define iq	(10.0f)
+#define id	(10.0f)
+
+float IA(float Angle)
+{
+	float Temp;
+	Temp = id * FastCos(DEGTORAD(Angle)) + iq * FastSin(DEGTORAD(Angle));
+	return Temp;
+}
+
+float IB(float Angle)
+{
+	float Temp;
+	Temp = iq *( 0.866f * FastCos(DEGTORAD(Angle)) + 0.5f * FastSin(DEGTORAD(Angle)) ) + id * (0.866f * FastSin(DEGTORAD(Angle)) - 0.5f * FastCos(DEGTORAD(Angle)));
+	return Temp;
+}
+
+float IC(float Angle)
+{
+	float Temp;
+	Temp = iq *( 0.5f * FastSin(DEGTORAD(Angle)) - 0.866f * FastCos(DEGTORAD(Angle))) + id * ( 0.5f * FastCos(DEGTORAD(Angle)) + 0.866f * FastSin(DEGTORAD(Angle)) );
+	return Temp;
+}
+
+
+
+void Foc_CTL()
+{
+	static float Angle  = 1.0f;
+    TickType_t Time;	
+	float I[3];
+
+    Time = xTaskGetTickCount();
+    while (1)
+    {
+		I[0] = IA(Angle);
+		I[1] = IB(Angle);
+		I[2] = IC(Angle);
+		
+		Angle++;
+
+		printf("Angle:%.2f Ia:%.2f Ib:%.2f Ic:%.2f\r\n",Angle,I[0],I[1],I[2]);
+
+		if(Angle >= 360.0f)
+		{
+			Angle = 0.0f;
+		}
+		vTaskDelayUntil(&Time,50/portTICK_PERIOD_MS);
+    }
+	vTaskDelete(NULL);
+
+
+
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
 
 
 float Val[3];
@@ -49,14 +117,14 @@ void LEDWave_Task()
 		}
 
 		LED_ON((uint32_t)(Val[0]*100+100)/10,(uint32_t)(Val[1]*100+100)/10,(uint32_t)(Val[2]*100+100)/10);
-		
+		SetEyeBgColorRGB((uint8_t)(Val[0]*100+100),(uint8_t)(Val[1]*100+100),(uint8_t)(Val[2]*100+100));
 		angleTemp ++;
 		if(angleTemp > 359.0f)
 		{
 			angleTemp = 0.0f;
 		}
 
-        vTaskDelayUntil(&Time,5/portTICK_PERIOD_MS);
+        vTaskDelayUntil(&Time,20/portTICK_PERIOD_MS);
     }
 	vTaskDelete(NULL);
 
@@ -98,21 +166,20 @@ void app_main(void)
 	Timer_Init();
 	LED_Init();
 	// WIFI_Init();
-	// LVGL_Init();
+	LVGL_Init();
 
-	// MainUICreate();
+	MainUICreate();
 
 
 	// xTaskCreatePinnedToCore( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL,0);
 	// xTaskCreatePinnedToCore( (TaskFunction_t)LED_Task,"LED_Task",4000,NULL,12,NULL,0);
 	// FOC_main();
-	// xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL);
+	xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL);
 	//xTaskCreate( (TaskFunction_t)LED_Task,"LED_Task",4096,NULL,12,NULL);
 	// xTaskCreate( (TaskFunction_t)TemperatureSensor_Task,"Temperature",4096,NULL,12,NULL);
-	xTaskCreate( (TaskFunction_t)LEDWave_Task,"Wave_Task",4096,NULL,12,NULL);
+	// xTaskCreate( (TaskFunction_t)LEDWave_Task,"Wave_Task",4096,NULL,12,NULL);
 
-	
-
+	xTaskCreate( (TaskFunction_t)Foc_CTL,"FOC_Task",4096,NULL,12,NULL);
 }
 
 

@@ -192,7 +192,7 @@ void Eye_BodyCreate()
 		lv_obj_set_style_radius(Eye_base[i],EYE_HOLE_SIZE/2,LV_PART_MAIN);
 		lv_obj_align_to(Eye_base[i],Eye_Group[i],LV_ALIGN_CENTER,0,0);
 		lv_obj_set_style_bg_color(Eye_base[i],lv_color_black(),LV_PART_MAIN);
-		lv_obj_set_style_outline_width(Eye_base[i],5,LV_PART_MAIN);
+		lv_obj_set_style_outline_width(Eye_base[i],3,LV_PART_MAIN);
 		lv_obj_set_style_outline_color(Eye_base[i],lv_color_black(),LV_PART_MAIN);
 		lv_obj_set_scrollbar_mode(Eye_base[i],LV_SCROLLBAR_MODE_OFF);
 		lv_obj_clear_flag(Eye_base[i],LV_OBJ_FLAG_CLICKABLE );
@@ -319,6 +319,20 @@ void SetEyeBgColor(lv_palette_t color)
 		lv_obj_set_style_bg_color(Eye_Group[i],lv_palette_main(color),LV_PART_MAIN);
     }
 }
+
+void SetEyeBgColorRGB(uint8_t r, uint8_t g, uint8_t b)
+{
+	uint8_t i=0;
+
+    for ( i = 0; i < 4; i++)
+    {
+		// lv_obj_set_style_bg_color(Eye_Group[i],lv_palette_darken(color,2),LV_PART_MAIN);
+		lv_obj_set_style_bg_color(Eye_Group[i],lv_color_make(r,g,b),LV_PART_MAIN);
+    }
+}
+
+
+
 
 
 void Eye_Main()
@@ -457,9 +471,9 @@ void lv_meter_1(void)
 
 void MainUICreate(void)
 {
-    lv_meter_1();
+    //lv_meter_1();
     // MeterTest();
-    // Eye_Main();
+    Eye_Main();
     // lv_demo_benchmark();
     // lv_demo_music();
 
