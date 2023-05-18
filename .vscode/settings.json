@@ -1,0 +1,8 @@
+{
+    "idf.flashType": "JTAG",
+    "idf.portWin": "COM4",
+    "idf.adapterTargetName": "esp32s3",
+    "idf.openOcdConfigs": [
+        "board/esp32s3-builtin.cfg"
+    ]
+}
