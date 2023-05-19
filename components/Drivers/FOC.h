@@ -5,7 +5,7 @@
 
 void FOC_GPIO_Init(void);
 void FOC_main(void);
-
+void ERRER(void);
 
 
 
