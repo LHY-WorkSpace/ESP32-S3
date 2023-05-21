@@ -46,20 +46,25 @@ void FOC_GPIO_Init(void)
         .group_id = 0,
         .clk_src = MCPWM_TIMER_CLK_SRC_DEFAULT,
         .resolution_hz = 1 * 1000 * 1000,
-        .period_ticks = 500, // 50us <-> 20KHz
+        .period_ticks = 100, // 10khz
         .count_mode = MCPWM_TIMER_COUNT_MODE_UP,
     };
-    mcpwm_timer_enable(mcpwm_timer_handle);
     mcpwm_new_timer(&timer_config,&mcpwm_timer_handle);
-
-
+    mcpwm_timer_enable(mcpwm_timer_handle);
 
     mcpwm_oper_handle_t mcpwm_oper_handle  = NULL;
     mcpwm_operator_config_t mcpwm_operator_config = 
     {
         .group_id = 0,
+        // .flags.update_gen_action_on_tez = true,
+        // .flags.update_gen_action_on_tep = true,
+        // .flags.update_gen_action_on_sync = true,
+        // .flags.update_dead_time_on_tez = true,
+        // .flags.update_dead_time_on_tep = true,
+        // .flags.update_dead_time_on_sync = true,
     };
     mcpwm_new_operator(&mcpwm_operator_config,&mcpwm_oper_handle);
+    mcpwm_operator_connect_timer(mcpwm_oper_handle,mcpwm_timer_handle);
 
 
     mcpwm_cmpr_handle_t UA_A_comparator_handle;
@@ -67,15 +72,20 @@ void FOC_GPIO_Init(void)
     mcpwm_comparator_config_t UA_A_comparator_config =
     {
         .flags.update_cmp_on_tep = true,
-        .flags.update_cmp_on_tez = true,
+        // .flags.update_cmp_on_tez = true,
+        // .flags.update_cmp_on_sync = true,
     };
     mcpwm_comparator_config_t UA_B_comparator_config =
     {
         .flags.update_cmp_on_tep = true,
-        .flags.update_cmp_on_tez = true,
+        // .flags.update_cmp_on_tez = true,
+        // .flags.update_cmp_on_sync = true,
     };
     mcpwm_new_comparator(mcpwm_oper_handle,&UA_A_comparator_config,&UA_A_comparator_handle);
     mcpwm_new_comparator(mcpwm_oper_handle,&UA_B_comparator_config,&UA_B_comparator_handle);
+
+    mcpwm_comparator_set_compare_value(UA_A_comparator_handle, 30);
+    mcpwm_comparator_set_compare_value(UA_B_comparator_handle, 70);
 
 
     mcpwm_gen_handle_t  mcpwm_UA_A_gen_handle;
@@ -83,34 +93,53 @@ void FOC_GPIO_Init(void)
     mcpwm_generator_config_t  mcpwm_UA_A_generator_config=
     {
         .gen_gpio_num = UA_A_PIN,
-        .flags.io_loop_back = true,
+        .flags.io_loop_back = false,
+        // .flags.invert_pwm = false,
     };
     mcpwm_generator_config_t  mcpwm_UA_B_generator_config=
     {
         .gen_gpio_num = UA_B_PIN,
-        .flags.io_loop_back = true,
+        .flags.io_loop_back = false,
+        // .flags.invert_pwm = false,      
     };
     mcpwm_new_generator(mcpwm_oper_handle,&mcpwm_UA_A_generator_config,&mcpwm_UA_A_gen_handle);
     mcpwm_new_generator(mcpwm_oper_handle,&mcpwm_UA_B_generator_config,&mcpwm_UA_B_gen_handle);
 
 
+
+
+    mcpwm_generator_set_actions_on_timer_event(mcpwm_UA_A_gen_handle, 
+                                                MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH),
+                                                MCPWM_GEN_TIMER_EVENT_ACTION_END());
+    mcpwm_generator_set_actions_on_timer_event(mcpwm_UA_B_gen_handle, 
+                                                MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH),
+                                                MCPWM_GEN_TIMER_EVENT_ACTION_END());
+
+    mcpwm_generator_set_actions_on_compare_event(mcpwm_UA_A_gen_handle,
+                                                MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, UA_A_comparator_handle, MCPWM_GEN_ACTION_LOW),
+                                                MCPWM_GEN_COMPARE_EVENT_ACTION_END());
+    mcpwm_generator_set_actions_on_compare_event(mcpwm_UA_B_gen_handle,
+                                                MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, UA_B_comparator_handle, MCPWM_GEN_ACTION_LOW),
+                                                MCPWM_GEN_COMPARE_EVENT_ACTION_END());
+
+
     mcpwm_dead_time_config_t UA_A_dead_time_config = 
     {
-        .posedge_delay_ticks = 100,
+        .posedge_delay_ticks = 5,
         .negedge_delay_ticks = 0,
         .flags.invert_output = true
     };
     mcpwm_dead_time_config_t UA_B_dead_time_config = 
     {
         .posedge_delay_ticks = 0,
-        .negedge_delay_ticks = 100,
+        .negedge_delay_ticks = 5,
         .flags.invert_output = false,
     };
     mcpwm_generator_set_dead_time(mcpwm_UA_A_gen_handle,mcpwm_UA_A_gen_handle,&UA_A_dead_time_config);
     mcpwm_generator_set_dead_time(mcpwm_UA_A_gen_handle,mcpwm_UA_B_gen_handle,&UA_B_dead_time_config);
-
-
-    gen_action_config(mcpwm_UA_A_gen_handle,mcpwm_UA_B_gen_handle,UA_A_comparator_handle,UA_B_comparator_handle);
+    
+    
+    //gen_action_config(mcpwm_UA_A_gen_handle,mcpwm_UA_B_gen_handle,UA_A_comparator_handle,UA_B_comparator_handle);
     mcpwm_timer_start_stop(mcpwm_timer_handle,MCPWM_TIMER_START_NO_STOP);
 
 }

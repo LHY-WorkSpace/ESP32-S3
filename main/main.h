@@ -12,8 +12,8 @@
 #include "TemperatureSensor.h"
 #include "MathFun.h"
 #include "IIC.h"
-
-
+#include "AS5600.h"
+#include "DataType.h"
 
 
 

@@ -1,13 +1,8 @@
 #ifndef  I2C_H
 #define  I2C_H
-#include <stdio.h>
-#include <inttypes.h>
 
-typedef union 
-{
-    uint8_t  B08[2];
-    uint16_t B16;
-}B16_B08;
+#include "DataType.h"
+
 
 #define EEPROM_PAGE_SIZE                 (16)   //字节
 #define EEPROM_PAGES                     (64)   //页数 内部Ram按页(16 Byte)对齐

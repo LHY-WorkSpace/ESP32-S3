@@ -115,23 +115,29 @@ void EEPROMReadData(uint16_t addr,uint16_t length,uint8_t *data)
 void IIC_Test()
 {
 	uint8_t Data[200];
-
+    TickType_t Time;	
+    Time=xTaskGetTickCount();
 	i2c_master_init();
 
 	for (uint8_t i = 0; i < sizeof(Data); i++)
 	{
-		Data[i] = 0x11+i;
+		Data[i] = i;
 	}
 	EEPROMWriteData(0,sizeof(Data),Data);
 
-	memset(Data,0,sizeof(Data));
+    while (1)
+    {
+		memset(Data,0,sizeof(Data));
 
-	EEPROMReadData(0,sizeof(Data),Data);
-	for (uint8_t i = 0; i < sizeof(Data); i++)
-	{
-		printf("Val:%d\r\n",Data[i]);
-		vTaskDelay(2/ portTICK_PERIOD_MS);
-	}
+		EEPROMReadData(0,sizeof(Data),Data);
+
+		for (uint8_t i = 0; i < sizeof(Data); i++)
+		{
+			printf("Val:%d\r\n",Data[i]);
+			vTaskDelay(2/ portTICK_PERIOD_MS);
+		}
+    }
+	vTaskDelete(NULL);
 
 }
 

@@ -4,5 +4,15 @@
     "idf.adapterTargetName": "esp32s3",
     "idf.openOcdConfigs": [
         "board/esp32s3-builtin.cfg"
-    ]
+    ],
+    "files.associations": {
+        "*.cpp": "cpp",
+        "string.h": "c",
+        "main.h": "c",
+        "stdio.h": "c",
+        "temperaturesensor.h": "c",
+        "datatype.h": "c",
+        "string_view": "c",
+        "mathfun.h": "c"
+    }
 }

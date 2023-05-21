@@ -150,11 +150,13 @@ void app_main(void)
     printf("System Online !\n");
 
 	// GPIO_Init();
-	Timer_Init();
+	//Timer_Init();
 	LED_Init();
+
+
 	// WIFI_Init();
 	FOC_GPIO_Init();
-	ERRER();
+	// ERRER();
 	// LVGL_Init();
 
 	// MainUICreate();
@@ -168,7 +170,8 @@ void app_main(void)
 	// xTaskCreate( (TaskFunction_t)LEDWave_Task,"Wave_Task",4096,NULL,12,NULL);
 
 	// xTaskCreate( (TaskFunction_t)Foc_CTL,"FOC_Task",4096,NULL,12,NULL);
-  //xTaskCreate( (TaskFunction_t)IIC_Test,"LVGL_Task",4500,NULL,11,NULL);
+  	//xTaskCreate( (TaskFunction_t)IIC_Test,"EE_Task",4500,NULL,11,NULL);
+	//xTaskCreate( (TaskFunction_t)AS5600_Test,"AS5600_Task",4500,NULL,12,NULL);
 }
 
 
