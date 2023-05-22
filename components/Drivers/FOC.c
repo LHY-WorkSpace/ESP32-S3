@@ -3,19 +3,13 @@
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "driver/mcpwm_timer.h"
+#include "driver/Timer.h"
 #include "driver/mcpwm_oper.h"
 #include "driver/mcpwm_cmpr.h"
 #include "driver/mcpwm_gen.h"
+#include "driver/mcpwm_timer.h"
 #include "MathFun.h"
 #include "FOC.h"
-
-//     MCPWM0A = 0,        /*!<PWM0A output pin*/
-//     MCPWM0B,            /*!<PWM0B output pin*/
-//     MCPWM1A,            /*!<PWM1A output pin*/
-//     MCPWM1B,            /*!<PWM1B output pin*/
-//     MCPWM2A,            /*!<PWM2A output pin*/
-//     MCPWM2B,            /*!<PWM2B output pin*/
 
 #define UA_A_PIN    (35)
 #define UA_B_PIN    (36)
@@ -24,50 +18,36 @@
 #define UC_A_PIN    (39)
 #define UC_B_PIN    (40)
 
-uint8_t PinGroup[U_TimerMax*2]=
+uint8_t PinGroup[U_PhaseMax][PWM_Max]=
 {
-    UA_A_PIN,UA_B_PIN,
-    UB_A_PIN,UB_B_PIN,
-    UC_A_PIN,UC_B_PIN,
+    {UA_A_PIN,UA_B_PIN},
+    {UB_A_PIN,UB_B_PIN},
+    {UC_A_PIN,UC_B_PIN},
 };
 
-
-
-
-
+mcpwm_cmpr_handle_t Comparator[U_PhaseMax];
 
 // https://github.com/espressif/esp-idf/blob/master/examples/peripherals/mcpwm/mcpwm_bldc_hall_control/main/mcpwm_bldc_hall_control_example_main.c
 
-// static void gen_action_config(mcpwm_gen_handle_t gena, mcpwm_gen_handle_t genb, mcpwm_cmpr_handle_t cmpa, mcpwm_cmpr_handle_t cmpb)
-// {
-//       ESP_ERROR_CHECK(mcpwm_generator_set_actions_on_compare_event(gena,
-//                     MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, cmpa, MCPWM_GEN_ACTION_HIGH),
-//                     MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_DOWN, cmpa, MCPWM_GEN_ACTION_LOW),
-//                     MCPWM_GEN_COMPARE_EVENT_ACTION_END()));
-//     ESP_ERROR_CHECK(mcpwm_generator_set_actions_on_compare_event(genb,
-//                     MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, cmpb, MCPWM_GEN_ACTION_LOW),
-//                     MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_DOWN, cmpb, MCPWM_GEN_ACTION_HIGH),
-//                     MCPWM_GEN_COMPARE_EVENT_ACTION_END()));
-// }
 void FOC_GPIO_Init(void)
 {
     uint8_t i;
 
-    mcpwm_timer_handle_t mcpwm_timer;
-    mcpwm_timer_config_t timer_config = 
+    mcpwm_timer_handle_t Timer;
+    mcpwm_timer_config_t Timer_Config = 
     {
         .group_id = 0,
         .clk_src = MCPWM_TIMER_CLK_SRC_DEFAULT,
         .resolution_hz = 1 * 1000 * 1000,
-        .period_ticks = 100, // 10khz
+        .period_ticks = 1000, // 1khz
         .count_mode = MCPWM_TIMER_COUNT_MODE_UP,
     };
     //分配一个定时器;
-    mcpwm_new_timer(&timer_config,&mcpwm_timer);
+    mcpwm_new_timer(&Timer_Config,&Timer);
+    mcpwm_timer_enable(Timer);
 
-
-    mcpwm_oper_handle_t mcpwm_oper_handle[U_TimerMax];
-    mcpwm_operator_config_t mcpwm_operator_config = 
+    mcpwm_oper_handle_t Operator[U_PhaseMax];
+    mcpwm_operator_config_t Operator_Config = 
     {
         .group_id = 0,
         // .flags.update_gen_action_on_tez = true,
@@ -80,41 +60,40 @@ void FOC_GPIO_Init(void)
 
     //多个操作器可以连接到同一个定时器
     ///分配3个操作器,连接到同一个定时器
-    for ( i = 0; i < U_TimerMax; i++)
+    for ( i = 0; i < U_PhaseMax; i++)
     {
-        mcpwm_new_operator(&mcpwm_operator_config,&mcpwm_oper_handle[i]);
-        mcpwm_operator_connect_timer(mcpwm_oper_handle[i],mcpwm_timer);
+        mcpwm_new_operator(&Operator_Config,&Operator[i]);
+        mcpwm_operator_connect_timer(Operator[i],Timer);
     }
     
 
 
 
 
-    mcpwm_cmpr_handle_t U_comparator_handle[U_TimerMax];
-    mcpwm_comparator_config_t U_comparator_config =
+    // mcpwm_cmpr_handle_t Comparator[U_PhaseMax];
+    mcpwm_comparator_config_t Comparator_Config =
     {
-        .flags.update_cmp_on_tep = true,
-        // .flags.update_cmp_on_tez = true,
+        // .flags.update_cmp_on_tep = true,
+        .flags.update_cmp_on_tez = true,
         // .flags.update_cmp_on_sync = true,
     };
     //每个操作器分配一个比较器
-    for ( i = 0; i < U_TimerMax; i++)
+    for ( i = 0; i < U_PhaseMax; i++)
     {
-        mcpwm_new_comparator(mcpwm_oper_handle[i],&U_comparator_config,&U_comparator_handle[i]);
-        mcpwm_comparator_set_compare_value(U_comparator_handle[i], 30);
+        mcpwm_new_comparator(Operator[i],&Comparator_Config,&Comparator[i]);
+        mcpwm_comparator_set_compare_value(Comparator[i], 30);
     }
 
 
 
-
-    mcpwm_gen_handle_t  mcpwm_U_gen_handle[U_TimerMax * 2];
-    mcpwm_generator_config_t  mcpwm_A_generator_config=
+    mcpwm_gen_handle_t  PWM_Out_Channel[U_PhaseMax][PWM_Max];
+    mcpwm_generator_config_t  PWM_A_Pin_Config=
     {
         .gen_gpio_num = 0,
         .flags.io_loop_back = false,
         // .flags.invert_pwm = false,
     };
-    mcpwm_generator_config_t  mcpwm_B_generator_config=
+    mcpwm_generator_config_t  PWM_B_Pin_Config=
     {
         .gen_gpio_num = 0,
         .flags.io_loop_back = false,
@@ -122,53 +101,88 @@ void FOC_GPIO_Init(void)
     };
 
 
-    for ( i = 0; i < U_TimerMax; i++)
+    for ( i = 0; i < U_PhaseMax; i++)
     {
-        mcpwm_A_generator_config.gen_gpio_num = PinGroup[i];
-        mcpwm_B_generator_config.gen_gpio_num = PinGroup[i+1];
-        mcpwm_new_generator(mcpwm_oper_handle[i],&mcpwm_A_generator_config,&mcpwm_U_gen_handle[i]);
-        mcpwm_new_generator(mcpwm_oper_handle[i],&mcpwm_B_generator_config,&mcpwm_U_gen_handle[i+1]);
+        PWM_A_Pin_Config.gen_gpio_num = PinGroup[i][PWM_A];
+        PWM_B_Pin_Config.gen_gpio_num = PinGroup[i][PWM_B];
+        mcpwm_new_generator(Operator[i],&PWM_A_Pin_Config,&PWM_Out_Channel[i][PWM_A]);
+        mcpwm_new_generator(Operator[i],&PWM_B_Pin_Config,&PWM_Out_Channel[i][PWM_B]);
     }
 
 
-    mcpwm_generator_set_actions_on_timer_event(mcpwm_UA_A_gen_handle, 
-                                                MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH),
-                                                MCPWM_GEN_TIMER_EVENT_ACTION_END());
-    mcpwm_generator_set_actions_on_timer_event(mcpwm_UA_B_gen_handle, 
-                                                MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH),
-                                                MCPWM_GEN_TIMER_EVENT_ACTION_END());
+    for (i = 0; i < U_PhaseMax; i++)
+    {
+        mcpwm_generator_set_actions_on_timer_event( PWM_Out_Channel[i][PWM_A], 
+                                                    MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH),
+                                                    MCPWM_GEN_TIMER_EVENT_ACTION_END());
+        mcpwm_generator_set_actions_on_compare_event(PWM_Out_Channel[i][PWM_A],
+                                                    MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, Comparator[i], MCPWM_GEN_ACTION_LOW),
+                                                    MCPWM_GEN_COMPARE_EVENT_ACTION_END());
 
-    mcpwm_generator_set_actions_on_compare_event(mcpwm_UA_A_gen_handle,
-                                                MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, UA_A_comparator_handle, MCPWM_GEN_ACTION_LOW),
-                                                MCPWM_GEN_COMPARE_EVENT_ACTION_END());
-    mcpwm_generator_set_actions_on_compare_event(mcpwm_UA_B_gen_handle,
-                                                MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, UA_B_comparator_handle, MCPWM_GEN_ACTION_LOW),
-                                                MCPWM_GEN_COMPARE_EVENT_ACTION_END());
+        mcpwm_generator_set_actions_on_timer_event( PWM_Out_Channel[i][PWM_B],
+                                                    MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH),
+                                                    MCPWM_GEN_TIMER_EVENT_ACTION_END());
+        mcpwm_generator_set_actions_on_compare_event(PWM_Out_Channel[i][PWM_B],
+                                                    MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, Comparator[i], MCPWM_GEN_ACTION_LOW),
+                                                    MCPWM_GEN_COMPARE_EVENT_ACTION_END());
+    }
 
 
-    mcpwm_dead_time_config_t UA_A_dead_time_config = 
+
+
+    mcpwm_dead_time_config_t PWM_A_dead_time_config = 
     {
         .posedge_delay_ticks = 5,
         .negedge_delay_ticks = 0,
-        .flags.invert_output = true
+        .flags.invert_output = true,
     };
-    mcpwm_dead_time_config_t UA_B_dead_time_config = 
+    mcpwm_dead_time_config_t PWM_B_dead_time_config = 
     {
         .posedge_delay_ticks = 0,
         .negedge_delay_ticks = 5,
         .flags.invert_output = false,
     };
-    mcpwm_generator_set_dead_time(mcpwm_UA_A_gen_handle,mcpwm_UA_A_gen_handle,&UA_A_dead_time_config);
-    mcpwm_generator_set_dead_time(mcpwm_UA_A_gen_handle,mcpwm_UA_B_gen_handle,&UA_B_dead_time_config);
+
+    for (i = 0; i < U_PhaseMax; i++)
+    {
+        mcpwm_generator_set_dead_time(PWM_Out_Channel[i][PWM_A],PWM_Out_Channel[i][PWM_A],&PWM_A_dead_time_config);
+        mcpwm_generator_set_dead_time(PWM_Out_Channel[i][PWM_B],PWM_Out_Channel[i][PWM_B],&PWM_B_dead_time_config);
+    }
     
-    //gen_action_config(mcpwm_UA_A_gen_handle,mcpwm_UA_B_gen_handle,UA_A_comparator_handle,UA_B_comparator_handle);
-    mcpwm_timer_start_stop(mcpwm_timer_handle,MCPWM_TIMER_START_NO_STOP);
-    mcpwm_timer_enable(mcpwm_timer);
+    mcpwm_timer_start_stop(Timer,MCPWM_TIMER_START_NO_STOP);
+
+}
+
+
+void FOC_Task()
+{
+	uint8_t i;
+    static uint8_t duty; 
+    TickType_t Time;	
+
+    Time = xTaskGetTickCount();
+    while (1)
+    {
+        for ( i = 0; i < U_PhaseMax; i++)
+        {
+            mcpwm_comparator_set_compare_value(Comparator[i], duty);
+            duty+=10;
+        }
+        if(duty>=800)
+        {
+            duty=0;
+        }
+		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
+    }
+	vTaskDelete(NULL);
+
+
 }
 
 
 
 
+#if 0
 /*
  * SPDX-FileCopyrightText: 2021-2022 Espressif Systems (Shanghai) CO LTD
  *
@@ -364,7 +378,7 @@ void app_main(void)
 
     ESP_LOGI(TAG, "Create MCPWM timer");
     mcpwm_timer_handle_t timer = NULL;
-    mcpwm_timer_config_t timer_config = 
+    mcpwm_timer_config_t Timer_Config = 
     {
         .group_id = 0,
         .clk_src = MCPWM_TIMER_CLK_SRC_DEFAULT,
@@ -372,7 +386,7 @@ void app_main(void)
         .count_mode = MCPWM_TIMER_COUNT_MODE_UP,
         .period_ticks = BLDC_MCPWM_PERIOD,
     };
-    ESP_ERROR_CHECK(mcpwm_new_timer(&timer_config, &timer));
+    ESP_ERROR_CHECK(mcpwm_new_timer(&Timer_Config, &timer));
 
 
 
@@ -466,8 +480,10 @@ void app_main(void)
     for (int i = 0; i < 3; i++) {
         ESP_ERROR_CHECK(mcpwm_generator_set_action_on_timer_event(generators[i][BLDC_MCPWM_GEN_INDEX_HIGH],
                         MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH)));
+
         ESP_ERROR_CHECK(mcpwm_generator_set_action_on_compare_event(generators[i][BLDC_MCPWM_GEN_INDEX_HIGH],
                         MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, comparators[i], MCPWM_GEN_ACTION_LOW)));
+
         ESP_ERROR_CHECK(mcpwm_generator_set_action_on_brake_event(generators[i][BLDC_MCPWM_GEN_INDEX_HIGH],
                         MCPWM_GEN_BRAKE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_OPER_BRAKE_MODE_CBC, MCPWM_GEN_ACTION_LOW)));
         ESP_ERROR_CHECK(mcpwm_generator_set_action_on_brake_event(generators[i][BLDC_MCPWM_GEN_INDEX_HIGH],
@@ -475,8 +491,10 @@ void app_main(void)
 
         ESP_ERROR_CHECK(mcpwm_generator_set_action_on_timer_event(generators[i][BLDC_MCPWM_GEN_INDEX_LOW],
                         MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH)));
+
         ESP_ERROR_CHECK(mcpwm_generator_set_action_on_compare_event(generators[i][BLDC_MCPWM_GEN_INDEX_LOW],
                         MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, comparators[i], MCPWM_GEN_ACTION_LOW)));
+
         ESP_ERROR_CHECK(mcpwm_generator_set_action_on_brake_event(generators[i][BLDC_MCPWM_GEN_INDEX_LOW],
                         MCPWM_GEN_BRAKE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_OPER_BRAKE_MODE_CBC, MCPWM_GEN_ACTION_LOW)));
         ESP_ERROR_CHECK(mcpwm_generator_set_action_on_brake_event(generators[i][BLDC_MCPWM_GEN_INDEX_LOW],
@@ -573,3 +591,4 @@ void app_main(void)
 }
 
 
+#endif

@@ -3,18 +3,24 @@
 
 typedef enum
 {
-    UA_Timer,
-    UB_Timer,
-    UC_Timer,
-    U_TimerMax,
-}U_Timer_e;
+    UA_Phase,
+    UB_Phase,
+    UC_Phase,
+    U_PhaseMax,
+}U_Phase_e;
 
+typedef enum
+{
+    PWM_A,
+    PWM_B,
+    PWM_Max,
+}PwmChannel_e;
 
 
 void FOC_GPIO_Init(void);
 void FOC_main(void);
 void ERRER(void);
-
+void FOC_Task(void);
 
 /*
 
