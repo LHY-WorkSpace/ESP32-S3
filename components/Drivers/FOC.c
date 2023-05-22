@@ -8,7 +8,7 @@
 #include "driver/mcpwm_cmpr.h"
 #include "driver/mcpwm_gen.h"
 #include "MathFun.h"
-
+#include "FOC.h"
 
 //     MCPWM0A = 0,        /*!<PWM0A output pin*/
 //     MCPWM0B,            /*!<PWM0B output pin*/
@@ -19,28 +19,41 @@
 
 #define UA_A_PIN    (35)
 #define UA_B_PIN    (36)
+#define UB_A_PIN    (37)
+#define UB_B_PIN    (38)
+#define UC_A_PIN    (39)
+#define UC_B_PIN    (40)
 
-// #define UB_A_PIN    (35)
-// #define UB_B_PIN    (35)
-
-// #define UC_A_PIN    (35)
-// #define UC_B_PIN    (35)
-
-static void gen_action_config(mcpwm_gen_handle_t gena, mcpwm_gen_handle_t genb, mcpwm_cmpr_handle_t cmpa, mcpwm_cmpr_handle_t cmpb)
+uint8_t PinGroup[U_TimerMax*2]=
 {
-      ESP_ERROR_CHECK(mcpwm_generator_set_actions_on_compare_event(gena,
-                    MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, cmpa, MCPWM_GEN_ACTION_HIGH),
-                    MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_DOWN, cmpa, MCPWM_GEN_ACTION_LOW),
-                    MCPWM_GEN_COMPARE_EVENT_ACTION_END()));
-    ESP_ERROR_CHECK(mcpwm_generator_set_actions_on_compare_event(genb,
-                    MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, cmpb, MCPWM_GEN_ACTION_LOW),
-                    MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_DOWN, cmpb, MCPWM_GEN_ACTION_HIGH),
-                    MCPWM_GEN_COMPARE_EVENT_ACTION_END()));
-}
+    UA_A_PIN,UA_B_PIN,
+    UB_A_PIN,UB_B_PIN,
+    UC_A_PIN,UC_B_PIN,
+};
+
+
+
+
+
+
+// https://github.com/espressif/esp-idf/blob/master/examples/peripherals/mcpwm/mcpwm_bldc_hall_control/main/mcpwm_bldc_hall_control_example_main.c
+
+// static void gen_action_config(mcpwm_gen_handle_t gena, mcpwm_gen_handle_t genb, mcpwm_cmpr_handle_t cmpa, mcpwm_cmpr_handle_t cmpb)
+// {
+//       ESP_ERROR_CHECK(mcpwm_generator_set_actions_on_compare_event(gena,
+//                     MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, cmpa, MCPWM_GEN_ACTION_HIGH),
+//                     MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_DOWN, cmpa, MCPWM_GEN_ACTION_LOW),
+//                     MCPWM_GEN_COMPARE_EVENT_ACTION_END()));
+//     ESP_ERROR_CHECK(mcpwm_generator_set_actions_on_compare_event(genb,
+//                     MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, cmpb, MCPWM_GEN_ACTION_LOW),
+//                     MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_DOWN, cmpb, MCPWM_GEN_ACTION_HIGH),
+//                     MCPWM_GEN_COMPARE_EVENT_ACTION_END()));
+// }
 void FOC_GPIO_Init(void)
 {
+    uint8_t i;
 
-    mcpwm_timer_handle_t mcpwm_timer_handle  = NULL ;
+    mcpwm_timer_handle_t mcpwm_timer;
     mcpwm_timer_config_t timer_config = 
     {
         .group_id = 0,
@@ -49,10 +62,11 @@ void FOC_GPIO_Init(void)
         .period_ticks = 100, // 10khz
         .count_mode = MCPWM_TIMER_COUNT_MODE_UP,
     };
-    mcpwm_new_timer(&timer_config,&mcpwm_timer_handle);
-    mcpwm_timer_enable(mcpwm_timer_handle);
+    //分配一个定时器;
+    mcpwm_new_timer(&timer_config,&mcpwm_timer);
 
-    mcpwm_oper_handle_t mcpwm_oper_handle  = NULL;
+
+    mcpwm_oper_handle_t mcpwm_oper_handle[U_TimerMax];
     mcpwm_operator_config_t mcpwm_operator_config = 
     {
         .group_id = 0,
@@ -63,49 +77,58 @@ void FOC_GPIO_Init(void)
         // .flags.update_dead_time_on_tep = true,
         // .flags.update_dead_time_on_sync = true,
     };
-    mcpwm_new_operator(&mcpwm_operator_config,&mcpwm_oper_handle);
-    mcpwm_operator_connect_timer(mcpwm_oper_handle,mcpwm_timer_handle);
+
+    //多个操作器可以连接到同一个定时器
+    ///分配3个操作器,连接到同一个定时器
+    for ( i = 0; i < U_TimerMax; i++)
+    {
+        mcpwm_new_operator(&mcpwm_operator_config,&mcpwm_oper_handle[i]);
+        mcpwm_operator_connect_timer(mcpwm_oper_handle[i],mcpwm_timer);
+    }
+    
 
 
-    mcpwm_cmpr_handle_t UA_A_comparator_handle;
-    mcpwm_cmpr_handle_t UA_B_comparator_handle;
-    mcpwm_comparator_config_t UA_A_comparator_config =
+
+
+    mcpwm_cmpr_handle_t U_comparator_handle[U_TimerMax];
+    mcpwm_comparator_config_t U_comparator_config =
     {
         .flags.update_cmp_on_tep = true,
         // .flags.update_cmp_on_tez = true,
         // .flags.update_cmp_on_sync = true,
     };
-    mcpwm_comparator_config_t UA_B_comparator_config =
+    //每个操作器分配一个比较器
+    for ( i = 0; i < U_TimerMax; i++)
     {
-        .flags.update_cmp_on_tep = true,
-        // .flags.update_cmp_on_tez = true,
-        // .flags.update_cmp_on_sync = true,
-    };
-    mcpwm_new_comparator(mcpwm_oper_handle,&UA_A_comparator_config,&UA_A_comparator_handle);
-    mcpwm_new_comparator(mcpwm_oper_handle,&UA_B_comparator_config,&UA_B_comparator_handle);
-
-    mcpwm_comparator_set_compare_value(UA_A_comparator_handle, 30);
-    mcpwm_comparator_set_compare_value(UA_B_comparator_handle, 70);
+        mcpwm_new_comparator(mcpwm_oper_handle[i],&U_comparator_config,&U_comparator_handle[i]);
+        mcpwm_comparator_set_compare_value(U_comparator_handle[i], 30);
+    }
 
 
-    mcpwm_gen_handle_t  mcpwm_UA_A_gen_handle;
-    mcpwm_gen_handle_t  mcpwm_UA_B_gen_handle;
-    mcpwm_generator_config_t  mcpwm_UA_A_generator_config=
+
+
+    mcpwm_gen_handle_t  mcpwm_U_gen_handle[U_TimerMax * 2];
+    mcpwm_generator_config_t  mcpwm_A_generator_config=
     {
-        .gen_gpio_num = UA_A_PIN,
+        .gen_gpio_num = 0,
         .flags.io_loop_back = false,
         // .flags.invert_pwm = false,
     };
-    mcpwm_generator_config_t  mcpwm_UA_B_generator_config=
+    mcpwm_generator_config_t  mcpwm_B_generator_config=
     {
-        .gen_gpio_num = UA_B_PIN,
+        .gen_gpio_num = 0,
         .flags.io_loop_back = false,
-        // .flags.invert_pwm = false,      
+        // .flags.invert_pwm = false,
     };
-    mcpwm_new_generator(mcpwm_oper_handle,&mcpwm_UA_A_generator_config,&mcpwm_UA_A_gen_handle);
-    mcpwm_new_generator(mcpwm_oper_handle,&mcpwm_UA_B_generator_config,&mcpwm_UA_B_gen_handle);
 
 
+    for ( i = 0; i < U_TimerMax; i++)
+    {
+        mcpwm_A_generator_config.gen_gpio_num = PinGroup[i];
+        mcpwm_B_generator_config.gen_gpio_num = PinGroup[i+1];
+        mcpwm_new_generator(mcpwm_oper_handle[i],&mcpwm_A_generator_config,&mcpwm_U_gen_handle[i]);
+        mcpwm_new_generator(mcpwm_oper_handle[i],&mcpwm_B_generator_config,&mcpwm_U_gen_handle[i+1]);
+    }
 
 
     mcpwm_generator_set_actions_on_timer_event(mcpwm_UA_A_gen_handle, 
@@ -138,241 +161,415 @@ void FOC_GPIO_Init(void)
     mcpwm_generator_set_dead_time(mcpwm_UA_A_gen_handle,mcpwm_UA_A_gen_handle,&UA_A_dead_time_config);
     mcpwm_generator_set_dead_time(mcpwm_UA_A_gen_handle,mcpwm_UA_B_gen_handle,&UA_B_dead_time_config);
     
-    
     //gen_action_config(mcpwm_UA_A_gen_handle,mcpwm_UA_B_gen_handle,UA_A_comparator_handle,UA_B_comparator_handle);
     mcpwm_timer_start_stop(mcpwm_timer_handle,MCPWM_TIMER_START_NO_STOP);
-
+    mcpwm_timer_enable(mcpwm_timer);
 }
 
 
 
-
-
-
-
-typedef void (*set_dead_time_cb_t)(mcpwm_gen_handle_t gena, mcpwm_gen_handle_t genb);
-typedef void (*set_gen_actions_cb_t)(mcpwm_gen_handle_t gena, mcpwm_gen_handle_t genb, mcpwm_cmpr_handle_t cmpa, mcpwm_cmpr_handle_t cmpb);
-
-static void mcpwm_deadtime_test_template(uint32_t timer_resolution, uint32_t period, uint32_t cmpa, uint32_t cmpb, int gpioa, int gpiob,
-        set_gen_actions_cb_t set_generator_actions, set_dead_time_cb_t set_dead_time)
-{
-    mcpwm_timer_config_t timer_config = {
-        .group_id = 0,
-        .clk_src = MCPWM_TIMER_CLK_SRC_DEFAULT,
-        .resolution_hz = 1000,
-        .period_ticks = 50,
-        .count_mode = MCPWM_TIMER_COUNT_MODE_UP,
-    };
-    mcpwm_timer_handle_t timer = NULL;
-    (mcpwm_new_timer(&timer_config, &timer));
-    (mcpwm_timer_enable(timer));
-    
-    mcpwm_operator_config_t operator_config = {
-        .group_id = 0,
-    };
-    mcpwm_oper_handle_t oper = NULL;
-    (mcpwm_new_operator(&operator_config, &oper));
-    (mcpwm_operator_connect_timer(oper, timer));
-
-
-
-    mcpwm_cmpr_handle_t comparator_a = NULL;
-    mcpwm_cmpr_handle_t comparator_b = NULL;
-    mcpwm_comparator_config_t comparator_config = {
-        .flags.update_cmp_on_tez = true,
-    };
-    (mcpwm_new_comparator(oper, &comparator_config, &comparator_a));
-    (mcpwm_new_comparator(oper, &comparator_config, &comparator_b));
-    (mcpwm_comparator_set_compare_value(comparator_a, cmpa));
-    (mcpwm_comparator_set_compare_value(comparator_b, cmpb));
-
-    mcpwm_gen_handle_t generator_a = NULL;
-    mcpwm_gen_handle_t generator_b = NULL;
-    mcpwm_generator_config_t generator_config = {
-        .gen_gpio_num = UA_A_PIN,
-    };
-    (mcpwm_new_generator(oper, &generator_config, &generator_a));
-    generator_config.gen_gpio_num = UA_B_PIN;
-    (mcpwm_new_generator(oper, &generator_config, &generator_b));
-
-    set_generator_actions(generator_a, generator_b, comparator_a, comparator_b);
-    set_dead_time(generator_a, generator_b);
-
-    (mcpwm_timer_start_stop(timer, MCPWM_TIMER_START_NO_STOP));
-    vTaskDelay(pdMS_TO_TICKS(100));
-    (mcpwm_timer_start_stop(timer, MCPWM_TIMER_STOP_EMPTY));
-    vTaskDelay(pdMS_TO_TICKS(10));
-
-    (mcpwm_timer_disable(timer));
-    (mcpwm_del_generator(generator_a));
-    (mcpwm_del_generator(generator_b));
-    (mcpwm_del_comparator(comparator_a));
-    (mcpwm_del_comparator(comparator_b));
-    (mcpwm_del_operator(oper));
-    (mcpwm_del_timer(timer));
-}
-
-
-
-static void ahc_set_generator_actions(mcpwm_gen_handle_t gena, mcpwm_gen_handle_t genb, mcpwm_cmpr_handle_t cmpa, mcpwm_cmpr_handle_t cmpb)
-{
-    (mcpwm_generator_set_actions_on_timer_event(gena,
-                MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH),
-                MCPWM_GEN_TIMER_EVENT_ACTION_END()));
-    (mcpwm_generator_set_actions_on_compare_event(gena,
-                MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, cmpa, MCPWM_GEN_ACTION_LOW),
-                MCPWM_GEN_COMPARE_EVENT_ACTION_END()));
-}
-static void ahc_set_dead_time(mcpwm_gen_handle_t gena, mcpwm_gen_handle_t genb)
-{
-    mcpwm_dead_time_config_t dead_time_config = {
-        .posedge_delay_ticks = 50,
-        .negedge_delay_ticks = 0
-    };
-    (mcpwm_generator_set_dead_time(gena, gena, &dead_time_config));
-    dead_time_config.posedge_delay_ticks = 0;
-    dead_time_config.negedge_delay_ticks = 100;
-    dead_time_config.flags.invert_output = true;
-    (mcpwm_generator_set_dead_time(gena, genb, &dead_time_config));
-}
-
-static void alc_set_generator_actions(mcpwm_gen_handle_t gena, mcpwm_gen_handle_t genb, mcpwm_cmpr_handle_t cmpa, mcpwm_cmpr_handle_t cmpb)
-{
-    (mcpwm_generator_set_actions_on_timer_event(gena,
-                MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH),
-                MCPWM_GEN_TIMER_EVENT_ACTION_END()));
-    (mcpwm_generator_set_actions_on_compare_event(gena,
-                MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, cmpa, MCPWM_GEN_ACTION_LOW),
-                MCPWM_GEN_COMPARE_EVENT_ACTION_END()));
-}
-
-static void alc_set_dead_time(mcpwm_gen_handle_t gena, mcpwm_gen_handle_t genb)
-{
-    mcpwm_dead_time_config_t dead_time_config = {
-        .posedge_delay_ticks = 50,
-        .negedge_delay_ticks = 0,
-        .flags.invert_output = true
-    };
-    (mcpwm_generator_set_dead_time(gena, gena, &dead_time_config));
-    dead_time_config.posedge_delay_ticks = 0;
-    dead_time_config.negedge_delay_ticks = 100;
-    dead_time_config.flags.invert_output = false;
-    (mcpwm_generator_set_dead_time(gena, genb, &dead_time_config));
-}
-void ERRER()
-{
-    printf("Active High Complementary\r\n");
-    mcpwm_deadtime_test_template(10000, 600, 200, 400, 0, 2, ahc_set_generator_actions, ahc_set_dead_time);
-
-    // printf("Active Low Complementary\r\n");
-    // mcpwm_deadtime_test_template(10000, 600, 200, 400, 0, 2, alc_set_generator_actions, alc_set_dead_time);
-}
-
-#if 0
-
-/* brushed dc motor control example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
 
 /*
- * This example will show you how to use MCPWM module to control brushed dc motor.
- * This code is tested with L298 motor driver.
- * User may need to make changes according to the motor driver they use.
-*/
+ * SPDX-FileCopyrightText: 2021-2022 Espressif Systems (Shanghai) CO LTD
+ *
+ * SPDX-License-Identifier: Unlicense OR CC0-1.0
+ */
 
 #include <stdio.h>
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "esp_attr.h"
+#include "esp_log.h"
+#include "esp_timer.h"
+#include "driver/mcpwm_prelude.h"
+#include "driver/gpio.h"
 
-#include "driver/mcpwm.h"
-#include "soc/mcpwm_reg.h"
-#include "soc/mcpwm_struct.h"
+#define BLDC_MCPWM_TIMER_RESOLUTION_HZ 10000000 // 10MHz, 1 tick = 0.1us
+#define BLDC_MCPWM_PERIOD              500      // 50us, 20KHz
+#define BLDC_SPIN_DIRECTION_CCW        false    // define the spin direction
+#define BLDC_SPEED_UPDATE_PERIOD_US    200000   // 200ms
 
-#define GPIO_PWM0A_OUT 15   //Set GPIO 15 as PWM0A
-#define GPIO_PWM0B_OUT 16   //Set GPIO 16 as PWM0B
+#define BLDC_DRV_EN_GPIO          46
+#define BLDC_DRV_FAULT_GPIO       10
+#define BLDC_PWM_UH_GPIO          47
+#define BLDC_PWM_UL_GPIO          21
+#define BLDC_PWM_VH_GPIO          14
+#define BLDC_PWM_VL_GPIO          13
+#define BLDC_PWM_WH_GPIO          12
+#define BLDC_PWM_WL_GPIO          11
+#define HALL_CAP_U_GPIO           4
+#define HALL_CAP_V_GPIO           5
+#define HALL_CAP_W_GPIO           6
 
-static void mcpwm_example_gpio_initialize()
+#define BLDC_MCPWM_OP_INDEX_U     0
+#define BLDC_MCPWM_OP_INDEX_V     1
+#define BLDC_MCPWM_OP_INDEX_W     2
+#define BLDC_MCPWM_GEN_INDEX_HIGH 0
+#define BLDC_MCPWM_GEN_INDEX_LOW  1
+
+static const char *TAG = "example";
+
+typedef void (*bldc_hall_phase_action_t)(mcpwm_gen_handle_t (*gens)[2]);
+
+static inline uint32_t bldc_get_hall_sensor_value(bool ccw)
 {
-    printf("initializing mcpwm gpio...\n");
-    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0A, GPIO_PWM0A_OUT);
-    mcpwm_gpio_init(MCPWM_UNIT_0, MCPWM0B, GPIO_PWM0B_OUT);
+    uint32_t hall_val = gpio_get_level(HALL_CAP_U_GPIO) * 4 + gpio_get_level(HALL_CAP_V_GPIO) * 2 + gpio_get_level(HALL_CAP_W_GPIO) * 1;
+    return ccw ? hall_val ^ (0x07) : hall_val;
 }
 
-/**
- * @brief motor moves in forward direction, with duty cycle = duty %
- */
-static void brushed_motor_forward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle)
+static bool IRAM_ATTR bldc_hall_updated(mcpwm_cap_channel_handle_t cap_channel, const mcpwm_capture_event_data_t *edata, void *user_data)
 {
-    mcpwm_set_signal_low(mcpwm_num, timer_num, MCPWM_OPR_B);
-    mcpwm_set_duty(mcpwm_num, timer_num, MCPWM_OPR_A, duty_cycle);
-    mcpwm_set_duty_type(mcpwm_num, timer_num, MCPWM_OPR_A, MCPWM_DUTY_MODE_0); //call this each time, if operator was previously in low/high state
+    TaskHandle_t task_to_notify = (TaskHandle_t)user_data;
+    BaseType_t high_task_wakeup = pdFALSE;
+    vTaskNotifyGiveFromISR(task_to_notify, &high_task_wakeup);
+    return high_task_wakeup == pdTRUE;
 }
 
-/**
- * @brief motor moves in backward direction, with duty cycle = duty %
- */
-static void brushed_motor_backward(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num , float duty_cycle)
+// U+V-
+static void bldc_set_phase_up_vm(mcpwm_gen_handle_t (*gens)[2])
 {
-    mcpwm_set_signal_low(mcpwm_num, timer_num, MCPWM_OPR_A);
-    mcpwm_set_duty(mcpwm_num, timer_num, MCPWM_OPR_B, duty_cycle);
-    mcpwm_set_duty_type(mcpwm_num, timer_num, MCPWM_OPR_B, MCPWM_DUTY_MODE_0);  //call this each time, if operator was previously in low/high state
+    // U+ = PWM, U- = _PWM_
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_U][BLDC_MCPWM_GEN_INDEX_HIGH], -1, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_U][BLDC_MCPWM_GEN_INDEX_LOW], -1, true);
+
+    // V+ = 0, V- = 1  --[because gen_low is inverted by dead time]--> V+ = 0, V- = 0
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_V][BLDC_MCPWM_GEN_INDEX_HIGH], 0, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_V][BLDC_MCPWM_GEN_INDEX_LOW], 0, true);
+
+    // W+ = 0, W- = 0  --[because gen_low is inverted by dead time]--> W+ = 0, W- = 1
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_W][BLDC_MCPWM_GEN_INDEX_HIGH], 0, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_W][BLDC_MCPWM_GEN_INDEX_LOW], 1, true);
 }
 
-/**
- * @brief motor stop
- */
-static void brushed_motor_stop(mcpwm_unit_t mcpwm_num, mcpwm_timer_t timer_num)
+// W+U-
+static void bldc_set_phase_wp_um(mcpwm_gen_handle_t (*gens)[2])
 {
-    mcpwm_set_signal_low(mcpwm_num, timer_num, MCPWM_OPR_A);
-    mcpwm_set_signal_low(mcpwm_num, timer_num, MCPWM_OPR_B);
+    // U+ = 0, U- = 1  --[because gen_low is inverted by dead time]--> U+ = 0, U- = 0
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_U][BLDC_MCPWM_GEN_INDEX_HIGH], 0, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_U][BLDC_MCPWM_GEN_INDEX_LOW], 0, true);
+
+    // V+ = 0, V- = 0  --[because gen_low is inverted by dead time]--> V+ = 0, V- = 1
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_V][BLDC_MCPWM_GEN_INDEX_HIGH], 0, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_V][BLDC_MCPWM_GEN_INDEX_LOW], 1, true);
+
+    // W+ = PWM, W- = _PWM_
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_W][BLDC_MCPWM_GEN_INDEX_HIGH], -1, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_W][BLDC_MCPWM_GEN_INDEX_LOW], -1, true);
 }
 
-/**
- * @brief Configure MCPWM module for brushed dc motor
- */
-static void mcpwm_example_brushed_motor_control(void *arg)
+// W+V-
+static void bldc_set_phase_wp_vm(mcpwm_gen_handle_t (*gens)[2])
 {
-    //1. mcpwm gpio initialization
-    mcpwm_example_gpio_initialize();
+    // U+ = 0, U- = 0  --[because gen_low is inverted by dead time]--> U+ = 0, U- = 1
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_U][BLDC_MCPWM_GEN_INDEX_HIGH], 0, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_U][BLDC_MCPWM_GEN_INDEX_LOW], 1, true);
 
-    //2. initial mcpwm configuration
-    printf("Configuring Initial Parameters of mcpwm...\n");
-    mcpwm_config_t pwm_config;
-    pwm_config.frequency = 1000;    //frequency = 500Hz,
-    pwm_config.cmpr_a = 0;    //duty cycle of PWMxA = 0
-    pwm_config.cmpr_b = 0;    //duty cycle of PWMxb = 0
-    pwm_config.counter_mode = MCPWM_UP_COUNTER;
-    pwm_config.duty_mode = MCPWM_DUTY_MODE_0;
-    mcpwm_init(MCPWM_UNIT_0, MCPWM_TIMER_0, &pwm_config);    //Configure PWM0A & PWM0B with above settings
-    while (1) 
-    {
-        brushed_motor_forward(MCPWM_UNIT_0, MCPWM_TIMER_0, 50.0);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
-        brushed_motor_backward(MCPWM_UNIT_0, MCPWM_TIMER_0, 30.0);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
-        brushed_motor_stop(MCPWM_UNIT_0, MCPWM_TIMER_0);
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    // V+ = 0, V- = 1  --[because gen_low is inverted by dead time]--> V+ = 0, V- = 0
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_V][BLDC_MCPWM_GEN_INDEX_HIGH], 0, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_V][BLDC_MCPWM_GEN_INDEX_LOW], 0, true);
+
+    // W+ = PWM, W- = _PWM_
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_W][BLDC_MCPWM_GEN_INDEX_HIGH], -1, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_W][BLDC_MCPWM_GEN_INDEX_LOW], -1, true);
+}
+
+// V+U-
+static void bldc_set_phase_vp_um(mcpwm_gen_handle_t (*gens)[2])
+{
+    // U+ = 0, U- = 1  --[because gen_low is inverted by dead time]--> U+ = 0, U- = 0
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_U][BLDC_MCPWM_GEN_INDEX_HIGH], 0, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_U][BLDC_MCPWM_GEN_INDEX_LOW], 0, true);
+
+    // V+ = PWM, V- = _PWM_
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_V][BLDC_MCPWM_GEN_INDEX_HIGH], -1, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_V][BLDC_MCPWM_GEN_INDEX_LOW], -1, true);
+
+    // W+ = 0, W- = 0  --[because gen_low is inverted by dead time]--> W+ = 0, W- = 1
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_W][BLDC_MCPWM_GEN_INDEX_HIGH], 0, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_W][BLDC_MCPWM_GEN_INDEX_LOW], 1, true);
+}
+
+// V+W-
+static void bldc_set_phase_vp_wm(mcpwm_gen_handle_t (*gens)[2])
+{
+    // U+ = 0, U- = 0  --[because gen_low is inverted by dead time]--> U+ = 0, U- = 1
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_U][BLDC_MCPWM_GEN_INDEX_HIGH], 0, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_U][BLDC_MCPWM_GEN_INDEX_LOW], 1, true);
+
+    // V+ = PWM, V- = _PWM_
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_V][BLDC_MCPWM_GEN_INDEX_HIGH], -1, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_V][BLDC_MCPWM_GEN_INDEX_LOW], -1, true);
+
+    // W+ = 0, W- = 1  --[because gen_low is inverted by dead time]--> W+ = 0, W- = 0
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_W][BLDC_MCPWM_GEN_INDEX_HIGH], 0, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_W][BLDC_MCPWM_GEN_INDEX_LOW], 0, true);
+}
+
+// U+W- / A+C-
+static void bldc_set_phase_up_wm(mcpwm_gen_handle_t (*gens)[2])
+{
+    // U+ = PWM, U- = _PWM_
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_U][BLDC_MCPWM_GEN_INDEX_HIGH], -1, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_U][BLDC_MCPWM_GEN_INDEX_LOW], -1, true);
+
+    // V+ = 0, V- = 0  --[because gen_low is inverted by dead time]--> V+ = 0, V- = 1
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_V][BLDC_MCPWM_GEN_INDEX_HIGH], 0, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_V][BLDC_MCPWM_GEN_INDEX_LOW], 1, true);
+
+    // W+ = 0, W- = 1  --[because gen_low is inverted by dead time]--> W+ = 0, W- = 0
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_W][BLDC_MCPWM_GEN_INDEX_HIGH], 0, true);
+    mcpwm_generator_set_force_level(gens[BLDC_MCPWM_OP_INDEX_W][BLDC_MCPWM_GEN_INDEX_LOW], 0, true);
+}
+
+static const bldc_hall_phase_action_t s_hall_actions[] = {
+    [2] = bldc_set_phase_up_vm,
+    [6] = bldc_set_phase_wp_vm,
+    [4] = bldc_set_phase_wp_um,
+    [5] = bldc_set_phase_vp_um,
+    [1] = bldc_set_phase_vp_wm,
+    [3] = bldc_set_phase_up_wm,
+};
+
+static void update_motor_speed_callback(void *arg)
+{
+    static int step = 20;
+    static int cur_speed = 0;
+    if ((cur_speed + step) > 300 || (cur_speed + step) < 0) {
+        step *= -1;
+    }
+    cur_speed += step;
+
+    mcpwm_cmpr_handle_t *cmprs = (mcpwm_cmpr_handle_t *)arg;
+    for (int i = 0; i < 3; i++) {
+        ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(cmprs[i], cur_speed));
     }
 }
 
-void FOC_main()
+void app_main(void)
 {
-    printf("Testing brushed motor...\n");
-    xTaskCreate(mcpwm_example_brushed_motor_control, "mcpwm_examlpe_brushed_motor_control", 4096, NULL, 5, NULL);
+
+
+
+    ESP_LOGI(TAG, "Disable MOSFET gate");
+    gpio_config_t drv_en_config = {
+        .mode = GPIO_MODE_OUTPUT,
+        .pin_bit_mask = 1ULL << BLDC_DRV_EN_GPIO,
+    };
+    ESP_ERROR_CHECK(gpio_config(&drv_en_config));
+    gpio_set_level(BLDC_DRV_EN_GPIO, 0);
+
+
+
+
+
+    ESP_LOGI(TAG, "Create MCPWM timer");
+    mcpwm_timer_handle_t timer = NULL;
+    mcpwm_timer_config_t timer_config = 
+    {
+        .group_id = 0,
+        .clk_src = MCPWM_TIMER_CLK_SRC_DEFAULT,
+        .resolution_hz = BLDC_MCPWM_TIMER_RESOLUTION_HZ,
+        .count_mode = MCPWM_TIMER_COUNT_MODE_UP,
+        .period_ticks = BLDC_MCPWM_PERIOD,
+    };
+    ESP_ERROR_CHECK(mcpwm_new_timer(&timer_config, &timer));
+
+
+
+
+
+
+    ESP_LOGI(TAG, "Create MCPWM operator");
+    mcpwm_oper_handle_t operators[3];
+    mcpwm_operator_config_t operator_config = 
+    {
+        .group_id = 0,
+    };
+
+    for (int i = 0; i < 3; i++) 
+    {
+        ESP_ERROR_CHECK(mcpwm_new_operator(&operator_config, &operators[i]));
+    }
+
+
+    ESP_LOGI(TAG, "Connect operators to the same timer");
+    for (int i = 0; i < 3; i++) {
+        ESP_ERROR_CHECK(mcpwm_operator_connect_timer(operators[i], timer));
+    }
+
+
+
+
+
+
+    ESP_LOGI(TAG, "Create comparators");
+    mcpwm_cmpr_handle_t comparators[3];
+    mcpwm_comparator_config_t compare_config = 
+    {
+        .flags.update_cmp_on_tez = true,
+    };
+    for (int i = 0; i < 3; i++) 
+    {
+        ESP_ERROR_CHECK(mcpwm_new_comparator(operators[i], &compare_config, &comparators[i]));
+        // set compare value to 0, we will adjust the speed in a period timer callback
+        ESP_ERROR_CHECK(mcpwm_comparator_set_compare_value(comparators[i], 0));
+    }
+
+
+
+
+    // ESP_LOGI(TAG, "Create over current fault detector");
+    // mcpwm_fault_handle_t over_cur_fault = NULL;
+    // mcpwm_gpio_fault_config_t gpio_fault_config = {
+    //     .gpio_num = BLDC_DRV_FAULT_GPIO,
+    //     .group_id = 0,
+    //     .flags.active_level = 0, // low level means fault, refer to DRV8302 datasheet
+    //     .flags.pull_up = true,   // internally pull up
+    // };
+    // ESP_ERROR_CHECK(mcpwm_new_gpio_fault(&gpio_fault_config, &over_cur_fault));
+    // ESP_LOGI(TAG, "Set brake mode on the fault event");
+    // mcpwm_brake_config_t brake_config = {
+    //     .brake_mode = MCPWM_OPER_BRAKE_MODE_CBC,
+    //     .fault = over_cur_fault,
+    //     .flags.cbc_recover_on_tez = true,
+    // };
+    // for (int i = 0; i < 3; i++) {
+    //     ESP_ERROR_CHECK(mcpwm_operator_set_brake_on_fault(operators[i], &brake_config));
+    // }
+
+
+
+
+
+
+    ESP_LOGI(TAG, "Create PWM generators");
+    mcpwm_gen_handle_t generators[3][2] = {};
+    mcpwm_generator_config_t gen_config = {};
+    const int gen_gpios[3][2] = 
+    {
+        {BLDC_PWM_UH_GPIO, BLDC_PWM_UL_GPIO},
+        {BLDC_PWM_VH_GPIO, BLDC_PWM_VL_GPIO},
+        {BLDC_PWM_WH_GPIO, BLDC_PWM_WL_GPIO},
+    };
+    for (int i = 0; i < 3; i++)
+    {
+        for (int j = 0; j < 2; j++) 
+        {
+            gen_config.gen_gpio_num = gen_gpios[i][j];
+            ESP_ERROR_CHECK(mcpwm_new_generator(operators[i], &gen_config, &generators[i][j]));
+        }
+    }
+
+    ESP_LOGI(TAG, "Set generator actions");
+    // gen_high and gen_low output the same waveform after the following configuration
+    // we will use the dead time module to add edge delay, also make gen_high and gen_low complementary
+    for (int i = 0; i < 3; i++) {
+        ESP_ERROR_CHECK(mcpwm_generator_set_action_on_timer_event(generators[i][BLDC_MCPWM_GEN_INDEX_HIGH],
+                        MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH)));
+        ESP_ERROR_CHECK(mcpwm_generator_set_action_on_compare_event(generators[i][BLDC_MCPWM_GEN_INDEX_HIGH],
+                        MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, comparators[i], MCPWM_GEN_ACTION_LOW)));
+        ESP_ERROR_CHECK(mcpwm_generator_set_action_on_brake_event(generators[i][BLDC_MCPWM_GEN_INDEX_HIGH],
+                        MCPWM_GEN_BRAKE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_OPER_BRAKE_MODE_CBC, MCPWM_GEN_ACTION_LOW)));
+        ESP_ERROR_CHECK(mcpwm_generator_set_action_on_brake_event(generators[i][BLDC_MCPWM_GEN_INDEX_HIGH],
+                        MCPWM_GEN_BRAKE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_OPER_BRAKE_MODE_CBC, MCPWM_GEN_ACTION_LOW)));
+
+        ESP_ERROR_CHECK(mcpwm_generator_set_action_on_timer_event(generators[i][BLDC_MCPWM_GEN_INDEX_LOW],
+                        MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH)));
+        ESP_ERROR_CHECK(mcpwm_generator_set_action_on_compare_event(generators[i][BLDC_MCPWM_GEN_INDEX_LOW],
+                        MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, comparators[i], MCPWM_GEN_ACTION_LOW)));
+        ESP_ERROR_CHECK(mcpwm_generator_set_action_on_brake_event(generators[i][BLDC_MCPWM_GEN_INDEX_LOW],
+                        MCPWM_GEN_BRAKE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_OPER_BRAKE_MODE_CBC, MCPWM_GEN_ACTION_LOW)));
+        ESP_ERROR_CHECK(mcpwm_generator_set_action_on_brake_event(generators[i][BLDC_MCPWM_GEN_INDEX_LOW],
+                        MCPWM_GEN_BRAKE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_OPER_BRAKE_MODE_CBC, MCPWM_GEN_ACTION_LOW)));
+    }
+
+    ESP_LOGI(TAG, "Setup deadtime");
+    mcpwm_dead_time_config_t dt_config = {
+        .posedge_delay_ticks = 5,
+    };
+    for (int i = 0; i < 3; i++) {
+        ESP_ERROR_CHECK(mcpwm_generator_set_dead_time(generators[i][BLDC_MCPWM_GEN_INDEX_HIGH], generators[i][BLDC_MCPWM_GEN_INDEX_HIGH], &dt_config));
+    }
+    dt_config = (mcpwm_dead_time_config_t) {
+        .negedge_delay_ticks = 5,
+        .flags.invert_output = true,
+    };
+    for (int i = 0; i < 3; i++) {
+        ESP_ERROR_CHECK(mcpwm_generator_set_dead_time(generators[i][BLDC_MCPWM_GEN_INDEX_LOW], generators[i][BLDC_MCPWM_GEN_INDEX_LOW], &dt_config));
+    }
+
+    ESP_LOGI(TAG, "Turn off all the gates");
+    for (int i = 0; i < 3; i++) {
+        ESP_ERROR_CHECK(mcpwm_generator_set_force_level(generators[i][BLDC_MCPWM_GEN_INDEX_HIGH], 0, true));
+        // because gen_low is inverted by dead time module, so we need to set force level to 1
+        ESP_ERROR_CHECK(mcpwm_generator_set_force_level(generators[i][BLDC_MCPWM_GEN_INDEX_LOW], 1, true));
+    }
+
+    ESP_LOGI(TAG, "Create Hall sensor capture channels");
+    mcpwm_cap_timer_handle_t cap_timer = NULL;
+    mcpwm_capture_timer_config_t cap_timer_config = {
+        .group_id = 0,
+        .clk_src = MCPWM_CAPTURE_CLK_SRC_DEFAULT,
+    };
+    ESP_ERROR_CHECK(mcpwm_new_capture_timer(&cap_timer_config, &cap_timer));
+    mcpwm_cap_channel_handle_t cap_channels[3];
+    mcpwm_capture_channel_config_t cap_channel_config = {
+        .prescale = 1,
+        .flags.pull_up = true,
+        .flags.neg_edge = true,
+        .flags.pos_edge = true,
+    };
+    const int cap_chan_gpios[3] = {HALL_CAP_U_GPIO, HALL_CAP_V_GPIO, HALL_CAP_W_GPIO};
+    for (int i = 0; i < 3; i++) {
+        cap_channel_config.gpio_num = cap_chan_gpios[i];
+        ESP_ERROR_CHECK(mcpwm_new_capture_channel(cap_timer, &cap_channel_config, &cap_channels[i]));
+    }
+
+    ESP_LOGI(TAG, "Register event callback for capture channels");
+    TaskHandle_t task_to_notify = xTaskGetCurrentTaskHandle();
+    for (int i = 0; i < 3; i++) {
+        mcpwm_capture_event_callbacks_t cbs = {
+            .on_cap = bldc_hall_updated,
+        };
+        ESP_ERROR_CHECK(mcpwm_capture_channel_register_event_callbacks(cap_channels[i], &cbs, task_to_notify));
+    }
+
+    ESP_LOGI(TAG, "Enable capture channels");
+    for (int i = 0; i < 3; i++) {
+        ESP_ERROR_CHECK(mcpwm_capture_channel_enable(cap_channels[i]));
+    }
+
+    ESP_LOGI(TAG, "Enable and start capture timer");
+    ESP_ERROR_CHECK(mcpwm_capture_timer_enable(cap_timer));
+    ESP_ERROR_CHECK(mcpwm_capture_timer_start(cap_timer));
+
+    ESP_LOGI(TAG, "Start a timer to adjust motor speed periodically");
+    esp_timer_handle_t periodic_timer = NULL;
+    const esp_timer_create_args_t periodic_timer_args = {
+        .callback = update_motor_speed_callback,
+        .arg = comparators,
+    };
+    ESP_ERROR_CHECK(esp_timer_create(&periodic_timer_args, &periodic_timer));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(periodic_timer, BLDC_SPEED_UPDATE_PERIOD_US));
+
+    ESP_LOGI(TAG, "Enable MOSFET gate");
+    gpio_set_level(BLDC_DRV_EN_GPIO, 1);
+
+    ESP_LOGI(TAG, "Start the MCPWM timer");
+    ESP_ERROR_CHECK(mcpwm_timer_enable(timer));
+    ESP_ERROR_CHECK(mcpwm_timer_start_stop(timer, MCPWM_TIMER_START_NO_STOP));
+
+    uint32_t hall_sensor_value = 0;
+    while (1) {
+        // The rotation direction is controlled by inverting the hall sensor value
+        hall_sensor_value = bldc_get_hall_sensor_value(BLDC_SPIN_DIRECTION_CCW);
+        if (hall_sensor_value >= 1 && hall_sensor_value <= 6) {
+            s_hall_actions[hall_sensor_value](generators);
+        } else {
+            ESP_LOGE(TAG, "invalid bldc phase, wrong hall sensor value:%"PRIu32, hall_sensor_value);
+        }
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+    }
 }
-
-#endif
-
-
-
-
-
 
 
