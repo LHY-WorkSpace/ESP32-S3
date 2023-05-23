@@ -89,7 +89,8 @@ esp_err_t led_strip_del(led_strip_handle_t strip);
 void LED_Init(void);
 void LED_ON(uint32_t red, uint32_t green, uint32_t blue);
 void LED_OFF(void);
-
+void LEDWave_Task(void);
+void LED_Task(void);
 #ifdef __cplusplus
 }
 #endif

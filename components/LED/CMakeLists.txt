@@ -4,4 +4,6 @@ list(APPEND srcs "src/led_strip_rmt_dev.c" "src/led_strip_rmt_encoder.c")
 
 idf_component_register(SRCS ${srcs}
                        INCLUDE_DIRS "include" "interface"
-                       PRIV_REQUIRES "driver")
+                       PRIV_REQUIRES "driver"
+                                     "Drivers"
+                       )

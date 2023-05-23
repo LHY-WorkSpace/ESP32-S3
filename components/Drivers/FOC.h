@@ -19,9 +19,9 @@ typedef enum
 
 void FOC_GPIO_Init(void);
 void FOC_main(void);
-void ERRER(void);
-void FOC_Task(void);
-
+void PWM_Task(void);
+void SetPWMDuty(uint8_t Phase,uint8_t Value);
+void Foc_CTL(void);
 /*
 
 
