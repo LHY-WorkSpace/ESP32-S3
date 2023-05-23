@@ -127,17 +127,11 @@ void AS5600_Test()
 	AS5600_Init();
     while (1)
     {
-
-		Angle.B16 =0X1234;
-
-		AS5600_WriteData(ZPOS_H_REG,1,&Angle.B08[0]);
-		AS5600_WriteData(ZPOS_L_REG,1,&Angle.B08[1]);
 		memset(Angle.B08,0,sizeof(B16_B08));
-		AS5600_ReadData(ZPOS_H_REG,1,&Angle.B08[0]);
-		AS5600_ReadData(ZPOS_L_REG,1,&Angle.B08[1]);
-
-		// AngleTmp = Angle.B16*360/4096;
-		// printf("Angle_ADC:%d    Angle:%d\r\n",Angle.B16,AngleTmp);
+		AS5600_ReadData(RAW_ANGLE_L_REG,1,&Angle.B08[0]);
+		AS5600_ReadData(RAW_ANGLE_H_REG,1,&Angle.B08[1]);
+		AngleTmp = Angle.B16*360/4096;
+		printf("Angle_ADC:%d    Angle:%d\r\n",Angle.B16,AngleTmp);
 		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
     }
 
