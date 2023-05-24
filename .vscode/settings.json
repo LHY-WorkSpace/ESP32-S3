@@ -1,6 +1,6 @@
 {
-    "idf.flashType": "JTAG",
-    "idf.portWin": "COM4",
+    "idf.flashType": "UART",
+    "idf.portWin": "COM5",
     "idf.adapterTargetName": "esp32s3",
     "idf.openOcdConfigs": [
         "board/esp32s3-builtin.cfg"
@@ -13,6 +13,7 @@
         "temperaturesensor.h": "c",
         "datatype.h": "c",
         "string_view": "c",
-        "mathfun.h": "c"
+        "mathfun.h": "c",
+        "lv_port_disp.h": "c"
     }
 }

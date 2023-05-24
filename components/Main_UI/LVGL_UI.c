@@ -6,7 +6,7 @@
 #include "lv_port_disp.h"
 #include "LVGL_UI.h"
 #include "MathFun.h"
-
+#include "Timer.h"
 //Ðý×ª°ë¾¶
 #define R_LEN (42)
 
@@ -482,8 +482,10 @@ void MainUICreate(void)
 
 void LVGL_Init()
 {
+    Timer_Init();
     lv_init();
 	lv_port_disp_init();
+
 }
 
 

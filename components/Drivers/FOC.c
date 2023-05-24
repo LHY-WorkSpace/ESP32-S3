@@ -16,12 +16,12 @@
 #define id	(10.0f)
 
 // 33 34 35 36 37 在八线SPI时被SRAM和flash占用
-#define UA_A_PIN    (35)
-#define UA_B_PIN    (36)
-#define UB_A_PIN    (37)
-#define UB_B_PIN    (38)
-#define UC_A_PIN    (39)
-#define UC_B_PIN    (40)
+#define UA_A_PIN    (4)
+#define UA_B_PIN    (5)
+#define UB_A_PIN    (6)
+#define UB_B_PIN    (7)
+#define UC_A_PIN    (15)
+#define UC_B_PIN    (16)
 
 #define PWM_FREQ    (1000)//HZ
 
@@ -185,9 +185,7 @@ void SetPWMDuty(uint8_t Phase,uint8_t Value)
     {
         return;
     }
-    printf("Duty:%d\r\n",PWM_FREQ*Value/100);
     mcpwm_comparator_set_compare_value(Comparator[Phase], PWM_FREQ*Value/100);
-
 }
 
 
