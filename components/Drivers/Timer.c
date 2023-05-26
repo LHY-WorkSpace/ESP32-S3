@@ -2,6 +2,7 @@
 #include "driver/gptimer.h"
 #include "driver/gpio.h"
 #include "lvgl.h"
+#include "Key.h"
 
 // "driver/gptimer.h"是更新版的"driver/tmer.h"，都能使用，语法不同
 
@@ -43,7 +44,16 @@ void Timer_Init()
 
 static bool example_timer_on_alarm_cb(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx)
 {
+	static uint8_t cnt;
 	lv_tick_inc(LVGL_TICK_PERIOD_MS);
+
+	cnt++;
+
+	if( cnt >= 20 )
+	{
+		button_ticks(); //20 ms
+		cnt=0;
+	}
 	return 0;
 }
 

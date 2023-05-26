@@ -4,7 +4,11 @@
  */
 
 /*Copy this file as "lv_port_disp.c" and set this value to "1" to enable content*/
-#if 0
+
+#define ILI9341_8880_16_BIT     0
+#define ST7789_SPI              1
+
+#if ST7789_SPI
 
 /*********************
  *      INCLUDES
