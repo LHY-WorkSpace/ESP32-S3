@@ -5,7 +5,9 @@ idf_component_register( SRCS	${SOURCES}
                         REQUIRES    
                             driver
                             lvgl
+                            Main_UI
                             esp_http_server
+                            esp_http_client
                             esp_wifi
                             nvs_flash
                             )

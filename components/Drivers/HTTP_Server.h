@@ -6,12 +6,12 @@
 #define MIN(i, j) (((i) < (j)) ? (i) : (j))
 #define MAX(i, j) (((i) > (j)) ? (i) : (j))
 
-#define HTTPD_RESP_USE_STRLEN   (-1)
+// #define HTTPD_RESP_USE_STRLEN   (-1)
 #define WIFI_MAX_SCAN_NUM       (20)
 
 
 void HTTP_Server_Init(void);
 void WIFI_Init(void);
-
+void HTTP_Clent_Init(void);
 
 #endif

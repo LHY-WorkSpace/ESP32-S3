@@ -33,8 +33,8 @@
 #define EYE_HIGHLIGHT_LOW_Y		( 18)
 
 
-#define ROTATEDIR_FORWARD     ( 1)//顺时针
-#define ROTATEDIR_OPPOSITE    (-1)//逆时针
+#define ROTATEDIR_FORWARD     (0x01)//顺时针
+#define ROTATEDIR_OPPOSITE    (0xFF)//逆时针
 
 
 
@@ -473,8 +473,8 @@ void MainUICreate(void)
 {
     //lv_meter_1();
     // MeterTest();
-    // Eye_Main();
-    lv_demo_benchmark();
+    Eye_Main();
+    // lv_demo_benchmark();
     // lv_demo_music();
 
 }
@@ -495,8 +495,9 @@ void LVGL_Task()
     Time=xTaskGetTickCount();
     while (1)
     {    
+        //SPI底层有临界保护，频繁调用此函数会导致长时间占用CPU，导致其他任务不执行
 		lv_task_handler();
-        vTaskDelayUntil(&Time,5/portTICK_PERIOD_MS);
+        vTaskDelayUntil(&Time,10/portTICK_PERIOD_MS);
     }
 	vTaskDelete(NULL);
 }

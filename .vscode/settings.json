@@ -14,6 +14,8 @@
         "datatype.h": "c",
         "string_view": "c",
         "mathfun.h": "c",
-        "lv_port_disp.h": "c"
+        "lv_port_disp.h": "c",
+        "http_server.h": "c",
+        "lvgl_ui.h": "c"
     }
 }

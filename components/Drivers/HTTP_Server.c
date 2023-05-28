@@ -5,23 +5,47 @@
 #include "freertos/event_groups.h"
 #include "freertos/task.h"
 #include "esp_http_server.h"
+#include "esp_http_client.h"
 #include "esp_wifi.h"
 #include "HTTP_Server.h"
 #include "esp_mac.h"
 #include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
+#include "esp_netif.h"
 #include "lwip/err.h"
 #include "lwip/sys.h"
+#include "lwip/sockets.h"
+#include "LVGL_UI.h"
 
+
+//================= WIFI ===============================
 #define EXAMPLE_ESP_MAXIMUM_RETRY  3
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
-
 static EventGroupHandle_t s_wifi_event_group;
-
 static const char *TAG = "wifi station + AP";
 static int s_retry_num = 0;
+
+
+//================= Client ===============================
+
+// #if defined(CONFIG_EXAMPLE_IPV4)
+// #define SERVER_IP_ADDR CONFIG_EXAMPLE_IPV4_ADDR
+// #elif defined(CONFIG_EXAMPLE_IPV6)
+// #define SERVER_IP_ADDR CONFIG_EXAMPLE_IPV6_ADDR
+// #else
+// #define SERVER_IP_ADDR "192.168.1.2"
+// #endif
+
+#define CONFIG_EXAMPLE_IPV4
+#define SERVER_IP_ADDR "192.168.1.2"
+#define PORT 6666
+static const char *Client_TAG = "Client Info";
+static const char *payload = " ESP32 Send this Message";
+
+
+
 
 
 
@@ -125,8 +149,7 @@ void stop_webserver(httpd_handle_t server)
 
 
 
-static void wifi_event_handler(void* arg, esp_event_base_t event_base,
-                                    int32_t event_id, void* event_data)
+static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t event_id, void* event_data)
 {
     if (event_id == WIFI_EVENT_AP_STACONNECTED) 
     {
@@ -141,7 +164,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
                  MAC2STR(event->mac), event->aid);
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
-     {
+    {
         esp_wifi_connect();
     } 
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) 
@@ -174,14 +197,6 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
 // https://blog.csdn.net/tianizimark/article/details/124689134?spm=1001.2101.3001.6650.1&utm_medium=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-124689134-blog-129145100.235%5Ev33%5Epc_relevant_default_base3&depth_1-utm_source=distribute.pc_relevant.none-task-blog-2%7Edefault%7ECTRLIST%7ERate-1-124689134-blog-129145100.235%5Ev33%5Epc_relevant_default_base3&utm_relevant_index=2
 void WIFI_Init()
 {
-
-    // wifi_init_config_t wifi_cfg = WIFI_INIT_CONFIG_DEFAULT();
-    // uint16_t number = WIFI_MAX_SCAN_NUM;
-    // wifi_ap_record_t ap_info[WIFI_MAX_SCAN_NUM];
-    // uint16_t ap_count = 0;
-    // memset(ap_info, 0, sizeof(ap_info));
-
-
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
       ESP_ERROR_CHECK(nvs_flash_erase());
@@ -191,7 +206,7 @@ void WIFI_Init()
 
     s_wifi_event_group = xEventGroupCreate();
     
-    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_netif_init());//LWIP
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     // esp_netif_create_default_wifi_ap();
     esp_netif_create_default_wifi_sta();
@@ -224,7 +239,7 @@ void WIFI_Init()
         .ap.channel = 1,
         .ap.authmode = WIFI_AUTH_WPA_WPA2_PSK,
         .ap.ssid_hidden = false,
-        .ap.max_connection = 4,
+        .ap.max_connection = 5,
         .ap.beacon_interval = 100,
     };
 
@@ -251,17 +266,20 @@ void WIFI_Init()
 
     /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
      * happened. */
-    if (bits & WIFI_CONNECTED_BIT) {
+    if (bits & WIFI_CONNECTED_BIT) 
+    {
         ESP_LOGI(TAG, "connected to ap ");
     } 
     else if (bits & WIFI_FAIL_BIT)
     {
         ESP_LOGI(TAG, "Failed to connect to ");
-    } else {
+    } 
+    else 
+    {
         ESP_LOGE(TAG, "UNEXPECTED EVENT");
     }
 
-    start_webserver();
+    //start_webserver();
 
     // esp_wifi_start();
 
@@ -279,6 +297,10 @@ void WIFI_Init()
 
 
 
+
+
+
+
 void HTTP_Server_Init(void)
 {
 
@@ -287,6 +309,132 @@ void HTTP_Server_Init(void)
 
 
 
+
+
+
+
+
+
+
+
+static void tcp_client_task(void *pvParameters)
+{
+    char rx_buffer[128];
+    char host_ip[] = SERVER_IP_ADDR;
+    int addr_family = 0;
+    int ip_protocol = 0;
+
+    while (1) 
+    {
+#if defined(CONFIG_EXAMPLE_IPV4)
+        struct sockaddr_in dest_addr;
+        dest_addr.sin_addr.s_addr = inet_addr(host_ip);
+        dest_addr.sin_family = AF_INET;
+        dest_addr.sin_port = htons(PORT);
+        addr_family = AF_INET;
+        ip_protocol = IPPROTO_IP;
+#elif defined(CONFIG_EXAMPLE_IPV6)
+        struct sockaddr_in6 dest_addr = { 0 };
+        inet6_aton(host_ip, &dest_addr.sin6_addr);
+        dest_addr.sin6_family = AF_INET6;
+        dest_addr.sin6_port = htons(PORT);
+        dest_addr.sin6_scope_id = esp_netif_get_netif_impl_index(EXAMPLE_INTERFACE);
+        addr_family = AF_INET6;
+        ip_protocol = IPPROTO_IPV6;
+#elif defined(CONFIG_EXAMPLE_SOCKET_IP_INPUT_STDIN)
+        struct sockaddr_storage dest_addr = { 0 };
+        ESP_ERROR_CHECK(get_addr_from_stdin(PORT, SOCK_STREAM, &ip_protocol, &addr_family, &dest_addr));
+#endif
+        int sock =  socket(addr_family, SOCK_STREAM, ip_protocol);
+
+        if (sock < 0) 
+        {
+            ESP_LOGE(Client_TAG, "Unable to create socket: errno %d", errno);
+            break;
+        }
+        ESP_LOGI(Client_TAG, "Socket created, connecting to %s:%d", host_ip, PORT);
+
+        int err = connect(sock, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr_in));
+
+        if (err != 0) 
+        {
+            ESP_LOGE(Client_TAG, "Socket unable to connect: errno %d", errno);
+            break;
+        }
+        ESP_LOGI(Client_TAG, "Successfully connected");
+
+        err = send(sock, payload, strlen(payload), 0);
+
+        if (err < 0) 
+        {
+            ESP_LOGE(Client_TAG, "Error occurred during sending: errno %d", errno);
+            break;
+        }
+
+        while (1) 
+        {
+            int len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
+            rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
+            ESP_LOGI(Client_TAG, "Received %d bytes from %s:", len, host_ip);
+            ESP_LOGI(Client_TAG, "%s", rx_buffer);
+            
+            // Error occurred during receiving
+            if (len < 0) 
+            {
+                ESP_LOGE(Client_TAG, "recv failed: errno %d", errno);
+                break;
+            }
+            // Data received
+            else
+            {
+                    switch (rx_buffer[0])
+                    {
+                    case 'P':
+                        RotateEye(0x01,1);
+                        break;
+                      case 'N':
+                        RotateEye(0xFF,1);
+                        break;   
+                      case '1':
+                        ChangeEyeFocalize('1'- 0x30);
+                        break;  
+                                       
+                    default:
+                        ChangeEyeFocalize(rx_buffer[0]- 0x30);
+                        break;
+                    }
+
+
+
+                // if(rx_buffer[0] == 'N')
+                // {
+                //     printf("ESP32 Get!!\n");
+                //     RotateEye();
+                // }
+            }
+
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+        }
+
+        if (sock != -1) 
+        {
+            ESP_LOGE(TAG, "Shutting down socket and restarting...");
+            shutdown(sock, 0);
+            close(sock);
+        }
+    }
+    vTaskDelete(NULL);
+}
+
+
+
+
+
+void HTTP_Clent_Init(void)
+{
+    WIFI_Init();
+    xTaskCreate(tcp_client_task, "tcp_client", 4096, NULL, 5, NULL);
+}
 
 
 

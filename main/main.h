@@ -4,6 +4,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "Timer.h"
+#include "lvgl.h"
 #include "LVGL_UI.h"
 #include "GPIO.h"
 #include "led_strip.h"

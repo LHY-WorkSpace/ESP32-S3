@@ -9,5 +9,6 @@ idf_component_register(SRCS "main.c"
                             Main_UI
                             LED
                             esp_http_server
+                            esp_http_client
                             esp_wifi
                     )
