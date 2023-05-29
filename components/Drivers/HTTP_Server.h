@@ -10,8 +10,8 @@
 #define WIFI_MAX_SCAN_NUM       (20)
 
 
-void HTTP_Server_Init(void);
-void WIFI_Init(void);
-void HTTP_Clent_Init(void);
 
+void WIFI_Init(void);
+void HTTP_Client_Init(void);
+void HTTP_Server_Init(void);
 #endif

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <inttypes.h>
+#include <lwip/netdb.h>
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
@@ -19,130 +20,33 @@
 #include "LVGL_UI.h"
 
 
+
 //================= WIFI ===============================
 #define EXAMPLE_ESP_MAXIMUM_RETRY  3
 #define WIFI_CONNECTED_BIT BIT0
 #define WIFI_FAIL_BIT      BIT1
 static EventGroupHandle_t s_wifi_event_group;
-static const char *TAG = "wifi station + AP";
+static const char *WIFI_TAG = "wifi:";
 static int s_retry_num = 0;
 
 
+
 //================= Client ===============================
-
-// #if defined(CONFIG_EXAMPLE_IPV4)
-// #define SERVER_IP_ADDR CONFIG_EXAMPLE_IPV4_ADDR
-// #elif defined(CONFIG_EXAMPLE_IPV6)
-// #define SERVER_IP_ADDR CONFIG_EXAMPLE_IPV6_ADDR
-// #else
-// #define SERVER_IP_ADDR "192.168.1.2"
-// #endif
-
 #define CONFIG_EXAMPLE_IPV4
 #define SERVER_IP_ADDR "192.168.1.2"
-#define PORT 6666
-static const char *Client_TAG = "Client Info";
-static const char *payload = " ESP32 Send this Message";
+#define SERVER_PORT 6666
+static const char *Client_TAG = "Client:";
+static const char *payload = " ESP32 Online!\r\n";
 
 
 
 
-
-
-
-
-// https://www.cnblogs.com/kerwincui/p/13958590.html
-/* URI 处理函数，在客户端发起 GET /uri 请求时被调用 */
-esp_err_t get_handler(httpd_req_t *req)
-{
-    /* 发送回简单的响应数据包 */
-    const char resp[] = "URI GET Response";
-    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
-    return ESP_OK;
-}
-
-/* URI 处理函数，在客户端发起 POST/uri 请求时被调用 */
-esp_err_t post_handler(httpd_req_t *req)
-{
-    /* 定义 HTTP POST 请求数据的目标缓存区
-     * httpd_req_recv() 只接收 char* 数据，但也可以是
-     * 任意二进制数据（需要类型转换）
-     * 对于字符串数据，null 终止符会被省略，
-     * content_len 会给出字符串的长度 */
-    char content[100];
-
-    /* 如果内容长度大于缓冲区则截断 */
-    size_t recv_size = MIN(req->content_len, sizeof(content));
-
-    int ret = httpd_req_recv(req, content, recv_size);
-    if (ret <= 0) {  /* 返回 0 表示连接已关闭 */
-        /* 检查是否超时 */
-        if (ret == HTTPD_SOCK_ERR_TIMEOUT) {
-            /* 如果是超时，可以调用 httpd_req_recv() 重试
-             * 简单起见，这里我们直接
-             * 响应 HTTP 408（请求超时）错误给客户端 */
-            httpd_resp_send_408(req);
-        }
-        /* 如果发生了错误，返回 ESP_FAIL 可以确保
-         * 底层套接字被关闭 */
-        return ESP_FAIL;
-    }
-
-    /* 发送简单的响应数据包 */
-    const char resp[] = "URI POST Response";
-    httpd_resp_send(req, resp, HTTPD_RESP_USE_STRLEN);
-    return ESP_OK;
-}
-
-/* GET /uri 的 URI 处理结构 */
-httpd_uri_t uri_get = {
-    .uri      = "/uri",
-    .method   = HTTP_GET,
-    .handler  = get_handler,
-    .user_ctx = NULL
-};
-
-/* POST/uri 的 URI 处理结构 */
-httpd_uri_t uri_post = {
-    .uri      = "/uri",
-    .method   = HTTP_POST,
-    .handler  = post_handler,
-    .user_ctx = NULL
-};
-
-/* 启动 Web 服务器的函数 */
-httpd_handle_t start_webserver(void)
-{
-    /* 生成默认的配置参数 */
-    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-
-    /* 置空 esp_http_server 的实例句柄 */
-    httpd_handle_t server = NULL;
-
-    /* 启动 httpd server */
-    if (httpd_start(&server, &config) == ESP_OK) {
-        /* 注册 URI 处理程序 */
-        httpd_register_uri_handler(server, &uri_get);
-        httpd_register_uri_handler(server, &uri_post);
-    }
-    /* 如果服务器启动失败，返回的句柄是 NULL */
-    return server;
-}
-
-/* 停止 Web 服务器的函数 */
-void stop_webserver(httpd_handle_t server)
-{
-    if (server) {
-        /* 停止 httpd server */
-        httpd_stop(server);
-    }
-}
-
-
-
-
-
-
+//================= Server ===============================
+#define OPEN_PORT                   8888
+#define KEEPALIVE_IDLE              5
+#define KEEPALIVE_INTERVAL          5
+#define KEEPALIVE_COUNT             5
+static const char *Server_TAG = "Server:";
 
 
 
@@ -154,13 +58,13 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
     if (event_id == WIFI_EVENT_AP_STACONNECTED) 
     {
         wifi_event_ap_staconnected_t* event = (wifi_event_ap_staconnected_t*) event_data;
-        ESP_LOGI(TAG, "station "MACSTR" join, AID=%d",
+        ESP_LOGI(WIFI_TAG, "station "MACSTR" join, AID=%d",
                  MAC2STR(event->mac), event->aid);
     } 
     else if (event_id == WIFI_EVENT_AP_STADISCONNECTED) 
     {
         wifi_event_ap_stadisconnected_t* event = (wifi_event_ap_stadisconnected_t*) event_data;
-        ESP_LOGI(TAG, "station "MACSTR" leave, AID=%d",
+        ESP_LOGI(WIFI_TAG, "station "MACSTR" leave, AID=%d",
                  MAC2STR(event->mac), event->aid);
     }
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
@@ -172,16 +76,16 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
         if (s_retry_num < EXAMPLE_ESP_MAXIMUM_RETRY) {
             esp_wifi_connect();
             s_retry_num++;
-            ESP_LOGI(TAG, "retry to connect to the AP");
+            ESP_LOGI(WIFI_TAG, "retry to connect to the AP");
         } else {
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
         }
-        ESP_LOGI(TAG,"connect to the AP fail");
+        ESP_LOGI(WIFI_TAG,"connect to the AP fail");
     } 
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) 
     {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+        ESP_LOGI(WIFI_TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
         s_retry_num = 0;
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
     }
@@ -268,15 +172,15 @@ void WIFI_Init()
      * happened. */
     if (bits & WIFI_CONNECTED_BIT) 
     {
-        ESP_LOGI(TAG, "connected to ap ");
+        ESP_LOGI(WIFI_TAG, "connected to ap ");
     } 
     else if (bits & WIFI_FAIL_BIT)
     {
-        ESP_LOGI(TAG, "Failed to connect to ");
+        ESP_LOGI(WIFI_TAG, "Failed to connect to ");
     } 
     else 
     {
-        ESP_LOGE(TAG, "UNEXPECTED EVENT");
+        ESP_LOGE(WIFI_TAG, "UNEXPECTED EVENT");
     }
 
     //start_webserver();
@@ -294,18 +198,123 @@ void WIFI_Init()
 
 
 
-
-
-
-
-
-
-
-void HTTP_Server_Init(void)
+static void do_retransmit(const int sock)
 {
+    int len;
+    char rx_buffer[128];
 
+    do {
+        len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
+        if (len < 0) {
+            ESP_LOGE(Server_TAG, "Error occurred during receiving: errno %d", errno);
+        } else if (len == 0) {
+            ESP_LOGW(Server_TAG, "Connection closed");
+        } else {
+            rx_buffer[len] = 0; // Null-terminate whatever is received and treat it like a string
+            ESP_LOGI(Server_TAG, "Received %d bytes: %s", len, rx_buffer);
 
+            // send() can return less bytes than supplied length.
+            // Walk-around for robust implementation.
+            int to_write = len;
+            while (to_write > 0) {
+                int written = send(sock, rx_buffer + (len - to_write), to_write, 0);
+                if (written < 0) {
+                    ESP_LOGE(Server_TAG, "Error occurred during sending: errno %d", errno);
+                }
+                to_write -= written;
+            }
+        }
+    } while (len > 0);
 }
+
+
+
+static void tcp_server_task(void *pvParameters)
+{
+    char addr_str[128];
+    int addr_family = (int)pvParameters;
+    int ip_protocol = 0;
+    int keepAlive = 1;
+    int keepIdle = KEEPALIVE_IDLE;
+    int keepInterval = KEEPALIVE_INTERVAL;
+    int keepCount = KEEPALIVE_COUNT;
+    struct sockaddr_storage dest_addr;
+
+    if (addr_family == AF_INET) {
+        struct sockaddr_in *dest_addr_ip4 = (struct sockaddr_in *)&dest_addr;
+        dest_addr_ip4->sin_addr.s_addr = htonl(INADDR_ANY);
+        dest_addr_ip4->sin_family = AF_INET;
+        dest_addr_ip4->sin_port = htons(OPEN_PORT);
+        ip_protocol = IPPROTO_IP;
+    }
+
+
+    int listen_sock = socket(addr_family, SOCK_STREAM, ip_protocol);
+    if (listen_sock < 0) {
+        ESP_LOGE(Server_TAG, "Unable to create socket: errno %d", errno);
+        vTaskDelete(NULL);
+        return;
+    }
+    int opt = 1;
+    setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+// #if defined(CONFIG_EXAMPLE_IPV4) && defined(CONFIG_EXAMPLE_IPV6)
+//     // Note that by default IPV6 binds to both protocols, it is must be disabled
+//     // if both protocols used at the same time (used in CI)
+//     setsockopt(listen_sock, IPPROTO_IPV6, IPV6_V6ONLY, &opt, sizeof(opt));
+// #endif
+
+    ESP_LOGI(Server_TAG, "Socket created");
+
+    int err = bind(listen_sock, (struct sockaddr *)&dest_addr, sizeof(dest_addr));
+    if (err != 0) {
+        ESP_LOGE(Server_TAG, "Socket unable to bind: errno %d", errno);
+        ESP_LOGE(Server_TAG, "IPPROTO: %d", addr_family);
+        goto CLEAN_UP;
+    }
+    ESP_LOGI(Server_TAG, "Socket bound, port %d", SERVER_PORT);
+
+    err = listen(listen_sock, 1);
+    if (err != 0) {
+        ESP_LOGE(Server_TAG, "Error occurred during listen: errno %d", errno);
+        goto CLEAN_UP;
+    }
+
+    while (1) {
+
+        ESP_LOGI(Server_TAG, "Socket listening");
+
+        struct sockaddr_storage source_addr; // Large enough for both IPv4 or IPv6
+        socklen_t addr_len = sizeof(source_addr);
+        int sock = accept(listen_sock, (struct sockaddr *)&source_addr, &addr_len);
+        if (sock < 0) {
+            ESP_LOGE(Server_TAG, "Unable to accept connection: errno %d", errno);
+            break;
+        }
+
+        // Set tcp keepalive option
+        setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &keepAlive, sizeof(int));
+        setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, &keepIdle, sizeof(int));
+        setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, &keepInterval, sizeof(int));
+        setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, &keepCount, sizeof(int));
+        // Convert ip address to string
+        if (source_addr.ss_family == PF_INET) {
+            inet_ntoa_r(((struct sockaddr_in *)&source_addr)->sin_addr, addr_str, sizeof(addr_str) - 1);
+        }
+
+        ESP_LOGI(Server_TAG, "Socket accepted ip address: %s", addr_str);
+
+        do_retransmit(sock);
+
+        shutdown(sock, 0);
+        close(sock);
+    }
+
+CLEAN_UP:
+    close(listen_sock);
+    vTaskDelete(NULL);
+}
+
+
 
 
 
@@ -323,45 +332,43 @@ static void tcp_client_task(void *pvParameters)
     char host_ip[] = SERVER_IP_ADDR;
     int addr_family = 0;
     int ip_protocol = 0;
+    int err,sock;
+    struct sockaddr_in dest_addr;
 
     while (1) 
     {
-#if defined(CONFIG_EXAMPLE_IPV4)
-        struct sockaddr_in dest_addr;
-        dest_addr.sin_addr.s_addr = inet_addr(host_ip);
-        dest_addr.sin_family = AF_INET;
-        dest_addr.sin_port = htons(PORT);
-        addr_family = AF_INET;
-        ip_protocol = IPPROTO_IP;
-#elif defined(CONFIG_EXAMPLE_IPV6)
-        struct sockaddr_in6 dest_addr = { 0 };
-        inet6_aton(host_ip, &dest_addr.sin6_addr);
-        dest_addr.sin6_family = AF_INET6;
-        dest_addr.sin6_port = htons(PORT);
-        dest_addr.sin6_scope_id = esp_netif_get_netif_impl_index(EXAMPLE_INTERFACE);
-        addr_family = AF_INET6;
-        ip_protocol = IPPROTO_IPV6;
-#elif defined(CONFIG_EXAMPLE_SOCKET_IP_INPUT_STDIN)
-        struct sockaddr_storage dest_addr = { 0 };
-        ESP_ERROR_CHECK(get_addr_from_stdin(PORT, SOCK_STREAM, &ip_protocol, &addr_family, &dest_addr));
-#endif
-        int sock =  socket(addr_family, SOCK_STREAM, ip_protocol);
-
-        if (sock < 0) 
+        while (1)
         {
-            ESP_LOGE(Client_TAG, "Unable to create socket: errno %d", errno);
-            break;
-        }
-        ESP_LOGI(Client_TAG, "Socket created, connecting to %s:%d", host_ip, PORT);
+            dest_addr.sin_addr.s_addr = inet_addr(host_ip);
+            dest_addr.sin_family = AF_INET;
+            dest_addr.sin_port = htons(SERVER_PORT);
+            addr_family = AF_INET;
+            ip_protocol = IPPROTO_IP;
 
-        int err = connect(sock, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr_in));
+            sock =  socket(addr_family, SOCK_STREAM, ip_protocol);
 
-        if (err != 0) 
-        {
-            ESP_LOGE(Client_TAG, "Socket unable to connect: errno %d", errno);
-            break;
+            if (sock < 0) 
+            {
+                ESP_LOGE(Client_TAG, "Unable to create socket: errno %d", errno);
+            }
+            else
+            {
+                ESP_LOGI(Client_TAG, "Socket created, connecting to %s:%d", host_ip, SERVER_PORT);
+
+                err = connect(sock, (struct sockaddr *)&dest_addr, sizeof(struct sockaddr_in));
+
+                if (err != 0) 
+                {
+                    ESP_LOGE(Client_TAG, "Socket unable to connect: errno %d", errno);
+                }
+                else
+                {
+                    break;
+                }
+            }
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
-        ESP_LOGI(Client_TAG, "Successfully connected");
+    
 
         err = send(sock, payload, strlen(payload), 0);
 
@@ -375,13 +382,12 @@ static void tcp_client_task(void *pvParameters)
         {
             int len = recv(sock, rx_buffer, sizeof(rx_buffer) - 1, 0);
             rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
-            ESP_LOGI(Client_TAG, "Received %d bytes from %s:", len, host_ip);
-            ESP_LOGI(Client_TAG, "%s", rx_buffer);
-            
+            // ESP_LOGI(Client_TAG, "Received %d bytes from %s:", len, host_ip);
+            // ESP_LOGI(Client_TAG, "%s", rx_buffer);
             // Error occurred during receiving
             if (len < 0) 
             {
-                ESP_LOGE(Client_TAG, "recv failed: errno %d", errno);
+                ESP_LOGE(Client_TAG, "RX Error :%d", errno);
                 break;
             }
             // Data received
@@ -400,27 +406,26 @@ static void tcp_client_task(void *pvParameters)
                         break;  
                                        
                     default:
+                        printf("times:%d\r\n",(uint8_t)(rx_buffer[0]- 0x30));
                         ChangeEyeFocalize(rx_buffer[0]- 0x30);
                         break;
                     }
-
-
-
-                // if(rx_buffer[0] == 'N')
-                // {
-                //     printf("ESP32 Get!!\n");
-                //     RotateEye();
-                // }
+                err = send(sock, rx_buffer, strlen(rx_buffer), 0);
+                if(err <0)
+                {
+                    send(sock, rx_buffer, strlen(rx_buffer), 0);
+                }
             }
 
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
+            vTaskDelay(500 / portTICK_PERIOD_MS);
         }
 
         if (sock != -1) 
         {
-            ESP_LOGE(TAG, "Shutting down socket and restarting...");
+            ESP_LOGE(Client_TAG, "Shutting down socket and restarting...");
             shutdown(sock, 0);
             close(sock);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
         }
     }
     vTaskDelete(NULL);
@@ -430,12 +435,18 @@ static void tcp_client_task(void *pvParameters)
 
 
 
-void HTTP_Clent_Init(void)
+void HTTP_Client_Init(void)
 {
-    WIFI_Init();
+    // WIFI_Init();
     xTaskCreate(tcp_client_task, "tcp_client", 4096, NULL, 5, NULL);
 }
 
+
+void HTTP_Server_Init(void)
+{
+    // WIFI_Init();
+    xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET, 5, NULL);
+}
 
 
 

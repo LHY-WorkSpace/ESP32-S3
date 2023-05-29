@@ -16,6 +16,7 @@
         "mathfun.h": "c",
         "lv_port_disp.h": "c",
         "http_server.h": "c",
-        "lvgl_ui.h": "c"
+        "lvgl_ui.h": "c",
+        "cerrno": "c"
     }
 }
