@@ -17,6 +17,12 @@
         "lv_port_disp.h": "c",
         "http_server.h": "c",
         "lvgl_ui.h": "c",
-        "cerrno": "c"
+        "cerrno": "c",
+        "wifi.h": "c",
+        "tcp_server.h": "c",
+        "sdkconfig.h": "c",
+        "udp_client.h": "c",
+        "udp_server.h": "c",
+        "param.h": "c"
     }
 }

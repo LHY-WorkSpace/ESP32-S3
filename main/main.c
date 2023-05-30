@@ -17,8 +17,10 @@ void app_main(void)
 	LED_Init();
 
 	WIFI_Init();
-	HTTP_Client_Init();
-	HTTP_Server_Init();
+	// TCP_Client_Init();
+	// TCP_Server_Init();
+	//UDP_Client_Init();
+	// UDP_Server_Init();
 	// FOC_GPIO_Init();
 
 	LVGL_Init();
