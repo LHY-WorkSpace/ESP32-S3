@@ -20,7 +20,7 @@ void app_main(void)
 	// TCP_Client_Init();
 	// TCP_Server_Init();
 	//UDP_Client_Init();
-	// UDP_Server_Init();
+
 	// FOC_GPIO_Init();
 
 	LVGL_Init();
@@ -30,7 +30,7 @@ void app_main(void)
 	// xTaskCreatePinnedToCore( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL,0);
 	// xTaskCreatePinnedToCore( (TaskFunction_t)LED_Task,"LED_Task",4000,NULL,12,NULL,0);
 
-	xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL);
+	xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4096,NULL,11,NULL);
 	xTaskCreate( (TaskFunction_t)LED_Task,"LED_Task",4096,NULL,12,NULL);
 	//xTaskCreate( (TaskFunction_t)TemperatureSensor_Task,"Temperature",4096,NULL,12,NULL);
 	// xTaskCreate( (TaskFunction_t)LEDWave_Task,"Wave_Task",4096,NULL,12,NULL);
