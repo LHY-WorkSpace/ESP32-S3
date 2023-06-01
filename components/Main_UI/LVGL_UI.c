@@ -469,11 +469,59 @@ void lv_meter_1(void)
 
 
 
+
+
+lv_obj_t *OPAbg;
+lv_obj_t *TESTOBJ;
+lv_anim_t OAPaNIM;
+
+static void OPAAINMASD(void *var, int32_t v)
+{
+    printf("OPA :%ld\r\n",v );
+    lv_obj_set_style_opa(TESTOBJ,v,LV_PART_MAIN);
+}
+
+
+void OpaTest()
+{
+
+    OPAbg = lv_obj_create(lv_scr_act());
+    lv_obj_set_size(OPAbg,240,240);
+    lv_obj_set_style_bg_color(OPAbg,lv_color_black(),LV_PART_MAIN);
+    lv_obj_set_style_radius(OPAbg,0,LV_PART_MAIN);
+    lv_obj_set_style_border_side(OPAbg,LV_BORDER_SIDE_FULL,LV_PART_MAIN);
+    lv_obj_set_style_border_color(OPAbg,lv_color_white(),LV_PART_MAIN);
+    lv_obj_set_style_border_width(OPAbg,0,LV_PART_MAIN);
+    lv_obj_set_scrollbar_mode(OPAbg,LV_SCROLLBAR_MODE_OFF);
+
+
+    TESTOBJ = lv_obj_create(OPAbg);
+    lv_obj_set_size(TESTOBJ,100,100);
+    lv_obj_set_style_bg_color(TESTOBJ,lv_color_make(56,110,23),LV_PART_MAIN);
+    lv_obj_set_style_radius(TESTOBJ,20,LV_PART_MAIN);
+    lv_obj_set_style_opa(TESTOBJ,LV_OPA_20,LV_PART_MAIN);
+
+
+    lv_anim_init(&OAPaNIM);
+    lv_anim_set_var(&OAPaNIM,TESTOBJ);
+    lv_anim_set_values(&OAPaNIM,0,250);
+    lv_anim_set_time(&OAPaNIM, 3000);
+    lv_anim_set_delay(&OAPaNIM, 500);
+    lv_anim_set_exec_cb(&OAPaNIM, OPAAINMASD);
+    lv_anim_set_path_cb(&OAPaNIM,lv_anim_path_ease_in_out);
+    lv_anim_set_repeat_delay(&OAPaNIM,200);
+    lv_anim_set_repeat_count(&OAPaNIM, LV_ANIM_REPEAT_INFINITE);
+    lv_anim_start(&OAPaNIM);
+
+}
+
+
 void MainUICreate(void)
 {
     //lv_meter_1();
     // MeterTest();
-    Eye_Main();
+    // Eye_Main();
+    OpaTest();
     // lv_demo_benchmark();
     // lv_demo_music();
 
