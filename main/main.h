@@ -19,6 +19,6 @@
 #include "IIC.h"
 #include "AS5600.h"
 #include "DataType.h"
-
+#include "ADC.h"
 
 

@@ -9,7 +9,9 @@ idf_component_register( SRCS	${SOURCES}
                             esp_http_server
                             esp_http_client
                             esp_wifi
+                            esp_adc
                             nvs_flash
+                            LED
                             )
 
 

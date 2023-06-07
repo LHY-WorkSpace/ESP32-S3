@@ -74,6 +74,8 @@ static void FaceAnim_CB(void *var, int32_t v)
     if(LV_OPA_COVER == v)
     {
         Eye_BodyAnimPath();
+        lv_anim_del((void *)&FaceAnim,FaceAnim_CB);
+        
     }
 }
 
