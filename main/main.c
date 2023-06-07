@@ -25,8 +25,6 @@ void app_main(void)
 
 	LVGL_Init();
 
-	MainUICreate();
-
 	// xTaskCreatePinnedToCore( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL,0);
 	// xTaskCreatePinnedToCore( (TaskFunction_t)LED_Task,"LED_Task",4000,NULL,12,NULL,0);
 
