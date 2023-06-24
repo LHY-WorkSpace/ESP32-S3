@@ -12,8 +12,14 @@
 #include "FOC.h"
 
 
-#define iq	(10.0f)
-#define id	(10.0f)
+#define iq	(3.0f)
+#define id	(0.0f)
+#define VCC_MOTOR	(12.0f)
+
+// 7 pair(*2) magnet
+// 6 pair(*2) coil
+#define POLE_PAIR	(6)
+
 
 // 33 34 35 36 37 在八线SPI时被SRAM和flash占用
 #define UA_A_PIN    (4)
@@ -22,8 +28,8 @@
 #define UB_B_PIN    (7)
 #define UC_A_PIN    (15)
 #define UC_B_PIN    (16)
-
-#define PWM_FREQ    (1000)//HZ
+#define TICK_HZ     (1*1000*1000)//1MHz
+#define PWM_FREQ    (20000)//HZ
 
 
 uint8_t PinGroup[U_PhaseMax][PWM_Max]=
@@ -46,8 +52,8 @@ void FOC_GPIO_Init(void)
     {
         .group_id = 0,
         .clk_src = MCPWM_TIMER_CLK_SRC_DEFAULT,
-        .resolution_hz = 1 * 1000 * 1000,
-        .period_ticks = (1 * 1000 * 1000)/PWM_FREQ,
+        .resolution_hz = TICK_HZ,
+        .period_ticks =  TICK_HZ/PWM_FREQ,
         .count_mode = MCPWM_TIMER_COUNT_MODE_UP,
     };
     //分配一个定时器;
@@ -152,7 +158,16 @@ void FOC_GPIO_Init(void)
     mcpwm_timer_start_stop(Timer,MCPWM_TIMER_START_NO_STOP);
 
 }
+//求电角度
+float ElectricalAngle(float shaft_angle, int pole_pairs) 
+{
+  return (shaft_angle * pole_pairs);
+}
 
+float LimitAngle(float shaft_angle) 
+{
+  return (float)((int)shaft_angle % 360);
+}
 
 
 // 帕克逆变换+克拉克逆变换
@@ -185,7 +200,7 @@ void SetPWMDuty(uint8_t Phase,uint8_t Value)
     {
         return;
     }
-    mcpwm_comparator_set_compare_value(Comparator[Phase], PWM_FREQ*Value/100);
+    mcpwm_comparator_set_compare_value(Comparator[Phase], TICK_HZ/PWM_FREQ*Value/100);
 }
 
 
@@ -219,25 +234,57 @@ void Foc_CTL()
 	static float Angle  = 1.0f;
     TickType_t Time;	
 	float I[3];
+    float angtmp;
 
     Time = xTaskGetTickCount();
     while (1)
     {
-		I[0] = IA(Angle)+15;
-		I[1] = IB(Angle)+15;
-		I[2] = IC(Angle)+15;
-		
-		Angle++;
-		SetPWMDuty(UA_Phase,(uint8_t)(I[0]*100/30));
-		SetPWMDuty(UB_Phase,(uint8_t)(I[1]*100/30));
-		SetPWMDuty(UC_Phase,(uint8_t)(I[2]*100/30));
-		printf("Angle:%.2f Ia:%.2f Ib:%.2f Ic:%.2f\r\n",Angle,I[0],I[1],I[2]);
+		Angle += 10.0;
+
+        angtmp = ElectricalAngle(Angle,POLE_PAIR);
+        angtmp = LimitAngle(angtmp);
+		I[0] = IA(angtmp)+VCC_MOTOR/2;
+		I[1] = IB(angtmp)+VCC_MOTOR/2;
+		I[2] = IC(angtmp)+VCC_MOTOR/2;
+        
+		SetPWMDuty(UA_Phase,(uint8_t)(I[0]*100/VCC_MOTOR));
+		SetPWMDuty(UB_Phase,(uint8_t)(I[1]*100/VCC_MOTOR));
+		SetPWMDuty(UC_Phase,(uint8_t)(I[2]*100/VCC_MOTOR));
+		printf("Angle:%.2f Ia:%.2f Ib:%.2f Ic:%.2f\r\n",Angle,I[0]/VCC_MOTOR,I[1]/VCC_MOTOR,I[2]/VCC_MOTOR);
 
 		if(Angle >= 360.0f)
 		{
 			Angle = 0.0f;
 		}
-		vTaskDelayUntil(&Time,10/portTICK_PERIOD_MS);
+		vTaskDelayUntil(&Time,1/portTICK_PERIOD_MS);
     }
 	vTaskDelete(NULL);
+}
+
+
+
+
+void FOC_Task()
+{
+	static float Angle  = 1.0f;	
+	float I[3];
+    float angtmp;
+
+		Angle += 10.0;
+
+        angtmp = ElectricalAngle(Angle,POLE_PAIR);
+        angtmp = LimitAngle(angtmp);
+		I[0] = IA(angtmp)+VCC_MOTOR/2;
+		I[1] = IB(angtmp)+VCC_MOTOR/2;
+		I[2] = IC(angtmp)+VCC_MOTOR/2;
+        
+		SetPWMDuty(UA_Phase,(uint8_t)(I[0]*100/VCC_MOTOR));
+		SetPWMDuty(UB_Phase,(uint8_t)(I[1]*100/VCC_MOTOR));
+		SetPWMDuty(UC_Phase,(uint8_t)(I[2]*100/VCC_MOTOR));
+		//printf("Angle:%.2f Ia:%.2f Ib:%.2f Ic:%.2f\r\n",Angle,I[0]/VCC_MOTOR,I[1]/VCC_MOTOR,I[2]/VCC_MOTOR);
+
+		if(Angle >= 360.0f)
+		{
+			Angle = 0.0f;
+		}
 }

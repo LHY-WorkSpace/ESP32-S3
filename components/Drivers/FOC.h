@@ -22,5 +22,6 @@ void FOC_main(void);
 void PWM_Task(void);
 void SetPWMDuty(uint8_t Phase,uint8_t Value);
 void Foc_CTL(void);
+void FOC_Task(void);
 #endif
 

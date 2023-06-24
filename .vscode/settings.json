@@ -24,6 +24,7 @@
         "udp_client.h": "c",
         "udp_server.h": "c",
         "param.h": "c",
-        "inttypes.h": "c"
+        "inttypes.h": "c",
+        "foc.h": "c"
     }
 }
