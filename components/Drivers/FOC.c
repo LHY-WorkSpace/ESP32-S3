@@ -12,13 +12,12 @@
 #include "FOC.h"
 
 
-#define iq	(3.0f)
-#define id	(0.0f)
-#define VCC_MOTOR	(12.0f)
-
 // 7 pair(*2) magnet
 // 6 pair(*2) coil
 #define POLE_PAIR	(6)
+#define Uq          (3.0f)
+#define Ud          (0.0f)
+#define VCC_MOTOR	(12.0f)
 
 
 // 33 34 35 36 37 在八线SPI时被SRAM和flash占用
@@ -174,22 +173,45 @@ float LimitAngle(float shaft_angle)
 float IA(float Angle)
 {
 	float Temp;
-	Temp = id * FastCos(DEGTORAD(Angle)) + iq * FastSin(DEGTORAD(Angle));
+	Temp = Ud * FastCos(DEGTORAD(Angle)) + Uq * FastSin(DEGTORAD(Angle));
 	return Temp;
 }
 
 float IB(float Angle)
 {
 	float Temp;
-	Temp = iq *( 0.866f * FastCos(DEGTORAD(Angle)) + 0.5f * FastSin(DEGTORAD(Angle)) ) + id * (0.866f * FastSin(DEGTORAD(Angle)) - 0.5f * FastCos(DEGTORAD(Angle)));
+	Temp = Uq *( 0.866f * FastCos(DEGTORAD(Angle)) + 0.5f * FastSin(DEGTORAD(Angle)) ) + Ud * (0.866f * FastSin(DEGTORAD(Angle)) - 0.5f * FastCos(DEGTORAD(Angle)));
 	return Temp;
 }
 
 float IC(float Angle)
 {
 	float Temp;
-	Temp = iq *( 0.5f * FastSin(DEGTORAD(Angle)) - 0.866f * FastCos(DEGTORAD(Angle))) + id * ( 0.5f * FastCos(DEGTORAD(Angle)) + 0.866f * FastSin(DEGTORAD(Angle)) );
+	Temp = Uq *( 0.5f * FastSin(DEGTORAD(Angle)) - 0.866f * FastCos(DEGTORAD(Angle))) + Ud * ( 0.5f * FastCos(DEGTORAD(Angle)) + 0.866f * FastSin(DEGTORAD(Angle)) );
 	return Temp;
+}
+
+
+//逆变换
+void N_Transform(float uq, float ud, float Angle)
+{
+    float Ua,Ub,Uc;
+    float Ualpha,Ubeta; 
+
+    //帕克逆变换
+    Ualpha =  -uq*FastSin(DEGTORAD(Angle)); 
+    Ubeta =   uq*FastCos(DEGTORAD(Angle)); 
+
+    // 克拉克逆变换
+    Ua = Ualpha + VCC_MOTOR/2;
+    Ub = (sqrt(3)*Ubeta-Ualpha)/2 + VCC_MOTOR/2;
+    Uc = (-Ualpha-sqrt(3)*Ubeta)/2 + VCC_MOTOR/2;
+
+    SetPWMDuty(UA_Phase,(uint8_t)(Ua*100/VCC_MOTOR));
+    SetPWMDuty(UB_Phase,(uint8_t)(Ub*100/VCC_MOTOR));
+    SetPWMDuty(UC_Phase,(uint8_t)(Uc*100/VCC_MOTOR));
+    //printf("Angle:%.2f Ia:%.2f Ib:%.2f Ic:%.2f\r\n",Angle,Ua,Ub,Uc);
+
 }
 
 
@@ -200,6 +222,12 @@ void SetPWMDuty(uint8_t Phase,uint8_t Value)
     {
         return;
     }
+
+    if( Value > 100)
+    {
+        return;
+    }
+
     mcpwm_comparator_set_compare_value(Comparator[Phase], TICK_HZ/PWM_FREQ*Value/100);
 }
 
@@ -239,24 +267,17 @@ void Foc_CTL()
     Time = xTaskGetTickCount();
     while (1)
     {
-		Angle += 10.0;
-
+		Angle += 5.0;
         angtmp = ElectricalAngle(Angle,POLE_PAIR);
         angtmp = LimitAngle(angtmp);
-		I[0] = IA(angtmp)+VCC_MOTOR/2;
-		I[1] = IB(angtmp)+VCC_MOTOR/2;
-		I[2] = IC(angtmp)+VCC_MOTOR/2;
-        
-		SetPWMDuty(UA_Phase,(uint8_t)(I[0]*100/VCC_MOTOR));
-		SetPWMDuty(UB_Phase,(uint8_t)(I[1]*100/VCC_MOTOR));
-		SetPWMDuty(UC_Phase,(uint8_t)(I[2]*100/VCC_MOTOR));
-		printf("Angle:%.2f Ia:%.2f Ib:%.2f Ic:%.2f\r\n",Angle,I[0]/VCC_MOTOR,I[1]/VCC_MOTOR,I[2]/VCC_MOTOR);
+
+        N_Transform(Uq,0,angtmp);
 
 		if(Angle >= 360.0f)
 		{
 			Angle = 0.0f;
 		}
-		vTaskDelayUntil(&Time,1/portTICK_PERIOD_MS);
+		vTaskDelayUntil(&Time,2/portTICK_PERIOD_MS);
     }
 	vTaskDelete(NULL);
 }
