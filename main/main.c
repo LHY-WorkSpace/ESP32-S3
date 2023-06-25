@@ -16,8 +16,8 @@ void app_main(void)
 
 	LED_Init();
 
-	// WIFI_Init();
-	// TCP_Client_Init();
+	WIFI_Init();
+	TCP_Client_Init();
 	// TCP_Server_Init();
 	//UDP_Client_Init();
 
@@ -39,7 +39,7 @@ void app_main(void)
 	// xTaskCreate( (TaskFunction_t)FOC_Task,"FOC_Task",4096,NULL,12,NULL);
 	xTaskCreate( (TaskFunction_t)Foc_CTL,"FOC_Task",4096,NULL,12,NULL);
   	//xTaskCreate( (TaskFunction_t)IIC_Test,"EE_Task",4500,NULL,11,NULL);
-	//xTaskCreate( (TaskFunction_t)AS5600_Test,"AS5600_Task",4096,NULL,12,NULL);
+	xTaskCreate( (TaskFunction_t)AS5600_Test,"AS5600_Task",4096,NULL,12,NULL);
 }
  
 

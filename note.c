@@ -15,7 +15,8 @@ float shaft_angle=0,open_loop_timestamp=0;
 float zero_electric_angle=0,Ualpha,Ubeta=0,Ua=0,Ub=0,Uc=0,dc_a=0,dc_b=0,dc_c=0;
 
 
-void setup() {
+void setup() 
+{
   // put your setup code here, to run once:
   Serial.begin(115200);
   //PWM…Ë÷√

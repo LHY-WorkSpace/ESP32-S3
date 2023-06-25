@@ -25,6 +25,7 @@
         "udp_server.h": "c",
         "param.h": "c",
         "inttypes.h": "c",
-        "foc.h": "c"
+        "foc.h": "c",
+        "as5600.h": "c"
     }
 }

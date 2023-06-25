@@ -16,7 +16,7 @@ typedef enum
     PWM_Max,
 }PwmChannel_e;
 
-
+extern uint8_t Addval;
 void FOC_GPIO_Init(void);
 void FOC_main(void);
 void PWM_Task(void);

@@ -117,7 +117,7 @@ void AS5600_ReadData(uint8_t addr,uint8_t length,uint8_t *data)
 
 
 
-
+uint16_t AS5600Angle=0;
 void AS5600_Test()
 {
     TickType_t Time;	
@@ -131,8 +131,9 @@ void AS5600_Test()
 		AS5600_ReadData(RAW_ANGLE_L_REG,1,&Angle.B08[0]);
 		AS5600_ReadData(RAW_ANGLE_H_REG,1,&Angle.B08[1]);
 		AngleTmp = Angle.B16*360/4096;
-		printf("Angle:%d\r\n",AngleTmp);
-		vTaskDelayUntil(&Time,10/portTICK_PERIOD_MS);
+		AS5600Angle = AngleTmp;
+		///printf("Angle:%d\r\n",AngleTmp);
+		vTaskDelayUntil(&Time,1/portTICK_PERIOD_MS);
     }
 
 	vTaskDelete(NULL);

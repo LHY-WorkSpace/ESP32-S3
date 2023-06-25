@@ -10,12 +10,12 @@
 #include "driver/mcpwm_timer.h"
 #include "MathFun.h"
 #include "FOC.h"
-
+#include "AS5600.h"
 
 // 7 pair(*2) magnet
 // 6 pair(*2) coil
 #define POLE_PAIR	(6)
-#define Uq          (3.0f)
+#define Uq          (6.0f)
 #define Ud          (0.0f)
 #define VCC_MOTOR	(12.0f)
 
@@ -210,7 +210,7 @@ void N_Transform(float uq, float ud, float Angle)
     SetPWMDuty(UA_Phase,(uint8_t)(Ua*100/VCC_MOTOR));
     SetPWMDuty(UB_Phase,(uint8_t)(Ub*100/VCC_MOTOR));
     SetPWMDuty(UC_Phase,(uint8_t)(Uc*100/VCC_MOTOR));
-    //printf("Angle:%.2f Ia:%.2f Ib:%.2f Ic:%.2f\r\n",Angle,Ua,Ub,Uc);
+    //printf("Angle:%.2f Ia:%d Ib:%d Ic:%d\r\n",Angle,(uint8_t)(Ua*100/VCC_MOTOR),(uint8_t)(Ub*100/VCC_MOTOR),(uint8_t)(Uc*100/VCC_MOTOR));
 
 }
 
@@ -256,7 +256,7 @@ void PWM_Task()
 	vTaskDelete(NULL);
 }
 
-
+uint8_t Addval=10;
 void Foc_CTL()
 {
 	static float Angle  = 1.0f;
@@ -267,8 +267,11 @@ void Foc_CTL()
     Time = xTaskGetTickCount();
     while (1)
     {
-		Angle += 5.0;
-        angtmp = ElectricalAngle(Angle,POLE_PAIR);
+		// Angle += (float)Addval;
+		Angle = (float)AS5600Angle + 1.0;
+        
+        angtmp = LimitAngle(Angle);
+        angtmp = ElectricalAngle(angtmp,7);
         angtmp = LimitAngle(angtmp);
 
         N_Transform(Uq,0,angtmp);
@@ -277,7 +280,7 @@ void Foc_CTL()
 		{
 			Angle = 0.0f;
 		}
-		vTaskDelayUntil(&Time,2/portTICK_PERIOD_MS);
+		vTaskDelayUntil(&Time,1/portTICK_PERIOD_MS);
     }
 	vTaskDelete(NULL);
 }
