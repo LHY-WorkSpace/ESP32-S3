@@ -7,6 +7,7 @@ idf_component_register(SRCS "main.c"
                             driver
                             Drivers
                             Main_UI
+                            UI
                             LED
                             esp_http_server
                             esp_http_client
