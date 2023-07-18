@@ -12,6 +12,8 @@ idf_component_register( SRCS	${SOURCES}
                             esp_adc
                             nvs_flash
                             LED
+                            sdmmc
+                            fatfs
                             )
 
 

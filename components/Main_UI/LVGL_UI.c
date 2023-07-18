@@ -7,13 +7,13 @@
 #include "Timer.h"
 #include "Face.h"
 #include "Face.h"
-#include "ui.h"
+// #include "ui.h"
 static void MainUICreate(void)
 {
     //lv_meter_1();
     // MeterTest();
     //Eye_Main();
-    ui_init();
+    // ui_init();
     // lv_demo_benchmark();
     // lv_demo_music();
 
