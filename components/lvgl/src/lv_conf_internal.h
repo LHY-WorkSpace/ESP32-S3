@@ -2366,7 +2366,7 @@
 /*Benchmark your system*/
 #ifndef LV_USE_DEMO_BENCHMARK
     #ifdef CONFIG_LV_USE_DEMO_BENCHMARK
-        #define LV_USE_DEMO_BENCHMARK CONFIG_LV_USE_DEMO_BENCHMARK
+        #define LV_USE_DEMO_BENCHMARK 1
     #else
         #define LV_USE_DEMO_BENCHMARK 1
     #endif

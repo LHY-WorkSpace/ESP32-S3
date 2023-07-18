@@ -26,6 +26,7 @@
         "param.h": "c",
         "inttypes.h": "c",
         "foc.h": "c",
-        "as5600.h": "c"
+        "as5600.h": "c",
+        "lvgl.h": "c"
     }
 }

@@ -1,7 +1,6 @@
 file(GLOB_RECURSE SOURCES "./*.c"
                           "screens/*.c" 
                           "fonts/*.c"
-                          "images/*.c"
                             )
 
 idf_component_register(SRCS	${SOURCES}
