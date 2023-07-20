@@ -18,17 +18,16 @@ extern "C" {
 void ui_Screen1_screen_init(void);
 extern lv_obj_t * ui_Screen1;
 extern lv_obj_t * ui_Image1;
-extern lv_obj_t * ui_Panel_Num;
 extern lv_obj_t * ui_Panel1;
 extern lv_obj_t * ui_Label2;
+extern lv_obj_t * ui_Panel_Num;
 extern lv_obj_t * ui_Label1;
-extern lv_obj_t * ui_Panel2;
+extern lv_obj_t * ui_Label3;
 extern lv_obj_t * ui____initial_actions0;
 extern lv_obj_t * ui_ImageN[24];
 extern lv_anim_t Indec;
 
-
-LV_IMG_DECLARE(ui_img_bgg_png);    // assets\bgG.png
+LV_IMG_DECLARE(ui_img_akf_gg_png);    // assets\AKF_gg.png
 LV_IMG_DECLARE(ui_img_akf_png);    // assets\AKF.png
 
 void ui_init(void);

@@ -13,7 +13,7 @@ void app_main(void)
     printf("System Online !\n");
 
 	// GPIO_Init();
-	SDIO_Init();
+	//SDIO_Init();
 	LED_Init();
 
 	// WIFI_Init();

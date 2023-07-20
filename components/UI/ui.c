@@ -12,11 +12,11 @@
 void ui_Screen1_screen_init(void);
 lv_obj_t * ui_Screen1;
 lv_obj_t * ui_Image1;
-lv_obj_t * ui_Panel_Num;
 lv_obj_t * ui_Panel1;
 lv_obj_t * ui_Label2;
+lv_obj_t * ui_Panel_Num;
 lv_obj_t * ui_Label1;
-lv_obj_t * ui_Panel2;
+lv_obj_t * ui_Label3;
 lv_obj_t * ui____initial_actions0;
 lv_obj_t * ui_ImageN[24];
 lv_anim_t Indec;
@@ -25,8 +25,8 @@ lv_anim_t Indec;
 #if LV_COLOR_DEPTH != 16
     #error "LV_COLOR_DEPTH should be 16bit to match SquareLine Studio's settings"
 #endif
-#if LV_COLOR_16_SWAP !=0
-    #error "LV_COLOR_16_SWAP should be 0 to match SquareLine Studio's settings"
+#if LV_COLOR_16_SWAP !=1
+    #error "LV_COLOR_16_SWAP should be 1 to match SquareLine Studio's settings"
 #endif
 
 ///////////////////// ANIMATIONS ////////////////////
