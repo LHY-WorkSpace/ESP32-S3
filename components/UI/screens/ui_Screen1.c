@@ -6,6 +6,7 @@
 #include "../ui.h"
 #include <stdio.h>
 
+uint16_t AngTab[16] = {450,300,150,3600,3450,3300,3150,3000,2850,2700,2550,2400,2250,2100,1950,1800};
 
 
 static void Eye_BodyAnimPath_CB(void *var, int32_t v)
@@ -17,11 +18,12 @@ static void Eye_BodyAnimPath_CB(void *var, int32_t v)
     for ( i = 0; i < v; i++)
     {
         lv_obj_add_flag(ui_ImageN[i], LV_OBJ_FLAG_HIDDEN);     /// Flags
+        //lv_obj_clear_flag(ui_ImageN[i], LV_OBJ_FLAG_HIDDEN);
     }
-    lv_label_set_text_fmt(ui_Label2,"%ld",24-v);
+
+    lv_label_set_text_fmt(ui_Label2,"%ld",16-v);
     //printf("%ld\r\n",v);
 }
-
 
 
 
@@ -34,7 +36,7 @@ void ui_Screen1_screen_init(void)
 
     uint8_t i;
 
-    for (i = 0; i < 24; i++)
+    for (i = 0; i < 16; i++)
     {
         ui_ImageN[i] = lv_img_create(ui_Screen1);
         lv_img_set_src(ui_ImageN[i], &ui_img_akf_png);
@@ -46,7 +48,7 @@ void ui_Screen1_screen_init(void)
         lv_obj_add_flag(ui_ImageN[i], LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
         lv_obj_clear_flag(ui_ImageN[i], LV_OBJ_FLAG_SCROLLABLE);      /// Flags
         lv_img_set_pivot(ui_ImageN[i], 27, 109);
-        lv_img_set_angle(ui_ImageN[i], (i+1)*150);
+        lv_img_set_angle(ui_ImageN[i], AngTab[i]);
         // lv_obj_add_flag(ui_ImageN[i], LV_OBJ_FLAG_HIDDEN);     /// Flags
     }
 
@@ -118,8 +120,8 @@ void ui_Screen1_screen_init(void)
 
     lv_anim_init(&Indec);
     lv_anim_set_var(&Indec,ui_ImageN);
-    lv_anim_set_values(&Indec,0,24);
-    lv_anim_set_time(&Indec, 24000);
+    lv_anim_set_values(&Indec,0,16);
+    lv_anim_set_time(&Indec, 16000);
     lv_anim_set_exec_cb(&Indec, Eye_BodyAnimPath_CB);
     lv_anim_set_path_cb(&Indec,lv_anim_path_linear);
     lv_anim_set_repeat_delay(&Indec,1000);
