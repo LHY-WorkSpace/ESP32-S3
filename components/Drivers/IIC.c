@@ -38,11 +38,9 @@ void i2c_master_init()
 void  EEPROMWriteData(uint16_t addr,uint16_t length,uint8_t *data)
 {
 	static uint8_t times;
-	uint8_t k,i;
 	uint16_t PageNum,WR_Len,Offset,LenCount;
 	B16_B08 MemAddr;
     i2c_cmd_handle_t cmd;
-	esp_err_t ret;
 	if( addr >= EEPROM_PAGE_SIZE*EEPROM_PAGES)
 	{
 		return;
@@ -90,7 +88,6 @@ void  EEPROMWriteData(uint16_t addr,uint16_t length,uint8_t *data)
 
 void EEPROMReadData(uint16_t addr,uint16_t length,uint8_t *data)
 {
-	uint16_t i;
 	B16_B08 MemAddr;
 
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
@@ -104,7 +101,7 @@ void EEPROMReadData(uint16_t addr,uint16_t length,uint8_t *data)
 	i2c_master_write_byte(cmd,( EEPROM_ADDRESS | READ_BIT | MemAddr.B08[1]<<1 ), ACK_CHECK_EN);
 	i2c_master_read(cmd, data, length, ACK_VAL);
     i2c_master_stop(cmd);
-    esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 10 / portTICK_PERIOD_MS);
+    i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 10 / portTICK_PERIOD_MS);
     i2c_cmd_link_delete(cmd);
 	vTaskDelay(2 / portTICK_PERIOD_MS);
 
@@ -115,8 +112,6 @@ void EEPROMReadData(uint16_t addr,uint16_t length,uint8_t *data)
 void IIC_Test()
 {
 	uint8_t Data[200];
-    TickType_t Time;	
-    Time=xTaskGetTickCount();
 	i2c_master_init();
 
 	for (uint8_t i = 0; i < sizeof(Data); i++)

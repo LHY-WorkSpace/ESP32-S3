@@ -3,4 +3,8 @@ ui.c
 components/ui_comp_hook.c
 ui_helpers.c
 images/ui_img_akf_gg_png.c
+images/ui_img_centerindec_png.c
 images/ui_img_akf_png.c
+images/ui_img_smallindecotr_1_png.c
+images/ui_img_akf_line_png.c
+fonts/ui_font_Font1.c

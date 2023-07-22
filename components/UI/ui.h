@@ -17,18 +17,29 @@ extern "C" {
 // SCREEN: ui_Screen1
 void ui_Screen1_screen_init(void);
 extern lv_obj_t * ui_Screen1;
-extern lv_obj_t * ui_Image1;
+extern lv_obj_t * ui_Image2[4];
+extern lv_obj_t * centerindecN[4];
+extern lv_obj_t * ui_Indector;
+extern lv_obj_t * ui_BoxSide;
 extern lv_obj_t * ui_Panel1;
 extern lv_obj_t * ui_Label2;
+extern lv_obj_t * ui_Label3;
 extern lv_obj_t * ui_Panel_Num;
 extern lv_obj_t * ui_Label1;
-extern lv_obj_t * ui_Label3;
 extern lv_obj_t * ui____initial_actions0;
 extern lv_obj_t * ui_ImageN[24];
+extern lv_obj_t * ui_SmallIndec1[6];
 extern lv_anim_t Indec;
 
 LV_IMG_DECLARE(ui_img_akf_gg_png);    // assets\AKF_gg.png
+LV_IMG_DECLARE(ui_img_centerindec_png);    // assets\CenterIndec.png
 LV_IMG_DECLARE(ui_img_akf_png);    // assets\AKF.png
+LV_IMG_DECLARE(ui_img_smallindecotr_1_png);    // assets\SmallIndecotr_1.png
+LV_IMG_DECLARE(ui_img_akf_line_png);    // assets\AKF_line.png
+LV_IMG_DECLARE(ui_img_secondindec_png);    // assets\AKF_line.png
+
+
+LV_FONT_DECLARE(ui_font_Font1);
 
 void ui_init(void);
 

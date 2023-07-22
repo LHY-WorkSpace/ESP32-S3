@@ -261,7 +261,6 @@ void Foc_CTL()
 {
 	static float Angle  = 1.0f;
     TickType_t Time;	
-	float I[3];
     float angtmp;
 
     Time = xTaskGetTickCount();
