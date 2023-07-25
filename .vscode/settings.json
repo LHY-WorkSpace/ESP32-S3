@@ -27,6 +27,7 @@
         "inttypes.h": "c",
         "foc.h": "c",
         "as5600.h": "c",
-        "lvgl.h": "c"
+        "lvgl.h": "c",
+        "ui.h": "c"
     }
 }

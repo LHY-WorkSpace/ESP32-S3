@@ -14,32 +14,44 @@ extern "C" {
 
 #include "ui_helpers.h"
 #include "ui_events.h"
-// SCREEN: ui_Screen1
-void ui_Screen1_screen_init(void);
-extern lv_obj_t * ui_Screen1;
-extern lv_obj_t * ui_Image2[4];
-extern lv_obj_t * centerindecN[4];
-extern lv_obj_t * ui_Indector;
+// SCREEN: ui_BoostModeA
+void ui_BoostModeA_screen_init(void);
+extern lv_obj_t * ui_BoostModeA;
+extern lv_obj_t * ui_ChargeIndecB[4];
+extern lv_obj_t * ui_ChargeIndecA[4];
+extern lv_obj_t * ui_MainIndecA[16];
+extern lv_obj_t * ui_MainIndecB[6];
 extern lv_obj_t * ui_BoxSide;
-extern lv_obj_t * ui_Panel1;
-extern lv_obj_t * ui_Label2;
-extern lv_obj_t * ui_Label3;
-extern lv_obj_t * ui_Panel_Num;
-extern lv_obj_t * ui_Label1;
+extern lv_obj_t * ui_SecNumBox;
+extern lv_obj_t * ui_SecNum;
+extern lv_obj_t * ui_SecLable;
+// SCREEN: ui_BoostModeB
+void ui_BoostModeB_screen_init(void);
+extern lv_obj_t * ui_BoostModeB;
+extern lv_obj_t * ui_MainIndeotor[5];
+extern lv_obj_t * ui_Triangle;
+extern lv_obj_t * ui_SmallPointWhite[12];
+extern lv_obj_t * ui_SmallPoint[12];
+extern lv_obj_t * ui_SecConut;
 extern lv_obj_t * ui____initial_actions0;
-extern lv_obj_t * ui_ImageN[24];
-extern lv_obj_t * ui_SmallIndec1[6];
-extern lv_anim_t Indec;
+void Boost2_AnimBegin(void);
+void Boost1_Anim_Del(void);
+
 
 LV_IMG_DECLARE(ui_img_akf_gg_png);    // assets\AKF_gg.png
 LV_IMG_DECLARE(ui_img_centerindec_png);    // assets\CenterIndec.png
+LV_IMG_DECLARE(ui_img_secondindec_png);    // assets\SecondIndec.png
 LV_IMG_DECLARE(ui_img_akf_png);    // assets\AKF.png
 LV_IMG_DECLARE(ui_img_smallindecotr_1_png);    // assets\SmallIndecotr_1.png
 LV_IMG_DECLARE(ui_img_akf_line_png);    // assets\AKF_line.png
-LV_IMG_DECLARE(ui_img_secondindec_png);    // assets\AKF_line.png
+LV_IMG_DECLARE(ui_img_secondbg_png);    // assets\SecondBg.png
+LV_IMG_DECLARE(ui_img_mainindector_png);    // assets\MainIndector.png
+LV_IMG_DECLARE(ui_img_triangle_png);    // assets\Triangle.png
+LV_IMG_DECLARE(ui_img_smallpoint_white_png);    // assets\SmallPoint_White.png
+LV_IMG_DECLARE(ui_img_smallpoint_png);    // assets\SmallPoint.png
 
-
-LV_FONT_DECLARE(ui_font_Font1);
+LV_FONT_DECLARE(ui_font_Seg40);
+LV_FONT_DECLARE(ui_font_Seg48);
 
 void ui_init(void);
 

@@ -133,8 +133,8 @@ static void Eye_BodyAnimPath_CB(void *var, int32_t v)
 
     for ( i = 0; i < 4; i++)
     {
-        if(Eye_tmp == Eye_Group[i])
-        {
+        // if(Eye_tmp == Eye_Group[i])
+        // {
 
 			if( RotateDir == 1)
 			{
@@ -162,7 +162,7 @@ static void Eye_BodyAnimPath_CB(void *var, int32_t v)
 				lv_anim_start(&EyeFocalize_Anim[i]);
 
 			}
-        }
+        // }
     }
 }
 
