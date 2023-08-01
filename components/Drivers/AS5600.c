@@ -111,7 +111,7 @@ void AS5600_ReadData(uint8_t addr,uint8_t length,uint8_t *data)
 
     i2c_master_stop(cmd);
 
-    esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 10 / portTICK_PERIOD_MS);
+    i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, 10 / portTICK_PERIOD_MS);
     i2c_cmd_link_delete(cmd);
 }
 

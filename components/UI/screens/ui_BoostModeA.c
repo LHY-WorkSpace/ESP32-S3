@@ -174,6 +174,12 @@ void ui_BoostModeA_screen_init(void)
 }
 
 
+void Boost1_Anim_Begin()
+{
+    lv_anim_start(&Boost1_Anim);
+}
+
+
 void Boost1_Anim_Del()
 {
     lv_anim_del(ui_MainIndecA,Boost1_Anim_CB);

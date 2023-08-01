@@ -42,8 +42,8 @@ lv_obj_t *Eye_Group[4];
 lv_obj_t *Eye_base[4];//瞳孔
 lv_obj_t *Eye_in_high[4];
 lv_obj_t *Eye_in_low[4];
-lv_anim_t EyeBodyPath_Anim[4];
-lv_anim_t EyeFocalize_Anim[4];
+lv_anim_t EyeBodyPath_Anim;
+lv_anim_t EyeFocalize_Anim;
 lv_obj_t *BackGround;
 lv_obj_t *Face;
 lv_anim_t FaceAnim;
@@ -82,7 +82,7 @@ static void FaceAnim_CB(void *var, int32_t v)
 
 static void Face_Create()
 {
-    BackGround = lv_obj_create(lv_scr_act());
+    BackGround = lv_obj_create(NULL);
     lv_obj_set_size(BackGround,240,240);
     lv_obj_set_style_bg_color(BackGround,lv_color_black(),LV_PART_MAIN);
     lv_obj_set_style_radius(BackGround,0,LV_PART_MAIN);
@@ -129,40 +129,32 @@ static void Eye_BodyAnimPath_CB(void *var, int32_t v)
     uint8_t i;
     int16_t x1,y1;
 
-    lv_obj_t *Eye_tmp = (lv_obj_t *)var;
-
     for ( i = 0; i < 4; i++)
     {
-        // if(Eye_tmp == Eye_Group[i])
-        // {
+        if( RotateDir == 1)
+        {
+            //顺时针
+            x1=(Eye_Position[Eye_Position[i][2]][0])*FastCos(DEGTORAD(v))-(Eye_Position[Eye_Position[i][2]][1])*FastSin(DEGTORAD(v));
+            y1=(Eye_Position[Eye_Position[i][2]][1])*FastCos(DEGTORAD(v))+(Eye_Position[Eye_Position[i][2]][0])*FastSin(DEGTORAD(v));  
+        }
+        else
+        {
+            //逆时针
+            x1=(Eye_Position[Eye_Position[i][2]][0])*FastCos(DEGTORAD(v))+(Eye_Position[Eye_Position[i][2]][1])*FastSin(DEGTORAD(v));
+            y1=(Eye_Position[Eye_Position[i][2]][1])*FastCos(DEGTORAD(v))-(Eye_Position[Eye_Position[i][2]][0])*FastSin(DEGTORAD(v));  
+        }
 
-			if( RotateDir == 1)
-			{
-				//顺时针
-				x1=(Eye_Position[Eye_Position[i][2]][0])*FastCos(DEGTORAD(v))-(Eye_Position[Eye_Position[i][2]][1])*FastSin(DEGTORAD(v));
-				y1=(Eye_Position[Eye_Position[i][2]][1])*FastCos(DEGTORAD(v))+(Eye_Position[Eye_Position[i][2]][0])*FastSin(DEGTORAD(v));  
-			}
-			else
-			{
-				//逆时针
-				x1=(Eye_Position[Eye_Position[i][2]][0])*FastCos(DEGTORAD(v))+(Eye_Position[Eye_Position[i][2]][1])*FastSin(DEGTORAD(v));
-				y1=(Eye_Position[Eye_Position[i][2]][1])*FastCos(DEGTORAD(v))-(Eye_Position[Eye_Position[i][2]][0])*FastSin(DEGTORAD(v));  
-			}
+        lv_obj_align_to(Eye_Group[i],Face,LV_ALIGN_CENTER,x1,y1);
 
+        if( v == 90)
+        {
+            Eye_Position[i][2] = (Eye_Position[i][2] +RotateDir)%4;
 
-			lv_obj_align_to(Eye_Group[i],Face,LV_ALIGN_CENTER,x1,y1);
-
-			if( v == 90)
-			{
-				Eye_Position[i][2] = (Eye_Position[i][2] +RotateDir)%4;
-
-				lv_anim_set_delay(&EyeBodyPath_Anim[i], 0);
-				//旋转结束后调整眼部焦距
-				lv_anim_set_repeat_count(&EyeFocalize_Anim[i], 2);
-				lv_anim_start(&EyeFocalize_Anim[i]);
-
-			}
-        // }
+            lv_anim_set_delay(&EyeBodyPath_Anim, 0);
+            //旋转结束后调整眼部焦距
+            lv_anim_set_repeat_count(&EyeFocalize_Anim, 2);
+            lv_anim_start(&EyeFocalize_Anim);
+        }
     }
 }
 
@@ -172,27 +164,21 @@ static void ChangeEyeFocalize_CB(void *var, int32_t v)
 	uint8_t i;
     int16_t x1,y1;
 
-    lv_obj_t *Eye_tmp = (lv_obj_t *)var;
-
     for ( i = 0; i < 4; i++)
     {
-        if(Eye_tmp == Eye_base[i])
-        {
-			lv_obj_set_size(Eye_tmp,v,v);
-			lv_obj_set_style_radius(Eye_tmp,v/2,LV_PART_MAIN);
-			lv_obj_align_to(Eye_tmp,Eye_Group[i],LV_ALIGN_CENTER,0,0);
+        lv_obj_set_size(Eye_base[i],v,v);
+        lv_obj_set_style_radius(Eye_base[i],v/2,LV_PART_MAIN);
+        lv_obj_align_to(Eye_base[i],Eye_Group[i],LV_ALIGN_CENTER,0,0);
 
-			//逆时针
-			x1=(EYE_HIGHLIGHT_HIGH_X)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))+(EYE_HIGHLIGHT_HIGH_Y)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G));
-			y1=(EYE_HIGHLIGHT_HIGH_Y)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))-(EYE_HIGHLIGHT_HIGH_X)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G)); 
-			lv_obj_align_to(Eye_in_high[i],Eye_Group[i],LV_ALIGN_CENTER,x1,y1);
+        //逆时针
+        x1=(EYE_HIGHLIGHT_HIGH_X)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))+(EYE_HIGHLIGHT_HIGH_Y)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G));
+        y1=(EYE_HIGHLIGHT_HIGH_Y)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))-(EYE_HIGHLIGHT_HIGH_X)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G)); 
+        lv_obj_align_to(Eye_in_high[i],Eye_Group[i],LV_ALIGN_CENTER,x1,y1);
 
-			//逆时针
-			x1=(EYE_HIGHLIGHT_LOW_X)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))+(EYE_HIGHLIGHT_LOW_Y)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G));
-			y1=(EYE_HIGHLIGHT_LOW_Y)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))-(EYE_HIGHLIGHT_LOW_X)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G));  
-			lv_obj_align_to(Eye_in_low[i],Eye_Group[i],LV_ALIGN_CENTER,x1,y1);
-
-        }
+        //逆时针
+        x1=(EYE_HIGHLIGHT_LOW_X)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))+(EYE_HIGHLIGHT_LOW_Y)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G));
+        y1=(EYE_HIGHLIGHT_LOW_Y)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))-(EYE_HIGHLIGHT_LOW_X)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G));  
+        lv_obj_align_to(Eye_in_low[i],Eye_Group[i],LV_ALIGN_CENTER,x1,y1);
     }
 }
 
@@ -255,50 +241,38 @@ static void Eye_BodyCreate()
 //创建眼球动画
 static void Eye_BodyAnimPath()
 {	
-	uint8_t i=0;
+    //创建眼球轨迹动画
+    lv_anim_init(&EyeBodyPath_Anim);
+    lv_anim_set_var(&EyeBodyPath_Anim,Eye_Group);
+    lv_anim_set_values(&EyeBodyPath_Anim,0,90);
+    lv_anim_set_time(&EyeBodyPath_Anim, 300);
+    lv_anim_set_delay(&EyeBodyPath_Anim, 400);
+    lv_anim_set_exec_cb(&EyeBodyPath_Anim, Eye_BodyAnimPath_CB);
+    lv_anim_set_path_cb(&EyeBodyPath_Anim,lv_anim_path_ease_in_out);
+    lv_anim_set_repeat_delay(&EyeBodyPath_Anim,200);
+    // lv_anim_set_repeat_count(&EyeBodyPath_Anim, LV_ANIM_REPEAT_INFINITE);
+    lv_anim_set_repeat_count(&EyeBodyPath_Anim, 3);
+    
+    lv_anim_start(&EyeBodyPath_Anim);
 
-	for ( i = 0; i < 4; i++)
-    {
-		//创建眼球轨迹动画
-        lv_anim_init(&EyeBodyPath_Anim[i]);
-        lv_anim_set_var(&EyeBodyPath_Anim[i],Eye_Group[i]);
-        lv_anim_set_values(&EyeBodyPath_Anim[i],0,90);
-        lv_anim_set_time(&EyeBodyPath_Anim[i], 300);
-		lv_anim_set_delay(&EyeBodyPath_Anim[i], 400);
-        lv_anim_set_exec_cb(&EyeBodyPath_Anim[i], Eye_BodyAnimPath_CB);
-        lv_anim_set_path_cb(&EyeBodyPath_Anim[i],lv_anim_path_ease_in_out);
-        lv_anim_set_repeat_delay(&EyeBodyPath_Anim[i],200);
-        // lv_anim_set_repeat_count(&EyeBodyPath_Anim[i], LV_ANIM_REPEAT_INFINITE);
-		lv_anim_set_repeat_count(&EyeBodyPath_Anim[i], 3);
-    }
-	
-    for ( i = 0; i < 4; i++)
-    {
-        lv_anim_start(&EyeBodyPath_Anim[i]);
-    }
 }
 
 
 //创建瞳孔焦距动画
 static void EyeFocalizeAnimCreat()
 {
-	uint8_t i=0;
 
-	for (i = 0; i < 4; i++)
-	{
-		lv_anim_init(&EyeFocalize_Anim[i]);
-        lv_anim_set_var(&EyeFocalize_Anim[i],Eye_base[i]);
-        lv_anim_set_values(&EyeFocalize_Anim[i],EYE_HOLE_SIZE,EYE_HOLE_MIN_SIZE);
-        lv_anim_set_time(&EyeFocalize_Anim[i], 200);
-		lv_anim_set_delay(&EyeFocalize_Anim[i], 500);
-        lv_anim_set_exec_cb(&EyeFocalize_Anim[i], ChangeEyeFocalize_CB);
-        lv_anim_set_path_cb(&EyeFocalize_Anim[i],lv_anim_path_ease_in_out);
-		lv_anim_set_playback_time(&EyeFocalize_Anim[i],200);
-		lv_anim_set_playback_delay(&EyeFocalize_Anim[i],200);
-        lv_anim_set_repeat_delay(&EyeFocalize_Anim[i],300);
-        lv_anim_set_repeat_count(&EyeFocalize_Anim[i], LV_ANIM_REPEAT_INFINITE);
-
-	}
+    lv_anim_init(&EyeFocalize_Anim);
+    lv_anim_set_var(&EyeFocalize_Anim,Eye_base);
+    lv_anim_set_values(&EyeFocalize_Anim,EYE_HOLE_SIZE,EYE_HOLE_MIN_SIZE);
+    lv_anim_set_time(&EyeFocalize_Anim, 200);
+    lv_anim_set_delay(&EyeFocalize_Anim, 500);
+    lv_anim_set_exec_cb(&EyeFocalize_Anim, ChangeEyeFocalize_CB);
+    lv_anim_set_path_cb(&EyeFocalize_Anim,lv_anim_path_ease_in_out);
+    lv_anim_set_playback_time(&EyeFocalize_Anim,200);
+    lv_anim_set_playback_delay(&EyeFocalize_Anim,200);
+    lv_anim_set_repeat_delay(&EyeFocalize_Anim,300);
+    lv_anim_set_repeat_count(&EyeFocalize_Anim, LV_ANIM_REPEAT_INFINITE);
 
 }
 
@@ -306,36 +280,16 @@ static void EyeFocalizeAnimCreat()
 //设置眼睛旋转方向和次数
 void RotateEye(uint8_t Dir ,uint8_t times)
 {
-	uint8_t i=0;
-
-    for ( i = 0; i < 4; i++)
-    {
-    	lv_anim_set_repeat_count(&EyeBodyPath_Anim[i], times);
-	}
-
+    lv_anim_set_repeat_count(&EyeBodyPath_Anim, times);
 	RotateDir = Dir;
-
-    for ( i = 0; i < 4; i++)
-    {
-        lv_anim_start(&EyeBodyPath_Anim[i]);
-    }
+    lv_anim_start(&EyeBodyPath_Anim);
 }
 
 //设置调整瞳孔焦距次数
 void ChangeEyeFocalize(uint8_t times)
 {
-	uint8_t i=0;
-
-    for ( i = 0; i < 4; i++)
-    {
-        lv_anim_set_repeat_count(&EyeFocalize_Anim[i], times);
-    }
-
-    for ( i = 0; i < 4; i++)
-    {
-        lv_anim_start(&EyeFocalize_Anim[i]);
-    }
-
+    lv_anim_set_repeat_count(&EyeFocalize_Anim, times);
+    lv_anim_start(&EyeFocalize_Anim);
 }
 
 //设置眼底颜色
@@ -366,11 +320,24 @@ void Eye_Main()
 	Face_Create();
 	Eye_BodyCreate();
 	EyeFocalizeAnimCreat();
-    lv_anim_start(&FaceAnim);
+    //lv_anim_start(&FaceAnim);
 
 }
 
 
+void Eye_Anim_Del()
+{
+    lv_anim_del(&FaceAnim,FaceAnim_CB);
+    lv_anim_del(&EyeBodyPath_Anim, Eye_BodyAnimPath_CB);
+    lv_anim_del(&EyeFocalize_Anim, ChangeEyeFocalize_CB);
+}
+
+
+
+void Eye_Anim_Begin()
+{
+    lv_anim_start(&FaceAnim);
+}
 
 
 
