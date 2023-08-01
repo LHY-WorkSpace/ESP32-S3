@@ -22,11 +22,11 @@
 
 // 33 34 35 36 37 在八线SPI时被SRAM和flash占用
 #define UA_A_PIN    (4)
-#define UA_B_PIN    (5)
+#define UA_B_PIN    (PWM_PIN_NULL)
 #define UB_A_PIN    (6)
-#define UB_B_PIN    (7)
+#define UB_B_PIN    (PWM_PIN_NULL)
 #define UC_A_PIN    (15)
-#define UC_B_PIN    (16)
+#define UC_B_PIN    (PWM_PIN_NULL)
 #define TICK_HZ     (1*1000*1000)//1MHz
 #define PWM_FREQ    (20000)//HZ
 
@@ -112,27 +112,34 @@ void FOC_GPIO_Init(void)
     for ( i = 0; i < U_PhaseMax; i++)
     {
         PWM_A_Pin_Config.gen_gpio_num = PinGroup[i][PWM_A];
-        PWM_B_Pin_Config.gen_gpio_num = PinGroup[i][PWM_B];
         mcpwm_new_generator(Operator[i],&PWM_A_Pin_Config,&PWM_Out_Channel[i][PWM_A]);
-        mcpwm_new_generator(Operator[i],&PWM_B_Pin_Config,&PWM_Out_Channel[i][PWM_B]);
+
+        if(PinGroup[i][PWM_B] != PWM_PIN_NULL)
+        {
+            PWM_B_Pin_Config.gen_gpio_num = PinGroup[i][PWM_B];
+            mcpwm_new_generator(Operator[i],&PWM_B_Pin_Config,&PWM_Out_Channel[i][PWM_B]);
+        }
+
     }
 
 
     for (i = 0; i < U_PhaseMax; i++)
     {
-        mcpwm_generator_set_actions_on_timer_event( PWM_Out_Channel[i][PWM_A], 
-                                                    MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH),
-                                                    MCPWM_GEN_TIMER_EVENT_ACTION_END());
-        mcpwm_generator_set_actions_on_compare_event(PWM_Out_Channel[i][PWM_A],
-                                                    MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, Comparator[i], MCPWM_GEN_ACTION_LOW),
-                                                    MCPWM_GEN_COMPARE_EVENT_ACTION_END());
-
-        mcpwm_generator_set_actions_on_timer_event( PWM_Out_Channel[i][PWM_B],
-                                                    MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH),
-                                                    MCPWM_GEN_TIMER_EVENT_ACTION_END());
-        mcpwm_generator_set_actions_on_compare_event(PWM_Out_Channel[i][PWM_B],
-                                                    MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, Comparator[i], MCPWM_GEN_ACTION_LOW),
-                                                    MCPWM_GEN_COMPARE_EVENT_ACTION_END());
+            mcpwm_generator_set_actions_on_timer_event( PWM_Out_Channel[i][PWM_A], 
+                                                        MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH),
+                                                        MCPWM_GEN_TIMER_EVENT_ACTION_END());
+            mcpwm_generator_set_actions_on_compare_event(PWM_Out_Channel[i][PWM_A],
+                                                        MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, Comparator[i], MCPWM_GEN_ACTION_LOW),
+                                                        MCPWM_GEN_COMPARE_EVENT_ACTION_END());
+        if(PinGroup[i][PWM_B] != PWM_PIN_NULL)
+        {        
+            mcpwm_generator_set_actions_on_timer_event( PWM_Out_Channel[i][PWM_B],
+                                                        MCPWM_GEN_TIMER_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, MCPWM_TIMER_EVENT_EMPTY, MCPWM_GEN_ACTION_HIGH),
+                                                        MCPWM_GEN_TIMER_EVENT_ACTION_END());
+            mcpwm_generator_set_actions_on_compare_event(PWM_Out_Channel[i][PWM_B],
+                                                        MCPWM_GEN_COMPARE_EVENT_ACTION(MCPWM_TIMER_DIRECTION_UP, Comparator[i], MCPWM_GEN_ACTION_LOW),
+                                                        MCPWM_GEN_COMPARE_EVENT_ACTION_END());
+        }
     }
 
     mcpwm_dead_time_config_t PWM_A_dead_time_config = 
@@ -151,7 +158,11 @@ void FOC_GPIO_Init(void)
     for (i = 0; i < U_PhaseMax; i++)
     {
         mcpwm_generator_set_dead_time(PWM_Out_Channel[i][PWM_A],PWM_Out_Channel[i][PWM_A],&PWM_A_dead_time_config);
+
+        if(PinGroup[i][PWM_B] != PWM_PIN_NULL)
+        {  
         mcpwm_generator_set_dead_time(PWM_Out_Channel[i][PWM_B],PWM_Out_Channel[i][PWM_B],&PWM_B_dead_time_config);
+        }
     }
     
     mcpwm_timer_start_stop(Timer,MCPWM_TIMER_START_NO_STOP);

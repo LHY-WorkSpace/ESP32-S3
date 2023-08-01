@@ -14,6 +14,7 @@ typedef enum
     PWM_A,
     PWM_B,
     PWM_Max,
+    PWM_PIN_NULL = 0XFF,
 }PwmChannel_e;
 
 extern uint8_t Addval;
