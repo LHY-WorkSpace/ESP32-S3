@@ -33,9 +33,9 @@
 
 uint8_t PinGroup[U_PhaseMax][PWM_Max]=
 {
-    {UA_A_PIN,UA_B_PIN},
-    {UB_A_PIN,UB_B_PIN},
-    {UC_A_PIN,UC_B_PIN},
+    {UA_A_PIN,PWM_PIN_NULL},
+    {UB_A_PIN,PWM_PIN_NULL},
+    {UC_A_PIN,PWM_PIN_NULL},
 };
 
 mcpwm_cmpr_handle_t Comparator[U_PhaseMax];
