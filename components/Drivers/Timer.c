@@ -3,13 +3,14 @@
 #include "driver/gpio.h"
 #include "lvgl.h"
 #include "Key.h"
-
+#include "AS5600.h"
+#include "FOC.h"
 // "driver/gptimer.h"是更新版的"driver/tmer.h"，都能使用，语法不同
 
+//0.1 ms
+#define LVGL_TICK_PERIOD_US	(100)
 
-#define LVGL_TICK_PERIOD_MS	(1)
-
-static bool example_timer_on_alarm_cb(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx);
+static bool Timer_CB(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx);
 
 //无需考虑定时器分配 gptimer_handle_t 会自动分配
 void Timer_Init()
@@ -25,13 +26,13 @@ void Timer_Init()
 	gptimer_alarm_config_t alarm_config =
 	{
 		.reload_count = 0, // counter will reload with 0 on alarm event
-		.alarm_count = LVGL_TICK_PERIOD_MS*1000, // period = 1s @resolution 1MHz
+		.alarm_count = LVGL_TICK_PERIOD_US, // period = 1s @resolution 1MHz
 		.flags.auto_reload_on_alarm = true, // enable auto-reload
 	};
 
 	gptimer_event_callbacks_t cbs = 
 	{
-		.on_alarm = example_timer_on_alarm_cb, // register user callback
+		.on_alarm = Timer_CB, // register user callback
 	};
 
 	ESP_ERROR_CHECK(gptimer_new_timer(&timer_config, &gptimer));//分配定时器
@@ -42,18 +43,20 @@ void Timer_Init()
 
 }
 
-static bool example_timer_on_alarm_cb(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx)
+static bool Timer_CB(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx)
 {
-	static uint8_t cnt;
-	lv_tick_inc(LVGL_TICK_PERIOD_MS);
+	// static uint8_t cnt;
+	// lv_tick_inc(LVGL_TICK_PERIOD_MS);
+	FOC_TickTask();
 
-	cnt++;
 
-	if( cnt >= 20 )
-	{
-		button_ticks(); //20 ms
-		cnt=0;
-	}
+	// cnt++;
+
+	// if( cnt >= 20 )
+	// {
+	// 	button_ticks(); //20 ms
+	// 	cnt=0;
+	// }
 	return 0;
 }
 

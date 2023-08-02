@@ -15,6 +15,8 @@
 #define ACK_VAL					0x0         /*!< I2C ack value */
 #define NACK_VAL				0x1         /*!< I2C nack value */
 
+static uint16_t AS5600Angle=0;
+
 //************************// 
 //  功能描述: AS5600_ IO 初始化函数
 //  
@@ -116,23 +118,35 @@ void AS5600_ReadData(uint8_t addr,uint8_t length,uint8_t *data)
 }
 
 
+void AS5600_UpdateAngle()
+{	
+	B16_B08 Angle;
+	memset(Angle.B08,0,sizeof(B16_B08));
+	AS5600_ReadData(RAW_ANGLE_L_REG,1,&Angle.B08[0]);
+	AS5600_ReadData(RAW_ANGLE_H_REG,1,&Angle.B08[1]);
+	AS5600Angle = Angle.B16*360/4096;
+}
 
-uint16_t AS5600Angle=0;
+
+uint16_t AS5600_Angle()
+{
+	return AS5600Angle;
+}
+
+
+
 void AS5600_Test()
 {
     TickType_t Time;	
     Time=xTaskGetTickCount();
-	B16_B08 Angle;
-	uint16_t AngleTmp=0;
-	AS5600_Init();
     while (1)
     {
-		memset(Angle.B08,0,sizeof(B16_B08));
-		AS5600_ReadData(RAW_ANGLE_L_REG,1,&Angle.B08[0]);
-		AS5600_ReadData(RAW_ANGLE_H_REG,1,&Angle.B08[1]);
-		AngleTmp = Angle.B16*360/4096;
-		AS5600Angle = AngleTmp;
-		///printf("Angle:%d\r\n",AngleTmp);
+		// memset(Angle.B08,0,sizeof(B16_B08));
+		// AS5600_ReadData(RAW_ANGLE_L_REG,1,&Angle.B08[0]);
+		// AS5600_ReadData(RAW_ANGLE_H_REG,1,&Angle.B08[1]);
+		// AngleTmp = Angle.B16*360/4096;
+		// AS5600Angle = AngleTmp;
+		printf("Angle:%d\r\n",AS5600_Angle());
 		vTaskDelayUntil(&Time,1/portTICK_PERIOD_MS);
     }
 

@@ -14,7 +14,8 @@
 
 // 7 pair(*2) magnet
 // 6 pair(*2) coil
-#define POLE_PAIR	(6)
+
+#define POLE_PAIR	(7)
 #define Uq          (6.0f)
 #define Ud          (0.0f)
 #define VCC_MOTOR	(12.0f)
@@ -28,9 +29,9 @@
 #define UC_A_PIN    (15)
 #define UC_B_PIN    (PWM_PIN_NULL)
 #define TICK_HZ     (1*1000*1000)//1MHz
-#define PWM_FREQ    (20000)//HZ
+#define PWM_FREQ    (20*1000)//HZ
 
-
+float Ua,Ub,Uc;
 uint8_t PinGroup[U_PhaseMax][PWM_Max]=
 {
     {UA_A_PIN,PWM_PIN_NULL},
@@ -171,7 +172,7 @@ void FOC_GPIO_Init(void)
 //求电角度
 float ElectricalAngle(float shaft_angle, int pole_pairs) 
 {
-  return (shaft_angle * pole_pairs);
+  return (shaft_angle * (float)pole_pairs);
 }
 
 float LimitAngle(float shaft_angle) 
@@ -179,34 +180,9 @@ float LimitAngle(float shaft_angle)
   return (float)((int)shaft_angle % 360);
 }
 
-
-// 帕克逆变换+克拉克逆变换
-float IA(float Angle)
-{
-	float Temp;
-	Temp = Ud * FastCos(DEGTORAD(Angle)) + Uq * FastSin(DEGTORAD(Angle));
-	return Temp;
-}
-
-float IB(float Angle)
-{
-	float Temp;
-	Temp = Uq *( 0.866f * FastCos(DEGTORAD(Angle)) + 0.5f * FastSin(DEGTORAD(Angle)) ) + Ud * (0.866f * FastSin(DEGTORAD(Angle)) - 0.5f * FastCos(DEGTORAD(Angle)));
-	return Temp;
-}
-
-float IC(float Angle)
-{
-	float Temp;
-	Temp = Uq *( 0.5f * FastSin(DEGTORAD(Angle)) - 0.866f * FastCos(DEGTORAD(Angle))) + Ud * ( 0.5f * FastCos(DEGTORAD(Angle)) + 0.866f * FastSin(DEGTORAD(Angle)) );
-	return Temp;
-}
-
-
 //逆变换
 void N_Transform(float uq, float ud, float Angle)
 {
-    float Ua,Ub,Uc;
     float Ualpha,Ubeta; 
 
     //帕克逆变换
@@ -218,9 +194,9 @@ void N_Transform(float uq, float ud, float Angle)
     Ub = (sqrt(3)*Ubeta-Ualpha)/2 + VCC_MOTOR/2;
     Uc = (-Ualpha-sqrt(3)*Ubeta)/2 + VCC_MOTOR/2;
 
-    SetPWMDuty(UA_Phase,(uint8_t)(Ua*100/VCC_MOTOR));
-    SetPWMDuty(UB_Phase,(uint8_t)(Ub*100/VCC_MOTOR));
-    SetPWMDuty(UC_Phase,(uint8_t)(Uc*100/VCC_MOTOR));
+    // SetPWMDuty(UA_Phase,(uint8_t)(Ua*100/VCC_MOTOR));
+    // SetPWMDuty(UB_Phase,(uint8_t)(Ub*100/VCC_MOTOR));
+    // SetPWMDuty(UC_Phase,(uint8_t)(Uc*100/VCC_MOTOR));
     //printf("Angle:%.2f Ia:%d Ib:%d Ic:%d\r\n",Angle,(uint8_t)(Ua*100/VCC_MOTOR),(uint8_t)(Ub*100/VCC_MOTOR),(uint8_t)(Uc*100/VCC_MOTOR));
 
 }
@@ -239,7 +215,7 @@ void SetPWMDuty(uint8_t Phase,uint8_t Value)
         return;
     }
 
-    mcpwm_comparator_set_compare_value(Comparator[Phase], TICK_HZ/PWM_FREQ*Value/100);
+    mcpwm_comparator_set_compare_value(Comparator[Phase], TICK_HZ*Value/PWM_FREQ/100);
 }
 
 
@@ -268,20 +244,22 @@ void PWM_Task()
 }
 
 uint8_t Addval=10;
+
 void Foc_CTL()
 {
 	static float Angle  = 1.0f;
     TickType_t Time;	
     float angtmp;
-
+     
     Time = xTaskGetTickCount();
     while (1)
     {
+        AS5600_UpdateAngle();
 		// Angle += (float)Addval;
-		Angle = (float)AS5600Angle + 1.0;
+		Angle = (float)AS5600_Angle() + 1.0;
         
         angtmp = LimitAngle(Angle);
-        angtmp = ElectricalAngle(angtmp,7);
+        angtmp = ElectricalAngle(angtmp,POLE_PAIR);
         angtmp = LimitAngle(angtmp);
 
         N_Transform(Uq,0,angtmp);
@@ -298,27 +276,9 @@ void Foc_CTL()
 
 
 
-void FOC_Task()
+void FOC_TickTask()
 {
-	static float Angle  = 1.0f;	
-	float I[3];
-    float angtmp;
-
-		Angle += 10.0;
-
-        angtmp = ElectricalAngle(Angle,POLE_PAIR);
-        angtmp = LimitAngle(angtmp);
-		I[0] = IA(angtmp)+VCC_MOTOR/2;
-		I[1] = IB(angtmp)+VCC_MOTOR/2;
-		I[2] = IC(angtmp)+VCC_MOTOR/2;
-        
-		SetPWMDuty(UA_Phase,(uint8_t)(I[0]*100/VCC_MOTOR));
-		SetPWMDuty(UB_Phase,(uint8_t)(I[1]*100/VCC_MOTOR));
-		SetPWMDuty(UC_Phase,(uint8_t)(I[2]*100/VCC_MOTOR));
-		//printf("Angle:%.2f Ia:%.2f Ib:%.2f Ic:%.2f\r\n",Angle,I[0]/VCC_MOTOR,I[1]/VCC_MOTOR,I[2]/VCC_MOTOR);
-
-		if(Angle >= 360.0f)
-		{
-			Angle = 0.0f;
-		}
+    SetPWMDuty(UA_Phase,(uint8_t)(Ua*100/VCC_MOTOR));
+    SetPWMDuty(UB_Phase,(uint8_t)(Ub*100/VCC_MOTOR));
+    SetPWMDuty(UC_Phase,(uint8_t)(Uc*100/VCC_MOTOR));
 }

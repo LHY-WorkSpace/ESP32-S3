@@ -42,10 +42,12 @@
 
 //========= Burn Commands =========
 #define BURN            (0xFF)//
-extern uint16_t AS5600Angle;
+
 void AS5600_Init(void);
 void AS5600_WriteData(uint8_t addr,uint8_t length,uint8_t *data);
 void AS5600_ReadData(uint8_t addr,uint8_t length,uint8_t *data);
+uint16_t AS5600_Angle(void);
+void AS5600_UpdateAngle(void);
 void AS5600_Test(void);
 #endif
 
