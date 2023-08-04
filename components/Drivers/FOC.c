@@ -186,8 +186,8 @@ void N_Transform(float uq, float ud, float Angle)
     float Ualpha,Ubeta; 
 
     //帕克逆变换
-    Ualpha =  -uq*FastSin(DEGTORAD(Angle)); 
-    Ubeta =   uq*FastCos(DEGTORAD(Angle)); 
+    Ualpha = ud * FastCos(DEGTORAD(Angle)) - uq * FastSin(DEGTORAD(Angle)); 
+    Ubeta =  uq * FastCos(DEGTORAD(Angle)) + ud * FastSin(DEGTORAD(Angle)); 
 
     // 克拉克逆变换
     Ua = Ualpha + VCC_MOTOR/2;
@@ -201,7 +201,21 @@ void N_Transform(float uq, float ud, float Angle)
 
 }
 
+void P_Transform(float id, float iq, float Angle)
+{
+    float ia,iβ; 
 
+    //帕克变换
+    ia = id * FastCos(DEGTORAD(Angle)) - iq * FastSin(DEGTORAD(Angle));
+    iβ = id * FastSin(DEGTORAD(Angle)) + iq * FastCos(DEGTORAD(Angle));
+
+
+    // 克拉克变换
+
+
+
+
+}
 
 void SetPWMDuty(uint8_t Phase,uint8_t Value)
 {
