@@ -60,9 +60,9 @@ void MeterTest()
 static void MainUICreate(void)
 {
     //lv_meter_1();
-    // MeterTest();
+    MeterTest();
     // Eye_Main();
-    ui_init();
+    // ui_init();
     // lv_demo_benchmark();
     // lv_demo_music();
 

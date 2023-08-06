@@ -203,11 +203,11 @@ void N_Transform(float uq, float ud, float Angle)
 
 void P_Transform(float id, float iq, float Angle)
 {
-    float ia,iβ; 
+    // float ia,iβ; 
 
     //帕克变换
-    ia = id * FastCos(DEGTORAD(Angle)) - iq * FastSin(DEGTORAD(Angle));
-    iβ = id * FastSin(DEGTORAD(Angle)) + iq * FastCos(DEGTORAD(Angle));
+    // ia = id * FastCos(DEGTORAD(Angle)) - iq * FastSin(DEGTORAD(Angle));
+    // iβ = id * FastSin(DEGTORAD(Angle)) + iq * FastCos(DEGTORAD(Angle));
 
 
     // 克拉克变换
