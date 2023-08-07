@@ -16,10 +16,10 @@
 
 
 
-#define KEY_LEFT_STATE		(1)
-#define KEY_DOWN_STATE		(2)
-#define KEY_UP_STATE		(3)
-#define KEY_RIGHT_STATE		(4)
+#define KEY_LEFT_STATE		(gpio_get_level(KEY_LEFT_PIN))
+#define KEY_DOWN_STATE		(gpio_get_level(KEY_DOWN_PIN))
+#define KEY_UP_STATE		(gpio_get_level(KEY_UP_PIN))
+#define KEY_RIGHT_STATE		(gpio_get_level(KEY_RIGHT_PIN))
 
 
 

@@ -187,7 +187,7 @@ void N_Transform(float uq, float ud, float Angle)
 
     //帕克逆变换
     Ualpha = ud * FastCos(DEGTORAD(Angle)) - uq * FastSin(DEGTORAD(Angle)); 
-    Ubeta =  uq * FastCos(DEGTORAD(Angle)) + ud * FastSin(DEGTORAD(Angle)); 
+    Ubeta =  ud * FastSin(DEGTORAD(Angle)) + uq * FastCos(DEGTORAD(Angle)); 
 
     // 克拉克逆变换
     Ua = Ualpha + VCC_MOTOR/2;
@@ -201,19 +201,17 @@ void N_Transform(float uq, float ud, float Angle)
 
 }
 
-void P_Transform(float id, float iq, float Angle)
+void P_Transform(float Ia, float Ib, float Ic)
 {
-    // float ia,iβ; 
+    float iq,id; 
+    float ialpha,ibeta;
 
-    //帕克变换
-    // ia = id * FastCos(DEGTORAD(Angle)) - iq * FastSin(DEGTORAD(Angle));
-    // iβ = id * FastSin(DEGTORAD(Angle)) + iq * FastCos(DEGTORAD(Angle));
+    ialpha = Ia;
+    ibeta = (1/sqrt(3))*Ia + (2/sqrt(3))*Ib;
 
-
-    // 克拉克变换
-
-
-
+    //// 帕克变换
+    iq = ibeta  * FastCos(DEGTORAD(Angle)) - ialpha * FastSin(DEGTORAD(Angle));
+    id = ialpha * FastCos(DEGTORAD(Angle)) + ibeta  * FastSin(DEGTORAD(Angle));
 
 }
 

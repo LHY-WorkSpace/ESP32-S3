@@ -61,7 +61,7 @@ static void MainUICreate(void)
 {
     //lv_meter_1();
     MeterTest();
-    // Eye_Main();
+    Eye_Main();
     // ui_init();
     // lv_demo_benchmark();
     // lv_demo_music();

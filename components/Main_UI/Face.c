@@ -51,7 +51,8 @@ lv_anim_t FaceAnim;
 
 static uint8_t RotateDir = ROTATEDIR_OPPOSITE;
 
- //口字形
+////口字形
+/// 可调整 R_LEN 
 static int8_t Eye_Position[4][3]=
 {
     { R_LEN,  R_LEN, 0},
@@ -60,6 +61,15 @@ static int8_t Eye_Position[4][3]=
     { R_LEN, -R_LEN, 3},
 };
 
+///// 十字型
+///// 可调整 R_LEN 
+// int8_t Eye_Position[4][3]=
+// {
+//     {0,      -R_LEN, 0},
+//     {R_LEN,  0,      1},
+//     {0,      R_LEN,  2},
+//     {-R_LEN, 0,      3},
+// };
 
 static void Eye_BodyAnimPath();
 
@@ -320,7 +330,7 @@ void Eye_Main()
 	Face_Create();
 	Eye_BodyCreate();
 	EyeFocalizeAnimCreat();
-    //lv_anim_start(&FaceAnim);
+    lv_anim_start(&FaceAnim);
 
 }
 

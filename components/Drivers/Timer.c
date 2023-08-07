@@ -8,7 +8,7 @@
 // "driver/gptimer.h"是更新版的"driver/tmer.h"，都能使用，语法不同
 
 //0.1 ms
-#define LVGL_TICK_PERIOD_US	(1000)
+#define LVGL_TICK_PERIOD_US	(100)
 
 static bool Timer_CB(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx);
 
@@ -45,18 +45,26 @@ void Timer_Init()
 
 static bool Timer_CB(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx)
 {
-	// static uint8_t cnt;
-	lv_tick_inc(1);
-	// FOC_TickTask();
+	static uint16_t cnt;
 
+	FOC_TickTask();
 
-	// cnt++;
+	if(( cnt % 10 ) == 0)
+	{
+		lv_tick_inc(1);
+	}
 
-	// if( cnt >= 20 )
-	// {
-	// 	button_ticks(); //20 ms
-	// 	cnt=0;
-	// }
+	if( ( cnt % 200 ) == 0 )
+	{
+		button_ticks(); //20 ms
+	}
+
+	cnt++;
+	if(cnt >= 10000)
+	{
+		cnt = 0;
+	}
+
 	return 0;
 }
 

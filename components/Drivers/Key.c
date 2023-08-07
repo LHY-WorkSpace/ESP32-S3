@@ -397,26 +397,22 @@ void DOUBLE_Click_Handler(void *Data)
 
 
 
-void GPIO_Init(void)
+static void KeyIO_Init(void)
 {
-	uint64_t PinTem=0;
 	uint8_t i;
 
 	for ( i = 0; i < Key_MaxNum; i++)
 	{
-		PinTem |= ((1ULL << (uint8_t)(KeyPin[i])));
+		esp_rom_gpio_pad_select_gpio(KeyPin[i]);
+		gpio_set_direction(KeyPin[i], GPIO_MODE_INPUT);
 	}
-
-	GPIO.pin_bit_mask = PinTem;
-
-	gpio_config(&GPIO);
 }
 
 
 void Key_Init()
 {
 
-	GPIO_Init();
+	KeyIO_Init();
 
     button_init(&Button_Up,read_button_GPIO,KEY_ACT_LEVEL,Key_Up);
     button_init(&Button_Down,read_button_GPIO,KEY_ACT_LEVEL,Key_Down);
