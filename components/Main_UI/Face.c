@@ -83,9 +83,8 @@ static void FaceAnim_CB(void *var, int32_t v)
     }
     if(LV_OPA_COVER == v)
     {
-        Eye_BodyAnimPath();
-        lv_anim_del((void *)&FaceAnim,FaceAnim_CB);
-        
+        lv_anim_del(FaceAnim.var,FaceAnim.exec_cb);
+        lv_anim_start(&EyeBodyPath_Anim);
     }
 }
 
@@ -123,8 +122,8 @@ static void Face_Create()
     lv_anim_init(&FaceAnim);
     lv_anim_set_var(&FaceAnim,Face);
     lv_anim_set_values(&FaceAnim,0,LV_OPA_COVER);
-    lv_anim_set_time(&FaceAnim, 2000);
-    lv_anim_set_delay(&FaceAnim, 1000);
+    lv_anim_set_time(&FaceAnim, 1000);
+    lv_anim_set_delay(&FaceAnim, 10);
     lv_anim_set_exec_cb(&FaceAnim, FaceAnim_CB);
     lv_anim_set_path_cb(&FaceAnim,lv_anim_path_ease_in_out);
     lv_anim_set_repeat_count(&FaceAnim, 1);
@@ -263,8 +262,6 @@ static void Eye_BodyAnimPath()
     // lv_anim_set_repeat_count(&EyeBodyPath_Anim, LV_ANIM_REPEAT_INFINITE);
     lv_anim_set_repeat_count(&EyeBodyPath_Anim, 3);
     
-    lv_anim_start(&EyeBodyPath_Anim);
-
 }
 
 
@@ -329,17 +326,18 @@ void Eye_Main()
 {
 	Face_Create();
 	Eye_BodyCreate();
+    Eye_BodyAnimPath();
 	EyeFocalizeAnimCreat();
-    lv_anim_start(&FaceAnim);
+    // lv_anim_start(&FaceAnim);
 
 }
 
 
 void Eye_Anim_Del()
 {
-    lv_anim_del(&FaceAnim,FaceAnim_CB);
-    lv_anim_del(&EyeBodyPath_Anim, Eye_BodyAnimPath_CB);
-    lv_anim_del(&EyeFocalize_Anim, ChangeEyeFocalize_CB);
+    lv_anim_del(FaceAnim.var,FaceAnim.exec_cb);
+    lv_anim_del(EyeBodyPath_Anim.var, EyeBodyPath_Anim.exec_cb);
+    lv_anim_del(EyeFocalize_Anim.var, EyeFocalize_Anim.exec_cb);
 }
 
 

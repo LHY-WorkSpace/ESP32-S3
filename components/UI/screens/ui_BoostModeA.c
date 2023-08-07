@@ -17,6 +17,7 @@ static uint8_t Flag = 0;
         {
             lv_disp_load_scr(ui_BoostModeB);
             Boost2_AnimBegin();
+            Boost1_Anim_Del();
         }
 
     }
@@ -37,7 +38,7 @@ static uint8_t Flag = 0;
     }
 
     lv_label_set_text_fmt(ui_SecNum,"%ld",21-v);
-
+    printf("Anim_A\r\n");
 }
 
 
@@ -165,7 +166,7 @@ void ui_BoostModeA_screen_init(void)
     lv_anim_init(&Boost1_Anim);
     lv_anim_set_var(&Boost1_Anim,ui_MainIndecA);
     lv_anim_set_values(&Boost1_Anim,0,21);
-    lv_anim_set_time(&Boost1_Anim, 121000);
+    lv_anim_set_time(&Boost1_Anim, 22000);
     lv_anim_set_exec_cb(&Boost1_Anim, Boost1_Anim_CB);
     lv_anim_set_path_cb(&Boost1_Anim,lv_anim_path_linear);
     lv_anim_set_repeat_count(&Boost1_Anim, LV_ANIM_REPEAT_INFINITE);
@@ -182,5 +183,5 @@ void Boost1_Anim_Begin()
 
 void Boost1_Anim_Del()
 {
-    lv_anim_del(ui_MainIndecA,Boost1_Anim_CB);
+    lv_anim_del(Boost1_Anim.var,Boost1_Anim.exec_cb);
 }

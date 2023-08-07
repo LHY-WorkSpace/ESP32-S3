@@ -28,6 +28,8 @@
         "foc.h": "c",
         "as5600.h": "c",
         "lvgl.h": "c",
-        "ui.h": "c"
+        "ui.h": "c",
+        "face.h": "c",
+        "ui_events.h": "c"
     }
 }

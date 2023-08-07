@@ -6,7 +6,6 @@
 #include "LVGL_UI.h"
 #include "Timer.h"
 #include "Face.h"
-#include "Face.h"
 #include "ui.h"
 
 static lv_obj_t * meter;
@@ -60,9 +59,9 @@ void MeterTest()
 static void MainUICreate(void)
 {
     //lv_meter_1();
-    MeterTest();
-    Eye_Main();
-    // ui_init();
+    // MeterTest();
+    // Eye_Main();
+    ui_init();
     // lv_demo_benchmark();
     // lv_demo_music();
 

@@ -205,6 +205,7 @@ void P_Transform(float Ia, float Ib, float Ic)
 {
     float iq,id; 
     float ialpha,ibeta;
+    float Angle = 0.0;
 
     ialpha = Ia;
     ibeta = (1/sqrt(3))*Ia + (2/sqrt(3))*Ib;

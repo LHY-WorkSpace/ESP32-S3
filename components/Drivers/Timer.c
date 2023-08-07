@@ -47,7 +47,7 @@ static bool Timer_CB(gptimer_handle_t timer, const gptimer_alarm_event_data_t *e
 {
 	static uint16_t cnt;
 
-	FOC_TickTask();
+	//FOC_TickTask();
 
 	if(( cnt % 10 ) == 0)
 	{

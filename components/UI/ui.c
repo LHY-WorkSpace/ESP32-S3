@@ -51,6 +51,7 @@ void ui_init(void)
     lv_disp_set_theme(dispp, theme);
     ui_BoostModeA_screen_init();
     ui_BoostModeB_screen_init();
+    Eye_Main();
     ui____initial_actions0 = lv_obj_create(NULL);
     lv_disp_load_scr(ui_BoostModeA);
 }

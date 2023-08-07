@@ -5,6 +5,7 @@
 
 #include "../ui.h"
 #include <stdio.h>
+
 lv_anim_t Boost2_Anim_Main;
 lv_anim_t Boost2_Anim_Point;
 
@@ -20,8 +21,16 @@ static void Boost2_Anim_MainCB(void *var, int32_t v)
     {
         lv_obj_add_flag(ui_MainIndeotor[v-1], LV_OBJ_FLAG_HIDDEN);
     }
+    else
+    {
+        Boost2_Anim_Del();
+        lv_disp_load_scr(BackGround);
+        Eye_Anim_Begin();
+        printf("in\r\n");
+
+    }
     lv_label_set_text_fmt(ui_SecConut,"%ld",5-v);
-    printf("++%ld\r\n",v);
+    printf("Anim_B1\r\n");
 
 }
 
@@ -48,7 +57,7 @@ static void Boost2_Anim_PointCB(void *var, int32_t v)
     {
         Flag = 1;
     }
-    printf("==%ld\r\n",v);
+    printf("Anim_B2\r\n");
 }
 
 
@@ -131,7 +140,7 @@ void ui_BoostModeB_screen_init(void)
     lv_anim_set_path_cb(&Boost2_Anim_Point,lv_anim_path_linear);
     lv_anim_set_repeat_count(&Boost2_Anim_Point, LV_ANIM_REPEAT_INFINITE);
     lv_anim_set_values(&Boost2_Anim_Point,0,13);
-    lv_anim_set_time(&Boost2_Anim_Point, 900);
+    lv_anim_set_time(&Boost2_Anim_Point, 800);
     lv_anim_set_var(&Boost2_Anim_Point, ui_SmallPointWhite);
 
     lv_anim_init(&Boost2_Anim_Main);
@@ -141,20 +150,20 @@ void ui_BoostModeB_screen_init(void)
     lv_anim_set_values(&Boost2_Anim_Main,0,6);
     lv_anim_set_time(&Boost2_Anim_Main, 5000);
     lv_anim_set_var(&Boost2_Anim_Main, ui_MainIndeotor);
-
-
-    // lv_anim_start(&Boost2_Anim_Point);
-    // lv_anim_start(&Boost2_Anim_Main);
-
-
 }
 
 void Boost2_AnimBegin()
 {
     lv_anim_start(&Boost2_Anim_Main);
     lv_anim_start(&Boost2_Anim_Point);
-    Boost1_Anim_Del();
+
 }
 
+
+void Boost2_Anim_Del()
+{
+    lv_anim_del(Boost2_Anim_Point.var,Boost2_Anim_Point.exec_cb);
+    lv_anim_del(Boost2_Anim_Main.var,Boost2_Anim_Main.exec_cb);
+}
 
 
