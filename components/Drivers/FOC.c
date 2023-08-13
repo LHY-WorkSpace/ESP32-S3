@@ -270,12 +270,13 @@ void Foc_CTL()
         AS5600_UpdateAngle();
 		// Angle += (float)Addval;
 		Angle = (float)AS5600_Angle() + 1.0;
-        
+
         angtmp = LimitAngle(Angle);
         angtmp = ElectricalAngle(angtmp,POLE_PAIR);
         angtmp = LimitAngle(angtmp);
 
         N_Transform(Uq,0,angtmp);
+        FOC_TickTask();
 
 		if(Angle >= 360.0f)
 		{

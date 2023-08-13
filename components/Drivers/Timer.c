@@ -8,7 +8,7 @@
 // "driver/gptimer.h"是更新版的"driver/tmer.h"，都能使用，语法不同
 
 //0.1 ms
-#define LVGL_TICK_PERIOD_US	(100)
+#define LVGL_TICK_PERIOD_MS	(1)
 
 static bool Timer_CB(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx);
 
@@ -26,7 +26,7 @@ void Timer_Init()
 	gptimer_alarm_config_t alarm_config =
 	{
 		.reload_count = 0, // counter will reload with 0 on alarm event
-		.alarm_count = LVGL_TICK_PERIOD_US, // period = 1s @resolution 1MHz
+		.alarm_count = LVGL_TICK_PERIOD_MS*1000, // period = 1s @resolution 1MHz
 		.flags.auto_reload_on_alarm = true, // enable auto-reload
 	};
 
@@ -43,18 +43,13 @@ void Timer_Init()
 
 }
 
-static bool Timer_CB(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx)
+static bool IRAM_ATTR Timer_CB(gptimer_handle_t timer, const gptimer_alarm_event_data_t *edata, void *user_ctx)
 {
 	static uint16_t cnt;
 
-	//FOC_TickTask();
+	lv_tick_inc(LVGL_TICK_PERIOD_MS);
 
-	if(( cnt % 10 ) == 0)
-	{
-		lv_tick_inc(1);
-	}
-
-	if( ( cnt % 200 ) == 0 )
+	if( ( cnt % 20 ) == 0 )
 	{
 		button_ticks(); //20 ms
 	}

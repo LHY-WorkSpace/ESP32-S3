@@ -10,7 +10,7 @@ lv_anim_t Boost1_Anim;
 
 static void Boost1_Anim_CB(void *var, int32_t v)
 {
-static uint8_t Flag = 0;
+    static uint8_t Flag = 0;
     if(v == 0 )
     {
         if(Flag == 1)
@@ -23,17 +23,25 @@ static uint8_t Flag = 0;
     }
     else if(v <= 16  )
     {
-        lv_obj_add_flag(ui_MainIndecA[v-1], LV_OBJ_FLAG_HIDDEN);
-
-        if(v > 4 )
+        if(Flag == 1)
         {
-            lv_obj_clear_flag(ui_ChargeIndecB[(v-4)/4], LV_OBJ_FLAG_HIDDEN);
-            lv_obj_clear_flag(ui_ChargeIndecA[(v-4)/4], LV_OBJ_FLAG_HIDDEN);
+            // lv_disp_load_scr(ui_BoostModeB);
+            // Boost2_AnimBegin();
+            // Boost1_Anim_Del();
+        }
+        else
+        {
+            lv_obj_add_flag(ui_MainIndecA[v-1], LV_OBJ_FLAG_HIDDEN);
+            if(v > 4 )
+            {
+                lv_obj_clear_flag(ui_ChargeIndecB[(v-4)/4], LV_OBJ_FLAG_HIDDEN);
+                lv_obj_clear_flag(ui_ChargeIndecA[(v-4)/4], LV_OBJ_FLAG_HIDDEN);
+            }
         }
     }
     else
     {
-        Flag =1;
+        Flag = 1;
         lv_obj_add_flag(ui_MainIndecB[v-17], LV_OBJ_FLAG_HIDDEN);
     }
 
