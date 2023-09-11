@@ -10,44 +10,43 @@ lv_anim_t Boost2_Anim_Main;
 lv_anim_t Boost2_Anim_Point;
 
 
-
+static uint8_t Switch = 0;
 static void Boost2_Anim_MainCB(void *var, int32_t v)
 {
-    if(v == 0)
-    {
-
-    }
-    else if(v <= 5)
+    if(v <= 5)
     {
         lv_obj_add_flag(ui_MainIndeotor[v-1], LV_OBJ_FLAG_HIDDEN);
+        lv_label_set_text_fmt(ui_SecConut,"%ld",5-v);
     }
     else
     {
-        Boost2_Anim_Del();
-        lv_disp_load_scr(BackGround);
-        Eye_Anim_Begin();
-        printf("in\r\n");
-
+        Switch = 1;
+        lv_anim_del(Boost2_Anim_Main.var,Boost2_Anim_Main.exec_cb);        
     }
-    lv_label_set_text_fmt(ui_SecConut,"%ld",5-v);
-    printf("Anim_B1\r\n");
-
 }
 
 static void Boost2_Anim_PointCB(void *var, int32_t v)
 {   
-     static uint8_t Flag = 0;
+     static uint8_t ComplateFlag = 0;
      uint8_t i;
 
     if(v == 0)
     {
-        if(Flag)
+        if(ComplateFlag)
         {
             for (i = 0; i < 12; i++)
             {
                 lv_obj_add_flag(ui_SmallPointWhite[i], LV_OBJ_FLAG_HIDDEN);     /// Flags
             }
         }
+        if(Switch == 1)
+        {
+            Boost2_Anim_Del();
+            lv_disp_load_scr(BackGround);
+            Eye_Anim_Begin();
+        }
+
+
     }
     else if(v <= 12)
     {
@@ -55,9 +54,9 @@ static void Boost2_Anim_PointCB(void *var, int32_t v)
     }
     else if(v == 13)
     {
-        Flag = 1;
+        ComplateFlag = 1;
     }
-    printf("Anim_B2\r\n");
+
 }
 
 
@@ -140,7 +139,7 @@ void ui_BoostModeB_screen_init(void)
     lv_anim_set_path_cb(&Boost2_Anim_Point,lv_anim_path_linear);
     lv_anim_set_repeat_count(&Boost2_Anim_Point, LV_ANIM_REPEAT_INFINITE);
     lv_anim_set_values(&Boost2_Anim_Point,0,13);
-    lv_anim_set_time(&Boost2_Anim_Point, 800);
+    lv_anim_set_time(&Boost2_Anim_Point, 850);
     lv_anim_set_var(&Boost2_Anim_Point, ui_SmallPointWhite);
 
     lv_anim_init(&Boost2_Anim_Main);
@@ -163,7 +162,7 @@ void Boost2_AnimBegin()
 void Boost2_Anim_Del()
 {
     lv_anim_del(Boost2_Anim_Point.var,Boost2_Anim_Point.exec_cb);
-    lv_anim_del(Boost2_Anim_Main.var,Boost2_Anim_Main.exec_cb);
+    // lv_anim_del(Boost2_Anim_Main.var,Boost2_Anim_Main.exec_cb);
 }
 
 

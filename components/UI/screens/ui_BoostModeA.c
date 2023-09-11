@@ -10,43 +10,45 @@ lv_anim_t Boost1_Anim;
 
 static void Boost1_Anim_CB(void *var, int32_t v)
 {
-    static uint8_t Flag = 0;
+    static uint8_t ComplateFlag = 0;
     if(v == 0 )
     {
-        if(Flag == 1)
+        if(ComplateFlag == 1)
         {
+            //倒计时完毕
             lv_disp_load_scr(ui_BoostModeB);
             Boost2_AnimBegin();
-            Boost1_Anim_Del();
+            Boost1_Anim_Del();           
         }
 
     }
     else if(v <= 16  )
     {
-        if(Flag == 1)
+        lv_obj_add_flag(ui_MainIndecA[v-1], LV_OBJ_FLAG_HIDDEN);
+        if(v > 4 )
         {
-            // lv_disp_load_scr(ui_BoostModeB);
-            // Boost2_AnimBegin();
-            // Boost1_Anim_Del();
+            lv_obj_clear_flag(ui_ChargeIndecB[(v-4)/4], LV_OBJ_FLAG_HIDDEN);
+            lv_obj_clear_flag(ui_ChargeIndecA[(v-4)/4], LV_OBJ_FLAG_HIDDEN);
         }
-        else
+
+        if(v == 16)
         {
-            lv_obj_add_flag(ui_MainIndecA[v-1], LV_OBJ_FLAG_HIDDEN);
-            if(v > 4 )
-            {
-                lv_obj_clear_flag(ui_ChargeIndecB[(v-4)/4], LV_OBJ_FLAG_HIDDEN);
-                lv_obj_clear_flag(ui_ChargeIndecA[(v-4)/4], LV_OBJ_FLAG_HIDDEN);
-            }
+            // if()//按键触发
+            // {
+            //     lv_disp_load_scr(ui_BoostModeB);
+            //     Boost2_AnimBegin();
+            //     Boost1_Anim_Del();
+            // }
         }
+
     }
     else
     {
-        Flag = 1;
+        ComplateFlag = 1;
         lv_obj_add_flag(ui_MainIndecB[v-17], LV_OBJ_FLAG_HIDDEN);
     }
 
     lv_label_set_text_fmt(ui_SecNum,"%ld",21-v);
-    printf("Anim_A\r\n");
 }
 
 
@@ -90,8 +92,8 @@ void ui_BoostModeA_screen_init(void)
         lv_obj_set_align(ui_ChargeIndecA[i], LV_ALIGN_CENTER);
         lv_obj_add_flag(ui_ChargeIndecA[i], LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
         lv_obj_clear_flag(ui_ChargeIndecA[i], LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-        lv_img_set_pivot(ui_ChargeIndecA[i], -10, 14);
-        lv_img_set_angle(ui_ChargeIndecA[i], -95*i);
+        lv_img_set_pivot(ui_ChargeIndecA[i], -20, 10);
+        lv_img_set_angle(ui_ChargeIndecA[i], -75*i);
         lv_obj_add_flag(ui_ChargeIndecA[i], LV_OBJ_FLAG_HIDDEN);     /// Flags
     }
 
