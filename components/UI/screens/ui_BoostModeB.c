@@ -15,7 +15,11 @@ static void Boost2_Anim_MainCB(void *var, int32_t v)
 {
     if(v <= 5)
     {
-        lv_obj_add_flag(ui_MainIndeotor[v-1], LV_OBJ_FLAG_HIDDEN);
+        if(v != 0)
+        {
+            lv_obj_add_flag(ui_MainIndeotor[v-1], LV_OBJ_FLAG_HIDDEN);
+
+        }
         lv_label_set_text_fmt(ui_SecConut,"%ld",5-v);
     }
     else
@@ -23,6 +27,7 @@ static void Boost2_Anim_MainCB(void *var, int32_t v)
         Switch = 1;
         lv_anim_del(Boost2_Anim_Main.var,Boost2_Anim_Main.exec_cb);        
     }
+
 }
 
 static void Boost2_Anim_PointCB(void *var, int32_t v)
@@ -128,7 +133,7 @@ void ui_BoostModeB_screen_init(void)
     lv_obj_set_width(ui_SecConut, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_SecConut, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_align(ui_SecConut, LV_ALIGN_CENTER);
-    lv_label_set_text_fmt(ui_SecConut,"%d",6);
+    lv_label_set_text_fmt(ui_SecConut,"%d",5);
     lv_obj_set_style_text_color(ui_SecConut, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(ui_SecConut, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_SecConut, &ui_font_Seg48, LV_PART_MAIN | LV_STATE_DEFAULT);
