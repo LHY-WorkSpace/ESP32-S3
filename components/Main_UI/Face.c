@@ -83,7 +83,7 @@ static void FaceAnim_CB(void *var, int32_t v)
     }
     if(LV_OPA_COVER == v)
     {
-        lv_anim_del(FaceAnim.var,FaceAnim.exec_cb);
+        // lv_anim_del(FaceAnim.var,FaceAnim.exec_cb);
         lv_anim_start(&EyeBodyPath_Anim);
     }
 }

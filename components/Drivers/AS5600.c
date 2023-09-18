@@ -58,7 +58,6 @@ void AS5600_Init(void)
 //************************//  
 void  AS5600_WriteData(uint8_t addr,uint8_t length,uint8_t *data)
 {
-	uint8_t i;
 	i2c_cmd_handle_t cmd;
 
 	cmd = i2c_cmd_link_create();

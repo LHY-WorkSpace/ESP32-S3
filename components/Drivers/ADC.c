@@ -9,7 +9,6 @@
 
 #define ADCx_CHAN0          ADC_CHANNEL_0
 static int ADC_Val;
-static int Voltage;
 static bool do_calibration1;
 static adc_oneshot_unit_handle_t adc1_handle;
 static adc_cali_handle_t adc1_cali_handle = NULL;

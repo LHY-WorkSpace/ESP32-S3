@@ -11,6 +11,7 @@
 // SCREEN: ui_BoostModeA
 void ui_BoostModeA_screen_init(void);
 lv_obj_t * ui_BoostModeA;
+lv_obj_t *ui_uiBoostModeA_Bg;
 lv_obj_t * ui_ChargeIndecB[4];
 lv_obj_t * ui_ChargeIndecA[4];
 lv_obj_t * ui_MainIndecA[16];
@@ -22,7 +23,9 @@ lv_obj_t * ui_SecLable;
 
 // SCREEN: ui_BoostModeB
 void ui_BoostModeB_screen_init(void);
+void Boost1_OPA_Del(void);
 lv_obj_t * ui_BoostModeB;
+lv_obj_t *ui_uiBoostModeB_Bg;
 lv_obj_t * ui_MainIndeotor[5];
 lv_obj_t * ui_Triangle;
 lv_obj_t * ui_SmallPointWhite[12];
@@ -31,6 +34,8 @@ lv_obj_t * ui_SecConut;
 lv_obj_t * ui____initial_actions0;
 const lv_img_dsc_t * ui_imgset_smallindecotr_[1] = {&ui_img_smallindecotr_1_png};
 
+
+lv_obj_t *StartBackGround;
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16
     #error "LV_COLOR_DEPTH should be 16bit to match SquareLine Studio's settings"
@@ -46,12 +51,14 @@ const lv_img_dsc_t * ui_imgset_smallindecotr_[1] = {&ui_img_smallindecotr_1_png}
 void ui_init(void)
 {
     lv_disp_t * dispp = lv_disp_get_default();
-    lv_theme_t * theme = lv_theme_default_init(dispp, lv_palette_main(LV_PALETTE_BLUE), lv_palette_main(LV_PALETTE_RED),
+    lv_theme_t * theme = lv_theme_default_init(dispp, lv_color_black(), lv_color_black(),
                                                false, LV_FONT_DEFAULT);
     lv_disp_set_theme(dispp, theme);
+
     ui_BoostModeA_screen_init();
     ui_BoostModeB_screen_init();
     Eye_Main();
-    ui____initial_actions0 = lv_obj_create(NULL);
+
     lv_disp_load_scr(ui_BoostModeA);
+    Boost1_Anim_Begin();
 }

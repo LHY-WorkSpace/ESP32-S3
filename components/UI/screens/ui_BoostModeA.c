@@ -8,18 +8,27 @@
 uint16_t AngTab[16] = {450,300,150,3600,3450,3300,3150,3000,2850,2700,2550,2400,2250,2100,1950,1800};
 lv_anim_t Boost1_Anim;
 
+static lv_anim_t Boost1_OPA_Anim;
+
+
+static void  Boost1_OPA_Anim_CB(void *var, int32_t v)
+{
+
+    lv_obj_set_style_opa(ui_uiBoostModeA_Bg,v,LV_PART_MAIN);
+
+    if(LV_OPA_COVER == v)
+    {
+        lv_anim_start(&Boost1_Anim);
+    }
+}
+
 static void Boost1_Anim_CB(void *var, int32_t v)
 {
-    static uint8_t ComplateFlag = 0;
+
+    lv_label_set_text_fmt(ui_SecNum,"%ld",21-v);
+
     if(v == 0 )
     {
-        if(ComplateFlag == 1)
-        {
-            //倒计时完毕
-            lv_disp_load_scr(ui_BoostModeB);
-            Boost2_AnimBegin();
-            Boost1_Anim_Del();           
-        }
 
     }
     else if(v <= 16  )
@@ -33,22 +42,27 @@ static void Boost1_Anim_CB(void *var, int32_t v)
 
         if(v == 16)
         {
-            // if()//按键触发
+            // if()//按键提前触发
             // {
-            //     lv_disp_load_scr(ui_BoostModeB);
-            //     Boost2_AnimBegin();
-            //     Boost1_Anim_Del();
+                // lv_obj_clear_flag(ui_BoostModeB, LV_OBJ_FLAG_HIDDEN);     /// Flags
+                // Boost2_AnimBegin();
             // }
         }
 
     }
-    else
+    else if(v <= 21)
     {
-        ComplateFlag = 1;
         lv_obj_add_flag(ui_MainIndecB[v-17], LV_OBJ_FLAG_HIDDEN);
+        if(v == 21)
+        {
+            //计时结束触发
+            lv_obj_clear_flag(ui_BoostModeB, LV_OBJ_FLAG_HIDDEN);     /// Flags
+            Boost2_AnimBegin();
+            // lv_disp_load_scr(BackGround);
+            // Eye_Anim_Begin();
+        }
     }
 
-    lv_label_set_text_fmt(ui_SecNum,"%ld",21-v);
 }
 
 
@@ -58,15 +72,27 @@ void ui_BoostModeA_screen_init(void)
     uint8_t i;
 
     ui_BoostModeA = lv_obj_create(NULL);
-    lv_obj_clear_flag(ui_BoostModeA, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_img_src(ui_BoostModeA, &ui_img_akf_gg_png, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_img_opa(ui_BoostModeA, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    lv_obj_set_style_bg_color(ui_BoostModeA,lv_color_black(),LV_PART_MAIN);
+    lv_obj_set_style_radius(ui_BoostModeA,0,LV_PART_MAIN);
+    lv_obj_set_style_border_side(ui_BoostModeA,LV_BORDER_SIDE_FULL,LV_PART_MAIN);
+    lv_obj_set_style_border_color(ui_BoostModeA,lv_color_white(),LV_PART_MAIN);
+    lv_obj_set_style_border_width(ui_BoostModeA,0,LV_PART_MAIN);
+    lv_obj_set_scrollbar_mode(ui_BoostModeA,LV_SCROLLBAR_MODE_OFF);
+    lv_obj_clear_flag(ui_BoostModeA, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    
+    ui_uiBoostModeA_Bg = lv_img_create(ui_BoostModeA);
+    lv_img_set_src(ui_uiBoostModeA_Bg, &ui_img_akf_gg_png);
+    lv_obj_set_width( ui_uiBoostModeA_Bg, LV_SIZE_CONTENT);  /// 1
+    lv_obj_set_height( ui_uiBoostModeA_Bg, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_align( ui_uiBoostModeA_Bg, LV_ALIGN_CENTER );
+    lv_obj_add_flag( ui_uiBoostModeA_Bg, LV_OBJ_FLAG_ADV_HITTEST );   /// Flags
+    lv_obj_clear_flag( ui_uiBoostModeA_Bg, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
 
 
     for (i = 0; i < 4; i++)
     {
-        ui_ChargeIndecB[i] = lv_img_create(ui_BoostModeA);
+        ui_ChargeIndecB[i] = lv_img_create(ui_uiBoostModeA_Bg);
         lv_img_set_src(ui_ChargeIndecB[i], &ui_img_centerindec_png);
         lv_obj_set_width(ui_ChargeIndecB[i], LV_SIZE_CONTENT);   /// 12
         lv_obj_set_height(ui_ChargeIndecB[i], LV_SIZE_CONTENT);    /// 15
@@ -83,7 +109,7 @@ void ui_BoostModeA_screen_init(void)
 
     for (i = 0; i < 4; i++)
     {
-        ui_ChargeIndecA[i] = lv_img_create(ui_BoostModeA);
+        ui_ChargeIndecA[i] = lv_img_create(ui_uiBoostModeA_Bg);
         lv_img_set_src(ui_ChargeIndecA[i], &ui_img_secondindec_png);
         lv_obj_set_width(ui_ChargeIndecA[i], LV_SIZE_CONTENT);   /// 237
         lv_obj_set_height(ui_ChargeIndecA[i], LV_SIZE_CONTENT);    /// 237
@@ -99,7 +125,7 @@ void ui_BoostModeA_screen_init(void)
 
     for (i = 0; i < 16; i++)
     {
-        ui_MainIndecA[i] = lv_img_create(ui_BoostModeA);
+        ui_MainIndecA[i] = lv_img_create(ui_uiBoostModeA_Bg);
         lv_img_set_src(ui_MainIndecA[i], &ui_img_akf_png);
         lv_obj_set_width(ui_MainIndecA[i], LV_SIZE_CONTENT);   /// 27
         lv_obj_set_height(ui_MainIndecA[i], LV_SIZE_CONTENT);    /// 92
@@ -115,7 +141,7 @@ void ui_BoostModeA_screen_init(void)
 
     for (i = 0; i < 5; i++)
     {
-        ui_MainIndecB[i] = lv_img_create(ui_BoostModeA);
+        ui_MainIndecB[i] = lv_img_create(ui_uiBoostModeA_Bg);
         lv_img_set_src(ui_MainIndecB[i], &ui_img_smallindecotr_1_png);
         lv_obj_set_width(ui_MainIndecB[i], LV_SIZE_CONTENT);   /// 22
         lv_obj_set_height(ui_MainIndecB[i], LV_SIZE_CONTENT);    /// 25
@@ -128,7 +154,7 @@ void ui_BoostModeA_screen_init(void)
         lv_img_set_angle(ui_MainIndecB[i], -100*i);
     }
 
-    ui_BoxSide = lv_img_create(ui_BoostModeA);
+    ui_BoxSide = lv_img_create(ui_uiBoostModeA_Bg);
     lv_img_set_src(ui_BoxSide, &ui_img_akf_line_png);
     lv_obj_set_width(ui_BoxSide, LV_SIZE_CONTENT);   /// 62
     lv_obj_set_height(ui_BoxSide, LV_SIZE_CONTENT);    /// 8
@@ -138,7 +164,7 @@ void ui_BoostModeA_screen_init(void)
     lv_obj_add_flag(ui_BoxSide, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
     lv_obj_clear_flag(ui_BoxSide, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
 
-    ui_SecNumBox = lv_obj_create(ui_BoostModeA);
+    ui_SecNumBox = lv_obj_create(ui_uiBoostModeA_Bg);
     lv_obj_set_width(ui_SecNumBox, 45);
     lv_obj_set_height(ui_SecNumBox, 30);
     lv_obj_set_x(ui_SecNumBox, 36);
@@ -161,7 +187,7 @@ void ui_BoostModeA_screen_init(void)
     lv_obj_set_style_text_line_space(ui_SecNum, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_SecNum, &ui_font_Seg40, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    ui_SecLable = lv_label_create(ui_BoostModeA);
+    ui_SecLable = lv_label_create(ui_uiBoostModeA_Bg);
     lv_obj_set_width(ui_SecLable, LV_SIZE_CONTENT);   /// 1
     lv_obj_set_height(ui_SecLable, LV_SIZE_CONTENT);    /// 1
     lv_obj_set_x(ui_SecLable, 49);
@@ -172,22 +198,32 @@ void ui_BoostModeA_screen_init(void)
     lv_obj_set_style_text_opa(ui_SecLable, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(ui_SecLable, &lv_font_montserrat_14, LV_PART_MAIN | LV_STATE_DEFAULT);
 
+    lv_obj_set_style_opa(ui_uiBoostModeA_Bg,LV_OPA_TRANSP,LV_PART_MAIN);
 
     lv_anim_init(&Boost1_Anim);
     lv_anim_set_var(&Boost1_Anim,ui_MainIndecA);
     lv_anim_set_values(&Boost1_Anim,0,21);
-    lv_anim_set_time(&Boost1_Anim, 22000);
+    lv_anim_set_time(&Boost1_Anim, 3000);
     lv_anim_set_exec_cb(&Boost1_Anim, Boost1_Anim_CB);
     lv_anim_set_path_cb(&Boost1_Anim,lv_anim_path_linear);
-    lv_anim_set_repeat_count(&Boost1_Anim, LV_ANIM_REPEAT_INFINITE);
-    lv_anim_start(&Boost1_Anim);
+    lv_anim_set_repeat_count(&Boost1_Anim, 1);
+    // lv_anim_start(&Boost1_Anim);
+
+    lv_anim_init(&Boost1_OPA_Anim);
+    lv_anim_set_var(&Boost1_OPA_Anim,ui_uiBoostModeA_Bg);
+    lv_anim_set_values(&Boost1_OPA_Anim,0,LV_OPA_COVER);
+    lv_anim_set_time(&Boost1_OPA_Anim, 1000);
+    lv_anim_set_delay(&Boost1_OPA_Anim, 300);
+    lv_anim_set_exec_cb(&Boost1_OPA_Anim, Boost1_OPA_Anim_CB);
+    lv_anim_set_path_cb(&Boost1_OPA_Anim,lv_anim_path_linear);
+    lv_anim_set_repeat_count(&Boost1_OPA_Anim, 1);
 
 }
 
 
 void Boost1_Anim_Begin()
 {
-    lv_anim_start(&Boost1_Anim);
+    lv_anim_start(&Boost1_OPA_Anim);
 }
 
 

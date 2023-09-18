@@ -19,6 +19,7 @@ extern "C" {
 // SCREEN: ui_BoostModeA
 void ui_BoostModeA_screen_init(void);
 extern lv_obj_t * ui_BoostModeA;
+extern lv_obj_t *ui_uiBoostModeA_Bg;
 extern lv_obj_t * ui_ChargeIndecB[4];
 extern lv_obj_t * ui_ChargeIndecA[4];
 extern lv_obj_t * ui_MainIndecA[16];
@@ -30,12 +31,16 @@ extern lv_obj_t * ui_SecLable;
 // SCREEN: ui_BoostModeB
 void ui_BoostModeB_screen_init(void);
 extern lv_obj_t * ui_BoostModeB;
+extern lv_obj_t *ui_uiBoostModeB_Bg;
 extern lv_obj_t * ui_MainIndeotor[5];
 extern lv_obj_t * ui_Triangle;
 extern lv_obj_t * ui_SmallPointWhite[12];
 extern lv_obj_t * ui_SmallPoint[12];
 extern lv_obj_t * ui_SecConut;
 extern lv_obj_t * ui____initial_actions0;
+
+extern lv_obj_t *StartBackGround;
+
 void Boost1_Anim_Begin(void);
 void Boost2_AnimBegin(void);
 void Boost1_Anim_Del(void);

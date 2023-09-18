@@ -4,6 +4,6 @@
 
 void TemperatureSensor_Task();
 
-
+extern QueueHandle_t TemperatureSensor_Queue;
 #endif
 

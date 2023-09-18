@@ -203,16 +203,16 @@ void N_Transform(float uq, float ud, float Angle)
 
 void P_Transform(float Ia, float Ib, float Ic)
 {
-    float iq,id; 
-    float ialpha,ibeta;
-    float Angle = 0.0;
+    // float iq,id; 
+    // float ialpha,ibeta;
+    // float Angle = 0.0;
 
-    ialpha = Ia;
-    ibeta = (1/sqrt(3))*Ia + (2/sqrt(3))*Ib;
+    // ialpha = Ia;
+    // ibeta = (1/sqrt(3))*Ia + (2/sqrt(3))*Ib;
 
-    //// 帕克变换
-    iq = ibeta  * FastCos(DEGTORAD(Angle)) - ialpha * FastSin(DEGTORAD(Angle));
-    id = ialpha * FastCos(DEGTORAD(Angle)) + ibeta  * FastSin(DEGTORAD(Angle));
+    // //// 帕克变换
+    // iq = ibeta  * FastCos(DEGTORAD(Angle)) - ialpha * FastSin(DEGTORAD(Angle));
+    // id = ialpha * FastCos(DEGTORAD(Angle)) + ibeta  * FastSin(DEGTORAD(Angle));
 
 }
 
