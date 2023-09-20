@@ -1,8 +1,8 @@
 #include "main.h"
 
 
+TimerHandle_t Timer1;
 
-TaskHandle_t  lvgl_cb;
 
 
 void Watch()
@@ -39,7 +39,10 @@ void Watch()
 
 
 
-
+void SW_Timer_CB( TimerHandle_t xTimer )
+{
+    printf("SW Timer Run !\n");
+}
 
 // https://blog.csdn.net/m0_50064262/article/details/120250151
 void app_main(void)
@@ -49,15 +52,17 @@ void app_main(void)
 	// GPIO_Init();
 	//SDIO_Init();
 	LED_Init();
+    UART_Init();
+
 
 	// WIFI_Init();
 	// TCP_Client_Init();
 	// TCP_Server_Init();
 	//UDP_Client_Init();
 
-	FOC_GPIO_Init();
+	// FOC_GPIO_Init();
 	// Timer_Init();
-	AS5600_Init();
+	// AS5600_Init();
 	// Timer_Init();
 	LVGL_Init();
 	// ADC_Init();
@@ -65,7 +70,10 @@ void app_main(void)
 	// xTaskCreatePinnedToCore( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL,0);
 	// xTaskCreatePinnedToCore( (TaskFunction_t)LED_Task,"LED_Task",4000,NULL,12,NULL,0);
 
-	xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4096*3,NULL,11,&lvgl_cb);
+	Timer1 = xTimerCreate("Timer1",pdMS_TO_TICKS( 500 ),pdTRUE,(void *)0,SW_Timer_CB);
+	xTimerStart(Timer1,0);
+	xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4096*3,NULL,11,NULL);
+    xTaskCreate(tx_task, "uart_tx_task", 1024*2, NULL, 12, NULL);
 	// xTaskCreate( (TaskFunction_t)LED_Task,"LED_Task",4096,NULL,12,NULL);
 	// xTaskCreate( (TaskFunction_t)TemperatureSensor_Task,"Temperature",4096,NULL,12,NULL);
 	// xTaskCreate( (TaskFunction_t)LEDWave_Task,"Wave_Task",4096,NULL,12,NULL);

@@ -66,7 +66,7 @@ static void Boost2_Anim_PointCB(void *var, int32_t v)
 static void  Boost2_OPA_Anim_CB(void *var, int32_t v)
 {
     uint8_t i=0;
-    printf("Run\r\n");
+
     lv_obj_set_style_opa(ui_BoostModeB,v,LV_PART_MAIN);
 
     if(LV_OPA_COVER == v)

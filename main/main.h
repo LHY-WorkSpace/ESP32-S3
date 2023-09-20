@@ -7,6 +7,7 @@
 #include "freertos/semphr.h"
 #include "freertos/timers.h"
 #include "Timer.h"
+#include "UART.h"
 #include "lvgl.h"
 #include "LVGL_UI.h"
 #include "GPIO.h"
@@ -24,4 +25,10 @@
 #include "DataType.h"
 #include "ADC.h"
 #include "SDIO.h"
+
+
+
+
+
+
 
