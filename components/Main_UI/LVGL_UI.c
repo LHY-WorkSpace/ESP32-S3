@@ -3,6 +3,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "lv_port_disp.h"
+#include "lv_port_indev.h"
 #include "LVGL_UI.h"
 #include "Timer.h"
 #include "Face.h"
@@ -73,6 +74,7 @@ void LVGL_Init()
     Timer_Init();
     lv_init();
 	lv_port_disp_init();
+	lv_port_indev_init();
     MainUICreate();
 
 }
