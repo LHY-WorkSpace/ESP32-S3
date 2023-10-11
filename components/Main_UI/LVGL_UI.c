@@ -54,6 +54,52 @@ void MeterTest()
 }
 
 
+void img()
+{
+    uint8_t Code=0;
+	static lv_obj_t *bgbg;
+
+    bgbg = lv_obj_create(lv_scr_act());
+    lv_obj_set_size(bgbg,240,240);
+    lv_obj_set_style_bg_color(bgbg,lv_color_black(),LV_PART_MAIN);
+    lv_obj_set_style_radius(bgbg,0,LV_PART_MAIN);
+    lv_obj_set_style_border_side(bgbg,LV_BORDER_SIDE_FULL,LV_PART_MAIN);
+    lv_obj_set_style_border_color(bgbg,lv_color_white(),LV_PART_MAIN);
+    lv_obj_set_style_border_width(bgbg,0,LV_PART_MAIN);
+    lv_obj_set_scrollbar_mode(bgbg,LV_SCROLLBAR_MODE_OFF);
+
+	lv_fs_dir_t d;
+    Code = lv_fs_dir_open(&d, "A:/");
+	if (Code == LV_FS_RES_OK)
+	{
+		char b[200];
+        uint8_t i;
+
+        for ( i = 0; i < 5; i++)
+        {
+            memset(b, 0, 200);
+            if (lv_fs_dir_read(&d, b) == LV_FS_RES_OK)
+            {
+                printf("%s\r\n", b);
+            }
+        }
+	}
+	else
+	{
+		printf("Err Code %d\r\n",Code);
+	}		
+	lv_fs_dir_close(&d);
+
+
+	lv_obj_t * img;
+
+	img = lv_img_create(bgbg);
+    
+	lv_img_set_src(img,"A:/321.png");
+
+    lv_obj_center(img);
+
+}
 
 
 
@@ -62,7 +108,8 @@ static void MainUICreate(void)
     //lv_meter_1();
     // MeterTest();
     // Eye_Main();
-    ui_init();
+    // ui_init();
+    img();
     // lv_demo_benchmark();
     // lv_demo_music();
 

@@ -91,6 +91,7 @@ void SDIO_Init(void)
 
     // Use POSIX and C standard library functions to work with files:
 
+#if 0
     // First create a file.
     const char *file_hello = MOUNT_POINT"/hello.txt";
 
@@ -139,7 +140,7 @@ void SDIO_Init(void)
         *pos = '\0';
     }
     ESP_LOGI(TAG, "Read from file: '%s'", line);
-
+#endif
     // All done, unmount partition and disable SDMMC peripheral
     esp_vfs_fat_sdcard_unmount(mount_point, card);
     ESP_LOGI(TAG, "Card unmounted");
