@@ -3,9 +3,7 @@
 
 
 void UART_Init(void);
+void UART_Task(void);
 
-
-
-void tx_task(void *arg);
 
 #endif

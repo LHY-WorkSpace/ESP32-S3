@@ -11,7 +11,7 @@
 
 
 static const char *TAG = "SDIO";
-#define MOUNT_POINT "/sdcard"
+#define MOUNT_POINT "/SD"
 
 
 void SDIO_Init(void)
@@ -91,7 +91,7 @@ void SDIO_Init(void)
 
     // Use POSIX and C standard library functions to work with files:
 
-#if 0
+#if 1
     // First create a file.
     const char *file_hello = MOUNT_POINT"/hello.txt";
 
@@ -142,8 +142,8 @@ void SDIO_Init(void)
     ESP_LOGI(TAG, "Read from file: '%s'", line);
 #endif
     // All done, unmount partition and disable SDMMC peripheral
-    esp_vfs_fat_sdcard_unmount(mount_point, card);
-    ESP_LOGI(TAG, "Card unmounted");
+    // esp_vfs_fat_sdcard_unmount(mount_point, card);
+    // ESP_LOGI(TAG, "Card unmounted");
 
 
 }

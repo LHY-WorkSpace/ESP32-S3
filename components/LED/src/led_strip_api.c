@@ -11,10 +11,13 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "MathFun.h"
-
-
+#include "freertos/event_groups.h"
+#include "DataType.h"
 static const char *TAG = "led_strip";
 static led_strip_handle_t led_strip;
+EventGroupHandle_t LED_EventGroup;
+
+
 
 #define LED_GPIO    (48)
 #define LED_NUM     (1)
@@ -68,6 +71,7 @@ void LED_Init()
 
     led_strip_clear(led_strip);
 
+    LED_EventGroup = xEventGroupCreate();
 }
 
 void LED_ON(uint32_t red, uint32_t green, uint32_t blue)
@@ -135,14 +139,17 @@ void LED_Task()
 
     while (1)
     {
-		LED_ON(5,5,5);
+        xEventGroupWaitBits(LED_EventGroup,Bit_0,pdTRUE,pdFALSE,portMAX_DELAY);
+		// LED_ON(5,5,5);
+        printf("LED_Task\n");
 		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
-		LED_OFF();
-		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
-		LED_ON(5,5,5);
-		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
-		LED_OFF();
-		vTaskDelayUntil(&Time,2000/portTICK_PERIOD_MS);
+		// LED_OFF();
+		// vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
+		// LED_ON(5,5,5);
+		// vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
+		// LED_OFF();
+		// vTaskDelayUntil(&Time,2000/portTICK_PERIOD_MS);
+
     }
 	vTaskDelete(NULL);
 }

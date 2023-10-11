@@ -8,20 +8,29 @@
 */
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/event_groups.h"
 #include "esp_system.h"
 #include "esp_log.h"
 #include "driver/uart.h"
 #include "string.h"
 #include "driver/gpio.h"
-
-
+#include "TemperatureSensor.h"
+#include "DataType.h"
+#include "led_strip.h"
 #define UART_N  (UART_NUM_1)
 #define TXD_PIN (GPIO_NUM_4)
 #define RXD_PIN (GPIO_NUM_5)
 
-#define RX_BUF_SIZE (2048)
-#define TX_BUF_SIZE (2048)
+#define RX_BUF_SIZE (4*1024)
+#define TX_BUF_SIZE (4*1024)
 
+#define RX_FLAG (Bit_0)
+#define TX_FLAG (Bit_1)
+
+
+EventGroupHandle_t USART_EventGroup;
+QueueHandle_t Event_Queue;
+extern EventGroupHandle_t LED_EventGroup;
 
 void UART_Init(void) 
 {
@@ -38,45 +47,85 @@ void UART_Init(void)
     uart_driver_install(UART_N, RX_BUF_SIZE * 2, TX_BUF_SIZE * 2, 0, NULL, 0);
     uart_param_config(UART_N, &uart_config);
     uart_set_pin(UART_N, TXD_PIN, RXD_PIN, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
+
+
+	Event_Queue = xQueueCreate(2,RX_BUF_SIZE);
+	if( Event_Queue == NULL)
+	{
+		printf("Event_Queue  Err\n");
+	}
+
+    //32 Bits you can use
+    USART_EventGroup = xEventGroupCreate();
+
+    if(USART_EventGroup == NULL)
+    {
+        printf("USART_EventGroup Err!!\n");
+        while (1);
+    }
 }
-
-int sendData(const char* logName, const char* data)
+    int rxBytes = 0;
+static void tx_task(void *arg)
 {
-    const int len = strlen(data);
-    const int txBytes = uart_write_bytes(UART_N, data, len);
-    return txBytes;
-}
-
-void tx_task(void *arg)
-{
-    static const char *TX_TASK_TAG = "TX_TASK";
-
+    int txBytes = 0;
+	float Sta;
+	UBaseType_t MsgNum;
+    uint8_t* data = (uint8_t*) malloc(RX_BUF_SIZE+1);
     while (1) 
     {
-        sendData(TX_TASK_TAG, "Hello world");
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        //读后清零:pdTRUE
+        //等待所有位触发:pdFALSE
+		MsgNum = uxQueueMessagesWaiting(TemperatureSensor_Queue);
+		if(MsgNum != 0)
+		{
+            memset(data,0,sizeof(RX_BUF_SIZE));
+            // 	printf("Msg Num %d \n",MsgNum);
+            xQueueReceive(TemperatureSensor_Queue,(void *)data,0);
+            memcpy((uint8_t*)&Sta,data,sizeof(float));
+            sprintf((char *)data,"%f",*((float *)data));
+            if(Sta >= 35.5)
+            {
+                xEventGroupSetBits(LED_EventGroup,Bit_0);    
+            }
+            // xEventGroupWaitBits(USART_EventGroup,TX_FLAG,pdTRUE,pdFALSE,portMAX_DELAY);
+            txBytes = uart_write_bytes(UART_N, data, sizeof(float));
+        }
+        else
+        {
+            vTaskDelay(100/portTICK_PERIOD_MS);
+        }
     }
 }
 
 static void rx_task(void *arg)
 {
-    static const char *RX_TASK_TAG = "RX_TASK";
-
     uint8_t* data = (uint8_t*) malloc(RX_BUF_SIZE+1);
+    int length = 0;
+
     while (1) 
     {
-        const int rxBytes = uart_read_bytes(UART_N, data, RX_BUF_SIZE, 1000 / portTICK_PERIOD_MS);
-        if (rxBytes > 0) 
+        uart_get_buffered_data_len(UART_N,(size_t*)&length);
+        memset(data,0,sizeof(RX_BUF_SIZE));
+        if (length != 0)
         {
-            data[rxBytes] = 0;
+            rxBytes = length;
+            uart_read_bytes(UART_N, data, RX_BUF_SIZE, 0);
+            // memcpy(data,0,sizeof(RX_BUF_SIZE));
+            // xEventGroupSetBits(USART_EventGroup,TX_FLAG);
+		    xQueueSendToBack(Event_Queue,(void *)data,0);
+            printf("RX %d Bytes   %d\n!!\n",rxBytes,length);
+        }
+        else
+        {
+            vTaskDelay(50/portTICK_PERIOD_MS);
         }
     }
     free(data);
 }
 
-// void app_main(void)
-// {
-//     UART_Init();
-//     xTaskCreate(rx_task, "uart_rx_task", 1024*2, NULL, configMAX_PRIORITIES, NULL);
-//     xTaskCreate(tx_task, "uart_tx_task", 1024*2, NULL, configMAX_PRIORITIES-1, NULL);
-// }
+void UART_Task(void)
+{
+    xTaskCreate(rx_task, "uart_rx_task", 1024*15, NULL, 10, NULL);
+    xTaskCreate(tx_task, "uart_tx_task", 1024*4, NULL, 9, NULL);
+    // vTaskDelete(NULL);
+}

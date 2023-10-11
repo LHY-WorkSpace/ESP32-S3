@@ -24,9 +24,9 @@
 // 33 34 35 36 37 在八线SPI时被SRAM和flash占用
 #define UA_A_PIN    (4)
 #define UA_B_PIN    (PWM_PIN_NULL)
-#define UB_A_PIN    (6)
+#define UB_A_PIN    (5)
 #define UB_B_PIN    (PWM_PIN_NULL)
-#define UC_A_PIN    (15)
+#define UC_A_PIN    (6)
 #define UC_B_PIN    (PWM_PIN_NULL)
 #define TICK_HZ     (1*1000*1000)//1MHz
 #define PWM_FREQ    (20*1000)//HZ

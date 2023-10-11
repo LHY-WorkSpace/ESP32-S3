@@ -16,6 +16,14 @@
  *      DEFINES
  *********************/
 
+
+#define  TOUCH_PAD  1 
+#define  MOUSE      2 
+#define  KEY_PAD    3
+#define  ENCODER    4
+#define  BUTTON     5
+
+#define  DEV_TYPE  BUTTON
 /**********************
  *      TYPEDEFS
  **********************/
@@ -23,41 +31,56 @@
 /**********************
  *  STATIC PROTOTYPES
  **********************/
-
+#if( DEV_TYPE == TOUCH_PAD) 
 static void touchpad_init(void);
 static void touchpad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
 static bool touchpad_is_pressed(void);
 static void touchpad_get_xy(lv_coord_t * x, lv_coord_t * y);
+lv_indev_t * indev_touchpad;
 
+
+#elif ( DEV_TYPE == MOUSE )
 static void mouse_init(void);
 static void mouse_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
 static bool mouse_is_pressed(void);
 static void mouse_get_xy(lv_coord_t * x, lv_coord_t * y);
+lv_indev_t * indev_mouse;
 
+
+#elif ( DEV_TYPE == KEY_PAD )
 static void keypad_init(void);
 static void keypad_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
 static uint32_t keypad_get_key(void);
+lv_indev_t * indev_keypad;
 
+
+#elif( DEV_TYPE == ENCODER )
 static void encoder_init(void);
 static void encoder_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
 static void encoder_handler(void);
+lv_indev_t * indev_encoder;
+static int32_t encoder_diff;
+static lv_indev_state_t encoder_state;
 
+
+#elif( DEV_TYPE == BUTTON )
+#define BUTTON_NUM  (4)
 static void button_init(void);
 static void button_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data);
 static int8_t button_get_pressed_id(void);
 static bool button_is_pressed(uint8_t id);
-
+lv_indev_t * indev_button;
+static const lv_point_t btn_points[BUTTON_NUM] = 
+{
+    {5, 100},   /*Button OK -&gt; x:10; y:10*/
+    {205, 100},  /*Button BACK -&gt; x:40; y:100*/
+    {5, 200},   /*Button UP -&gt; x:10; y:10*/
+    {205, 200},  /*Button DOWN -&gt; x:40; y:100*/
+};
+#endif
 /**********************
  *  STATIC VARIABLES
  **********************/
-lv_indev_t * indev_touchpad;
-lv_indev_t * indev_mouse;
-lv_indev_t * indev_keypad;
-lv_indev_t * indev_encoder;
-lv_indev_t * indev_button;
-
-static int32_t encoder_diff;
-static lv_indev_state_t encoder_state;
 
 /**********************
  *      MACROS
@@ -86,7 +109,7 @@ void lv_port_indev_init(void)
     /*------------------
      * Touchpad
      * -----------------*/
-
+#if( DEV_TYPE == TOUCH_PAD)
     /*Initialize your touchpad if you have*/
     touchpad_init();
 
@@ -99,7 +122,7 @@ void lv_port_indev_init(void)
     /*------------------
      * Mouse
      * -----------------*/
-
+ #elif ( DEV_TYPE == MOUSE )
     /*Initialize your mouse if you have*/
     mouse_init();
 
@@ -117,7 +140,7 @@ void lv_port_indev_init(void)
     /*------------------
      * Keypad
      * -----------------*/
-
+ #elif ( DEV_TYPE == KEY_PAD )
     /*Initialize your keypad or keyboard if you have*/
     keypad_init();
 
@@ -135,7 +158,7 @@ void lv_port_indev_init(void)
     /*------------------
      * Encoder
      * -----------------*/
-
+ #elif ( DEV_TYPE == ENCODER )
     /*Initialize your encoder if you have*/
     encoder_init();
 
@@ -153,7 +176,7 @@ void lv_port_indev_init(void)
     /*------------------
      * Button
      * -----------------*/
-
+#elif( DEV_TYPE == BUTTON) 
     /*Initialize your button if you have*/
     button_init();
 
@@ -164,11 +187,8 @@ void lv_port_indev_init(void)
     indev_button = lv_indev_drv_register(&indev_drv);
 
     /*Assign buttons to points on the screen*/
-    static const lv_point_t btn_points[2] = {
-        {10, 10},   /*Button 0 -> x:10; y:10*/
-        {40, 100},  /*Button 1 -> x:40; y:100*/
-    };
     lv_indev_set_button_points(indev_button, btn_points);
+ #endif
 }
 
 /**********************
@@ -178,7 +198,7 @@ void lv_port_indev_init(void)
 /*------------------
  * Touchpad
  * -----------------*/
-
+#if( DEV_TYPE == TOUCH_PAD)
 /*Initialize your touchpad*/
 static void touchpad_init(void)
 {
@@ -225,7 +245,7 @@ static void touchpad_get_xy(lv_coord_t * x, lv_coord_t * y)
 /*------------------
  * Mouse
  * -----------------*/
-
+ #elif ( DEV_TYPE == MOUSE )
 /*Initialize your mouse*/
 static void mouse_init(void)
 {
@@ -267,7 +287,7 @@ static void mouse_get_xy(lv_coord_t * x, lv_coord_t * y)
 /*------------------
  * Keypad
  * -----------------*/
-
+ #elif ( DEV_TYPE == KEY_PAD )
 /*Initialize your keypad*/
 static void keypad_init(void)
 {
@@ -326,7 +346,7 @@ static uint32_t keypad_get_key(void)
 /*------------------
  * Encoder
  * -----------------*/
-
+ #elif ( DEV_TYPE == ENCODER )
 /*Initialize your keypad*/
 static void encoder_init(void)
 {
@@ -353,7 +373,7 @@ static void encoder_handler(void)
 /*------------------
  * Button
  * -----------------*/
-
+#elif( DEV_TYPE == BUTTON) 
 /*Initialize your buttons*/
 static void button_init(void)
 {
@@ -406,6 +426,7 @@ static bool button_is_pressed(uint8_t id)
 
     return false;
 }
+#endif
 
 #else /*Enable this file at the top*/
 

@@ -69,7 +69,7 @@ void img()
     lv_obj_set_scrollbar_mode(bgbg,LV_SCROLLBAR_MODE_OFF);
 
 	lv_fs_dir_t d;
-    Code = lv_fs_dir_open(&d, "A:/");
+    Code = lv_fs_dir_open(&d, "A:SD/Img");
 	if (Code == LV_FS_RES_OK)
 	{
 		char b[200];
@@ -83,6 +83,16 @@ void img()
                 printf("%s\r\n", b);
             }
         }
+        lv_obj_t * img;
+
+        // img = lv_img_create(bgbg);
+        // lv_img_set_src(img,"A:SD/Img/321.gif");
+
+        img = lv_gif_create(bgbg);
+        lv_gif_set_src(img,"A:SD/Img/321.gif");
+
+        lv_obj_center(img);
+
 	}
 	else
 	{
@@ -90,14 +100,17 @@ void img()
 	}		
 	lv_fs_dir_close(&d);
 
+    // LV_IMG_DECLARE(GGG321);
+    //     lv_obj_t * img;
 
-	lv_obj_t * img;
+    //     // img = lv_img_create(bgbg);
+    //     // lv_img_set_src(img,"A:SD/Img/321.gif");
 
-	img = lv_img_create(bgbg);
-    
-	lv_img_set_src(img,"A:/321.png");
+    //     img = lv_gif_create(bgbg);
+    //     lv_gif_set_src(img,&GGG321);
+    //     lv_obj_center(img);
 
-    lv_obj_center(img);
+
 
 }
 

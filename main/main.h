@@ -6,6 +6,7 @@
 #include "freertos/queue.h"
 #include "freertos/semphr.h"
 #include "freertos/timers.h"
+#include "freertos/event_groups.h"
 #include "Timer.h"
 #include "UART.h"
 #include "lvgl.h"
