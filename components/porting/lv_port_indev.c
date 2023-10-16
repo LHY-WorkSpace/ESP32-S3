@@ -10,7 +10,7 @@
  *      INCLUDES
  *********************/
 #include "lv_port_indev.h"
-
+#include "AS5600.h"
 
 /*********************
  *      DEFINES
@@ -23,7 +23,7 @@
 #define  ENCODER    4
 #define  BUTTON     5
 
-#define  DEV_TYPE  BUTTON
+#define  DEV_TYPE  ENCODER
 /**********************
  *      TYPEDEFS
  **********************/
@@ -72,9 +72,9 @@ static bool button_is_pressed(uint8_t id);
 lv_indev_t * indev_button;
 static const lv_point_t btn_points[BUTTON_NUM] = 
 {
-    {5, 100},   /*Button OK -&gt; x:10; y:10*/
+    {5, 100},    /*Button OK -&gt; x:10; y:10*/
     {205, 100},  /*Button BACK -&gt; x:40; y:100*/
-    {5, 200},   /*Button UP -&gt; x:10; y:10*/
+    {5, 200},    /*Button UP -&gt; x:10; y:10*/
     {205, 200},  /*Button DOWN -&gt; x:40; y:100*/
 };
 #endif
@@ -356,16 +356,18 @@ static void encoder_init(void)
 /*Will be called by the library to read the encoder*/
 static void encoder_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
 {
-
+    encoder_handler();
     data->enc_diff = encoder_diff;
     data->state = encoder_state;
+    encoder_diff = 0;
 }
 
 /*Call this function in an interrupt to process encoder events (turn, press)*/
 static void encoder_handler(void)
 {
     /*Your code comes here*/
-
+    AS5600_UpdateAngle();
+    AS5600_Angle();
     encoder_diff += 0;
     encoder_state = LV_INDEV_STATE_REL;
 }
@@ -389,7 +391,8 @@ static void button_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
     /*Get the pressed button's ID*/
     int8_t btn_act = button_get_pressed_id();
 
-    if(btn_act >= 0) {
+    if(btn_act >= 0) 
+    {
         data->state = LV_INDEV_STATE_PR;
         last_btn = btn_act;
     }
@@ -407,9 +410,11 @@ static int8_t button_get_pressed_id(void)
     uint8_t i;
 
     /*Check to buttons see which is being pressed (assume there are 2 buttons)*/
-    for(i = 0; i < 2; i++) {
+    for(i = 0; i < BUTTON_NUM; i++) 
+    {
         /*Return the pressed button's ID*/
-        if(button_is_pressed(i)) {
+        if(button_is_pressed(i)) 
+        {
             return i;
         }
     }

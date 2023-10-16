@@ -8,6 +8,7 @@
 #include "Timer.h"
 #include "Face.h"
 #include "ui.h"
+#include "led_strip.h"
 
 static lv_obj_t * meter;
 static void set_value(void * indic, int32_t v)
@@ -110,7 +111,54 @@ void img()
     //     lv_gif_set_src(img,&GGG321);
     //     lv_obj_center(img);
 
+}
 
+
+
+void QR_Code()
+{
+	static lv_obj_t *bgbg;
+    bgbg = lv_obj_create(lv_scr_act());
+    lv_obj_set_size(bgbg,240,240);
+    lv_obj_set_style_bg_color(bgbg,lv_color_black(),LV_PART_MAIN);
+    lv_obj_set_style_radius(bgbg,0,LV_PART_MAIN);
+    lv_obj_set_style_border_side(bgbg,LV_BORDER_SIDE_FULL,LV_PART_MAIN);
+    lv_obj_set_style_border_color(bgbg,lv_color_white(),LV_PART_MAIN);
+    lv_obj_set_style_border_width(bgbg,0,LV_PART_MAIN);
+    lv_obj_set_scrollbar_mode(bgbg,LV_SCROLLBAR_MODE_OFF);
+
+    lv_obj_t *QR;
+    char Data[] = "123";
+    QR = lv_qrcode_create(bgbg,100,lv_color_black(),lv_color_white());
+    lv_qrcode_update(QR,Data,sizeof(Data));
+}
+
+
+static void cw_event_cb(lv_event_t * e)
+{
+    lv_event_code_t code = lv_event_get_code(e);        //获取事件
+    lv_obj_t * obj = lv_event_get_target(e);            //获取当前事件
+    lv_color_t ledColor;
+
+    switch (code)
+    {
+        case LV_EVENT_VALUE_CHANGED:
+            ledColor = lv_colorwheel_get_rgb(obj);
+            LED_ON(ledColor.ch.red,ledColor.ch.green,ledColor.ch.blue);
+            break;
+        default:
+            break;
+    }
+}
+
+void lv_colorwheel_1()
+{
+    lv_obj_t * cw;
+
+    cw = lv_colorwheel_create(lv_scr_act(), true);
+    lv_obj_set_size(cw, 200, 200);
+    lv_obj_center(cw);
+    lv_obj_add_event_cb(cw, cw_event_cb, LV_EVENT_VALUE_CHANGED, NULL);   //设置回调
 
 }
 
@@ -122,9 +170,10 @@ static void MainUICreate(void)
     // MeterTest();
     // Eye_Main();
     // ui_init();
-    img();
+    // img();
     // lv_demo_benchmark();
     // lv_demo_music();
+    lv_colorwheel_1();
 
 }
 
