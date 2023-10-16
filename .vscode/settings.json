@@ -52,6 +52,8 @@
         "sdio.h": "c",
         "esp_log.h": "c",
         "led_strip_rmt.h": "c",
-        "ff.h": "c"
+        "ff.h": "c",
+        "future": "c",
+        "system_error": "c"
     }
 }

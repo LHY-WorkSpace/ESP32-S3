@@ -11,19 +11,13 @@
  *********************/
 #include "lv_port_indev.h"
 #include "AS5600.h"
-
+#include "driver/gpio.h"
 /*********************
  *      DEFINES
  *********************/
 
 
-#define  TOUCH_PAD  1 
-#define  MOUSE      2 
-#define  KEY_PAD    3
-#define  ENCODER    4
-#define  BUTTON     5
 
-#define  DEV_TYPE  ENCODER
 /**********************
  *      TYPEDEFS
  **********************/
@@ -359,17 +353,39 @@ static void encoder_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
     encoder_handler();
     data->enc_diff = encoder_diff;
     data->state = encoder_state;
-    encoder_diff = 0;
+    // encoder_diff = 0;
 }
 
 /*Call this function in an interrupt to process encoder events (turn, press)*/
 static void encoder_handler(void)
 {
+    static uint16_t Key=0;
+
     /*Your code comes here*/
     AS5600_UpdateAngle();
-    AS5600_Angle();
-    encoder_diff += 0;
-    encoder_state = LV_INDEV_STATE_REL;
+
+    if(Key > AS5600_Angle())
+    {    
+        encoder_diff = -1;
+    }
+    else if( Key < AS5600_Angle())
+    {
+        encoder_diff = 1;
+    }
+    else 
+    {
+      encoder_diff = 0;  
+    }
+
+    if(gpio_get_level(1))
+    {
+        encoder_state = LV_INDEV_STATE_PR;
+    }
+    else
+    {
+        encoder_state = LV_INDEV_STATE_REL;
+    }
+    Key= AS5600_Angle();
 }
 
 /*------------------

@@ -49,7 +49,7 @@ typedef enum {
     LV_EVENT_FOCUSED,             /**< The object is focused*/
     LV_EVENT_DEFOCUSED,           /**< The object is defocused*/
     LV_EVENT_LEAVE,               /**< The object is defocused but still selected*/
-    LV_EVENT_HIT_TEST,            /**< Perform advanced hit-testing*/
+    LV_EVENT_HIT_TEST,            /**< 17 Perform advanced hit-testing*/
 
     /** Drawing events*/
     LV_EVENT_COVER_CHECK,        /**< Check if the object fully covers an area. The event parameter is `lv_cover_check_info_t *`.*/
@@ -64,7 +64,7 @@ typedef enum {
     LV_EVENT_DRAW_PART_END,      /**< Finishing to draw a part. The event parameter is `lv_obj_draw_dsc_t *`. */
 
     /** Special events*/
-    LV_EVENT_VALUE_CHANGED,       /**< The object's value has changed (i.e. slider moved)*/
+    LV_EVENT_VALUE_CHANGED,       /**< 28 The object's value has changed (i.e. slider moved)*/
     LV_EVENT_INSERT,              /**< A text is inserted to the object. The event data is `char *` being inserted.*/
     LV_EVENT_REFRESH,             /**< Notify the object to refresh something on it (for the user)*/
     LV_EVENT_READY,               /**< A process has finished*/

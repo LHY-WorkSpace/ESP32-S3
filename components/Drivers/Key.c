@@ -401,7 +401,7 @@ static void KeyIO_Init(void)
 {
 	uint8_t i;
 
-	for ( i = 0; i < Key_MaxNum; i++)
+	for ( i = 0; i < 1; i++)
 	{
 		esp_rom_gpio_pad_select_gpio(KeyPin[i]);
 		gpio_set_direction(KeyPin[i], GPIO_MODE_INPUT);
@@ -413,7 +413,7 @@ void Key_Init()
 {
 
 	KeyIO_Init();
-
+	return;
     button_init(&Button_Up,read_button_GPIO,KEY_ACT_LEVEL,Key_Up);
     button_init(&Button_Down,read_button_GPIO,KEY_ACT_LEVEL,Key_Down);
     button_init(&Button_Left,read_button_GPIO,KEY_ACT_LEVEL,Key_Left);

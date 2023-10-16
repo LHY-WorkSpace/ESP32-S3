@@ -50,9 +50,9 @@ void app_main(void)
     printf("System Online !\n");
 
 	// GPIO_Init();
-	SDIO_Init();
+	// SDIO_Init();
 	LED_Init();
-	// Key_Init();
+	Key_Init();
     // UART_Init();
 	// TemperatureSensor_Init();
 	// WIFI_Init();

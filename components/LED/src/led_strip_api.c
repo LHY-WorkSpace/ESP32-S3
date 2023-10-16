@@ -76,6 +76,8 @@ void LED_Init()
 
 void LED_ON(uint32_t red, uint32_t green, uint32_t blue)
 {
+
+    printf("LED_Val %ld %ld %ld\n",red,green,blue);
     led_strip_set_pixel(led_strip, 0, red, green, blue);
     led_strip_refresh(led_strip);
 }
@@ -139,16 +141,15 @@ void LED_Task()
 
     while (1)
     {
-        xEventGroupWaitBits(LED_EventGroup,Bit_0,pdTRUE,pdFALSE,portMAX_DELAY);
-		// LED_ON(5,5,5);
-        printf("LED_Task\n");
+
+		LED_ON(5,5,5);
 		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
-		// LED_OFF();
-		// vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
-		// LED_ON(5,5,5);
-		// vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
-		// LED_OFF();
-		// vTaskDelayUntil(&Time,2000/portTICK_PERIOD_MS);
+		LED_OFF();
+		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
+		LED_ON(5,5,5);
+		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
+		LED_OFF();
+		vTaskDelayUntil(&Time,2000/portTICK_PERIOD_MS);
 
     }
 	vTaskDelete(NULL);

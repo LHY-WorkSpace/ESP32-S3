@@ -144,11 +144,13 @@ static void cw_event_cb(lv_event_t * e)
     {
         case LV_EVENT_VALUE_CHANGED:
             ledColor = lv_colorwheel_get_rgb(obj);
-            LED_ON(ledColor.ch.red,ledColor.ch.green,ledColor.ch.blue);
+            LED_ON(ledColor.ch.red,((ledColor.ch.green_h << 3) + ledColor.ch.green_l),ledColor.ch.blue);
+            
             break;
         default:
             break;
     }
+    // printf("event_cb %d\r\n",code);
 }
 
 void lv_colorwheel_1()
@@ -156,9 +158,21 @@ void lv_colorwheel_1()
     lv_obj_t * cw;
 
     cw = lv_colorwheel_create(lv_scr_act(), true);
+
+    // cw = lv_slider_create(lv_scr_act());
     lv_obj_set_size(cw, 200, 200);
+    // lv_slider_set_range(cw, 0, 10);
+    // lv_obj_add_flag(cw, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
     lv_obj_center(cw);
     lv_obj_add_event_cb(cw, cw_event_cb, LV_EVENT_VALUE_CHANGED, NULL);   //设置回调
+
+    lv_group_t * group;
+    //创建一个group
+    group= lv_group_create();
+    //将group加载到输入设备中。注意，下面这个函数的第一个参数是注册输入设备时返回的指向新输入设备的指针，不要写错了
+    lv_group_add_obj(group,cw);
+    lv_group_focus_obj(cw);
+    lv_indev_set_group(indev_encoder,group);
 
 }
 
