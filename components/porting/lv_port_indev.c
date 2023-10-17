@@ -359,7 +359,7 @@ static void encoder_read(lv_indev_drv_t * indev_drv, lv_indev_data_t * data)
 /*Call this function in an interrupt to process encoder events (turn, press)*/
 static void encoder_handler(void)
 {
-    static uint16_t Key=0;
+    static float Key=0.0f;
 
     /*Your code comes here*/
     AS5600_UpdateAngle();

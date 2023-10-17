@@ -34,9 +34,9 @@
 float Ua,Ub,Uc;
 uint8_t PinGroup[U_PhaseMax][PWM_Max]=
 {
-    {UA_A_PIN,PWM_PIN_NULL},
-    {UB_A_PIN,PWM_PIN_NULL},
-    {UC_A_PIN,PWM_PIN_NULL},
+    {UA_A_PIN,UA_B_PIN},
+    {UB_A_PIN,UB_B_PIN},
+    {UC_A_PIN,UC_B_PIN},
 };
 
 mcpwm_cmpr_handle_t Comparator[U_PhaseMax];
@@ -169,15 +169,22 @@ void FOC_GPIO_Init(void)
     mcpwm_timer_start_stop(Timer,MCPWM_TIMER_START_NO_STOP);
 
 }
-//求电角度
+
+//求电角度 = 物理角度*极对数
 float ElectricalAngle(float shaft_angle, int pole_pairs) 
 {
   return (shaft_angle * (float)pole_pairs);
 }
 
-float LimitAngle(float shaft_angle) 
+float LimitAngle(float Input) 
 {
-  return (float)((int)shaft_angle % 360);
+    float Tmp;
+    Tmp = fmod(Input,360.0);
+    if( Tmp < 0.0)
+    {
+       Tmp += 360.0;
+    }
+    return Tmp;
 }
 
 //逆变换
@@ -269,7 +276,7 @@ void Foc_CTL()
     {
         AS5600_UpdateAngle();
 		// Angle += (float)Addval;
-		Angle = (float)AS5600_Angle() + 1.0;
+		Angle = AS5600_Angle() + 1.0f;
 
         angtmp = LimitAngle(Angle);
         angtmp = ElectricalAngle(angtmp,POLE_PAIR);

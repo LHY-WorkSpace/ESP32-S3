@@ -150,7 +150,6 @@ static void cw_event_cb(lv_event_t * e)
         default:
             break;
     }
-    // printf("event_cb %d\r\n",code);
 }
 
 void lv_colorwheel_1()
