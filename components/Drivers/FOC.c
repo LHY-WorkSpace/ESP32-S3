@@ -11,7 +11,7 @@
 #include "MathFun.h"
 #include "FOC.h"
 #include "AS5600.h"
-
+#include "PID.h"
 // 7 pair(*2) magnet
 // 6 pair(*2) coil
 
@@ -40,7 +40,7 @@ uint8_t PinGroup[U_PhaseMax][PWM_Max]=
 };
 
 mcpwm_cmpr_handle_t Comparator[U_PhaseMax];
-
+static PID_t PosPID;
 // https://github.com/espressif/esp-idf/blob/master/examples/peripherals/mcpwm/mcpwm_bldc_hall_control/main/mcpwm_bldc_hall_control_example_main.c
 
 void FOC_GPIO_Init(void)
@@ -171,9 +171,9 @@ void FOC_GPIO_Init(void)
 }
 
 //求电角度 = 物理角度*极对数
-float ElectricalAngle(float shaft_angle, int pole_pairs) 
+float ElectricalAngle(float physics_angle, int pole_pairs) 
 {
-  return (shaft_angle * (float)pole_pairs);
+  return (physics_angle * (float)pole_pairs);
 }
 
 float LimitAngle(float Input) 
@@ -267,29 +267,29 @@ uint8_t Addval=10;
 
 void Foc_CTL()
 {
-	static float Angle  = 1.0f;
+	float Angle  = 1.0f;
     TickType_t Time;	
     float angtmp;
-     
+    float UqTmp;   
+
+    PID_Init(&PosPID);
+    PID_Change_Kp(&PosPID,0.1);
+    // PID_Change_Ki(&PosPID,0.01);
+    PID_Change_Kd(&PosPID,0.01);
+    PID_SetTarget(&PosPID,90.0);
+
     Time = xTaskGetTickCount();
     while (1)
     {
-        AS5600_UpdateAngle();
-		// Angle += (float)Addval;
-		Angle = AS5600_Angle() + 1.0f;
-
-        angtmp = LimitAngle(Angle);
-        angtmp = ElectricalAngle(angtmp,POLE_PAIR);
+        Angle = AS5600_Angle();
+        angtmp = ElectricalAngle(Angle,POLE_PAIR);
         angtmp = LimitAngle(angtmp);
 
-        N_Transform(Uq,0,angtmp);
+        UqTmp = PID_Process(&PosPID,Angle);
+        printf("FOC %.2f %.2f\n",UqTmp,Angle);
+        N_Transform(UqTmp,0,angtmp);
         FOC_TickTask();
-
-		if(Angle >= 360.0f)
-		{
-			Angle = 0.0f;
-		}
-		vTaskDelayUntil(&Time,1/portTICK_PERIOD_MS);
+		vTaskDelayUntil(&Time,10/portTICK_PERIOD_MS);
     }
 	vTaskDelete(NULL);
 }

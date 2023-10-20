@@ -49,10 +49,10 @@ void app_main(void)
 {
     printf("System Online !\n");
 
-	// GPIO_Init();
+	GPIO_Init();
 	// SDIO_Init();
 	LED_Init();
-	Key_Init();
+	// Key_Init();
     // UART_Init();
 	// TemperatureSensor_Init();
 	// WIFI_Init();
@@ -60,10 +60,10 @@ void app_main(void)
 	// TCP_Server_Init();
 	//UDP_Client_Init();
 
-	// FOC_GPIO_Init();
+	FOC_GPIO_Init();
 	// Timer_Init();
 	AS5600_Init();
-	LVGL_Init();
+	// LVGL_Init();
 	// ADC_Init();
 
 	// xTaskCreatePinnedToCore( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL,0);
@@ -71,15 +71,15 @@ void app_main(void)
 
 	// Timer1 = xTimerCreate("Timer1",pdMS_TO_TICKS( 500 ),pdTRUE,(void *)0,SW_Timer_CB);
 	// xTimerStart(Timer1,0);
-	xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4096*3,NULL,11,NULL);
+	// xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4096*3,NULL,11,NULL);
     // xTaskCreate(tx_task, "uart_tx_task", 1024*2, NULL, 12, NULL);
-	// xTaskCreate( (TaskFunction_t)LED_Task,"LED_Task",4096,NULL,5,NULL);
+	xTaskCreate( (TaskFunction_t)LED_Task,"LED_Task",4096,NULL,5,NULL);
 	// xTaskCreate( (TaskFunction_t)TemperatureSensor_Task,"Temperature",4096,NULL,12,NULL);
 	// xTaskCreate( (TaskFunction_t)LEDWave_Task,"Wave_Task",4096,NULL,12,NULL);
 	// xTaskCreate( (TaskFunction_t)ADC_Task,"ADC_Task",4096,NULL,12,NULL);
 	// UART_Task();
 
-	// xTaskCreate( (TaskFunction_t)Foc_CTL,"FOC_Task",4096,NULL,11,NULL);
+	xTaskCreate( (TaskFunction_t)Foc_CTL,"FOC_Task",4096,NULL,11,NULL);
   	// xTaskCreate( (TaskFunction_t)IIC_Test,"EE_Task",4500,NULL,11,NULL);
 	// xTaskCreate( (TaskFunction_t)Watch,"Watch",4096,NULL,13,NULL);
 	// xTaskCreate( (TaskFunction_t)UART_Task,"UART_Task",4096,NULL,6,NULL);

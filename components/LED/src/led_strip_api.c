@@ -77,7 +77,7 @@ void LED_Init()
 void LED_ON(uint32_t red, uint32_t green, uint32_t blue)
 {
 
-    printf("LED_Val %ld %ld %ld\n",red,green,blue);
+    // printf("LED_Val %ld %ld %ld\n",red,green,blue);
     led_strip_set_pixel(led_strip, 0, red, green, blue);
     led_strip_refresh(led_strip);
 }

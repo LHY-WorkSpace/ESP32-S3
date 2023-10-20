@@ -129,6 +129,7 @@ void AS5600_UpdateAngle()
 
 float AS5600_Angle()
 {
+	AS5600_UpdateAngle();
 	return AS5600Angle;
 }
 
