@@ -21,7 +21,7 @@
 
 //================= Client ===============================
 #define CONFIG_EXAMPLE_IPV4
-#define SERVER_IP_ADDR "192.168.1.4"
+#define SERVER_IP_ADDR "192.168.31.139"
 #define SERVER_PORT 6666
 static const char *Client_TAG = "Client:";
 static const char *payload = " ESP32 Online!\r\n";
@@ -95,26 +95,30 @@ static void tcp_client_task(void *pvParameters)
             // Data received
             else
             {
-                    switch (rx_buffer[0])
-                    {
-                    case 'P':
-                        // RotateEye(0x01,1);
-                        Addval +=1;
-                        break;
-                      case 'N':
-                        Addval -=1;
-                        // RotateEye(0xFF,1);
-                        break;   
-                      case '1':
-                        Addval = 5;
-                        // ChangeEyeFocalize('1'- 0x30);
-                        break;  
+                Addval = atof(rx_buffer);
+
+                // memcpy((uint8_t *)&Addval,rx_buffer,sizeof(float));
+                    // switch (rx_buffer[0])
+                    // {
+                    // case 'P':
+                    //     // RotateEye(0x01,1);
+                    //     Addval +=1;
+                    //     break;
+                    //   case 'N':
+                    //     Addval -=1;
+                    //     // RotateEye(0xFF,1);
+                    //     break;   
+                    //   case '1':
+                    //     Addval = 5;
+                    //     // ChangeEyeFocalize('1'- 0x30);
+                    //     break;  
                                        
-                    default:
-                        // printf("times:%d\r\n",(uint8_t)(rx_buffer[0]- 0x30));
-                        // ChangeEyeFocalize(rx_buffer[0]- 0x30);
-                        break;
-                    }
+                    // default:
+                    //     // printf("times:%d\r\n",(uint8_t)(rx_buffer[0]- 0x30));
+                    //     // ChangeEyeFocalize(rx_buffer[0]- 0x30);
+                    //     break;
+                    // }
+
                 rx_buffer[0] = Addval;
                 err = send(sock, rx_buffer, strlen(rx_buffer), 0);
                 if(err <0)

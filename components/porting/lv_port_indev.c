@@ -362,13 +362,11 @@ static void encoder_handler(void)
     static float Key=0.0f;
 
     /*Your code comes here*/
-    AS5600_UpdateAngle();
-
-    if(Key > AS5600_Angle())
+    if(Key > AS5600_Angle(ANGLE_TURN_MODE))
     {    
         encoder_diff = -1;
     }
-    else if( Key < AS5600_Angle())
+    else if( Key < AS5600_Angle(ANGLE_TURN_MODE))
     {
         encoder_diff = 1;
     }
@@ -385,7 +383,7 @@ static void encoder_handler(void)
     {
         encoder_state = LV_INDEV_STATE_REL;
     }
-    Key= AS5600_Angle();
+    Key= AS5600_Angle(ANGLE_TURN_MODE);
 }
 
 /*------------------

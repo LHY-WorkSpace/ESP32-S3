@@ -43,11 +43,17 @@
 //========= Burn Commands =========
 #define BURN            (0xFF)//
 
+
+
+#define ANGLE_MODE          (0x01)//角度
+#define TURN_MODE           (0x02)//圈数
+#define ANGLE_TURN_MODE     (0x03)//带圈数的角度
+
+
 void AS5600_Init(void);
 void AS5600_WriteData(uint8_t addr,uint8_t length,uint8_t *data);
 void AS5600_ReadData(uint8_t addr,uint8_t length,uint8_t *data);
-float AS5600_Angle(void);
-void AS5600_UpdateAngle(void);
+float AS5600_Angle(uint8_t Mode);
 void AS5600_Test(void);
 #endif
 

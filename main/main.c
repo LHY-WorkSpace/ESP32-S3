@@ -55,8 +55,8 @@ void app_main(void)
 	// Key_Init();
     // UART_Init();
 	// TemperatureSensor_Init();
-	// WIFI_Init();
-	// TCP_Client_Init();
+	WIFI_Init();
+	TCP_Client_Init();
 	// TCP_Server_Init();
 	//UDP_Client_Init();
 

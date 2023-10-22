@@ -54,6 +54,8 @@
         "led_strip_rmt.h": "c",
         "ff.h": "c",
         "future": "c",
-        "system_error": "c"
+        "system_error": "c",
+        "cmath": "c",
+        "math.h": "c"
     }
 }

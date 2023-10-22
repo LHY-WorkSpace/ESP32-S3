@@ -3,6 +3,7 @@
 #include <string.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include <math.h>
 
 #define I2C_MASTER_SCL_IO		17    /*!< gpio number for I2C master clock */
 #define I2C_MASTER_SDA_IO		18    /*!< gpio number for I2C master data  */
@@ -15,7 +16,6 @@
 #define ACK_VAL					0x0         /*!< I2C ack value */
 #define NACK_VAL				0x1         /*!< I2C nack value */
 
-static float AS5600Angle = 0.0f;
 
 //************************// 
 //  功能描述: AS5600_ IO 初始化函数
@@ -117,20 +117,46 @@ void AS5600_ReadData(uint8_t addr,uint8_t length,uint8_t *data)
 }
 
 
-void AS5600_UpdateAngle()
-{	
-	B16_B08 Angle;
-	memset(Angle.B08,0,sizeof(B16_B08));
-	AS5600_ReadData(RAW_ANGLE_L_REG,1,&Angle.B08[0]);
-	AS5600_ReadData(RAW_ANGLE_H_REG,1,&Angle.B08[1]);
-	AS5600Angle = (float)Angle.B16*360.0f/4096.0f;
-}
-
-
-float AS5600_Angle()
+//带圈数
+float AS5600_Angle(uint8_t Mode)
 {
-	AS5600_UpdateAngle();
-	return AS5600Angle;
+	static float TurnsNum =0.0;
+	static float PrvAngle =0.0;	
+	float Err;
+	float AS5600Angle;
+	float Result=0.0;
+	B16_B08 AngleReg;
+
+	memset(AngleReg.B08,0,sizeof(B16_B08));
+	AS5600_ReadData(RAW_ANGLE_L_REG,1,&AngleReg.B08[0]);
+	AS5600_ReadData(RAW_ANGLE_H_REG,1,&AngleReg.B08[1]);
+	AS5600Angle = (float)AngleReg.B16*360.0f/4096.0f;
+
+	Err = AS5600Angle - PrvAngle;
+
+	if(fabs(Err) > 360.0*0.8)
+	{
+		TurnsNum += (Err > 0.0) ? -1:1;
+	}
+
+	PrvAngle = AS5600Angle;
+
+	switch (Mode)
+	{
+		case ANGLE_MODE:
+			Result = AS5600Angle;
+			break;
+		case TURN_MODE:
+			Result = TurnsNum;
+			break;
+		case ANGLE_TURN_MODE:
+			Result = AS5600Angle + TurnsNum*360.0;
+			break;
+		default:
+			break;
+	}
+
+	return Result;
 }
 
 
@@ -146,7 +172,7 @@ void AS5600_Test()
 		// AS5600_ReadData(RAW_ANGLE_H_REG,1,&Angle.B08[1]);
 		// AngleTmp = Angle.B16*360/4096;
 		// AS5600Angle = AngleTmp;
-		printf("Angle:%.3f\r\n",AS5600_Angle());
+		printf("Angle:%.3f\r\n",AS5600_Angle(ANGLE_TURN_MODE));
 		vTaskDelayUntil(&Time,1/portTICK_PERIOD_MS);
     }
 

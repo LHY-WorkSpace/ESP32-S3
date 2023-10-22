@@ -125,8 +125,8 @@ void WIFI_Init()
     wifi_config_t wifi_STAconfig =
     {
         //STA²ÎÊý
-        .sta.ssid = "CMCC-idhx",
-        .sta.password = "uf9mije6",
+        .sta.ssid = "Redmi_AX3000",
+        .sta.password = "9.1.502.",
         .sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK,
         .sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
 

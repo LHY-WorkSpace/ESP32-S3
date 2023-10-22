@@ -24,9 +24,9 @@
 // 33 34 35 36 37 在八线SPI时被SRAM和flash占用
 #define UA_A_PIN    (4)
 #define UA_B_PIN    (PWM_PIN_NULL)
-#define UB_A_PIN    (5)
+#define UB_A_PIN    (6)
 #define UB_B_PIN    (PWM_PIN_NULL)
-#define UC_A_PIN    (6)
+#define UC_A_PIN    (15)
 #define UC_B_PIN    (PWM_PIN_NULL)
 #define TICK_HZ     (1*1000*1000)//1MHz
 #define PWM_FREQ    (20*1000)//HZ
@@ -40,7 +40,9 @@ uint8_t PinGroup[U_PhaseMax][PWM_Max]=
 };
 
 mcpwm_cmpr_handle_t Comparator[U_PhaseMax];
-static PID_t PosPID;
+static PID_t PositionPID;
+static PID_t SpeedPID;
+static PID_t ForcePID;
 // https://github.com/espressif/esp-idf/blob/master/examples/peripherals/mcpwm/mcpwm_bldc_hall_control/main/mcpwm_bldc_hall_control_example_main.c
 
 void FOC_GPIO_Init(void)
@@ -186,12 +188,14 @@ float LimitAngle(float Input)
     }
     return Tmp;
 }
+#define _constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
 //逆变换
 void N_Transform(float uq, float ud, float Angle)
 {
     float Ualpha,Ubeta; 
 
+    Angle = LimitAngle(Angle);
     //帕克逆变换
     Ualpha = ud * FastCos(DEGTORAD(Angle)) - uq * FastSin(DEGTORAD(Angle)); 
     Ubeta =  ud * FastSin(DEGTORAD(Angle)) + uq * FastCos(DEGTORAD(Angle)); 
@@ -222,6 +226,74 @@ void P_Transform(float Ia, float Ib, float Ic)
     // id = ialpha * FastCos(DEGTORAD(Angle)) + ibeta  * FastSin(DEGTORAD(Angle));
 
 }
+
+void SVPWM_CTL(float uq, float ud, float Angle)
+{
+
+    int sector = floor(Angle / 60.0) + 1;
+    // 计算占空比
+    float T1 = sqrt(3)*FastSin(DEGTORAD(sector*60.0 - Angle)) * uq/VCC_MOTOR;
+    float T2 = sqrt(3)*FastSin(DEGTORAD(Angle - (sector-1.0)*60.0)) * uq/VCC_MOTOR;
+    // 两个版本 
+    // 以电压电源为中心/2
+      float T0 = 1 - T1 - T2;
+    // 低电源电压，拉到0
+    //float T0 = 0;
+
+    // 计算占空比（时间）
+    float Ta,Tb,Tc; 
+    switch(sector)
+    {
+        case 1:
+            Ta = T1 + T2 + T0/2;
+            Tb = T2 + T0/2;
+            Tc = T0/2;
+            break;
+        case 2:
+            Ta = T1 +  T0/2;
+            Tb = T1 + T2 + T0/2;
+            Tc = T0/2;
+            break;
+        case 3:
+            Ta = T0/2;
+            Tb = T1 + T2 + T0/2;
+            Tc = T2 + T0/2;
+            break;
+        case 4:
+            Ta = T0/2;
+            Tb = T1+ T0/2;
+            Tc = T1 + T2 + T0/2;
+            break;
+        case 5:
+            Ta = T2 + T0/2;
+            Tb = T0/2;
+            Tc = T1 + T2 + T0/2;
+            break;
+        case 6:
+            Ta = T1 + T2 + T0/2;
+            Tb = T0/2;
+            Tc = T1 + T0/2;
+            break;
+        default:
+            // 可能的错误状态
+            Ta = 0;
+            Tb = 0;
+            Tc = 0;
+      }
+
+      // 计算相电压和中心
+      Ua = Ta*VCC_MOTOR;
+      Ub = Tb*VCC_MOTOR;
+      Uc = Tc*VCC_MOTOR;
+}
+
+
+
+
+
+
+
+
 
 void SetPWMDuty(uint8_t Phase,uint8_t Value)
 {
@@ -263,8 +335,7 @@ void PWM_Task()
 	vTaskDelete(NULL);
 }
 
-uint8_t Addval=10;
-
+float Addval = 0.0;
 void Foc_CTL()
 {
 	float Angle  = 1.0f;
@@ -272,27 +343,34 @@ void Foc_CTL()
     float angtmp;
     float UqTmp;   
 
-    PID_Init(&PosPID);
-    PID_Change_Kp(&PosPID,0.1);
-    // PID_Change_Ki(&PosPID,0.01);
-    PID_Change_Kd(&PosPID,0.01);
-    PID_SetTarget(&PosPID,90.0);
+    PID_Init(&PositionPID);
+    PID_Change_Kp(&PositionPID,0.05);
+    // PID_Change_Ki(&PositionPID,0.01);
+    PID_Change_Kd(&PositionPID,0.01);
+
 
     Time = xTaskGetTickCount();
     while (1)
     {
-        Angle = AS5600_Angle();
+        PID_SetTarget(&PositionPID,Addval);
+        Angle = AS5600_Angle(ANGLE_TURN_MODE);
+        // printf("FOC %.2f\n",Angle);
         angtmp = ElectricalAngle(Angle,POLE_PAIR);
         angtmp = LimitAngle(angtmp);
 
-        UqTmp = PID_Process(&PosPID,Angle);
-        printf("FOC %.2f %.2f\n",UqTmp,Angle);
-        N_Transform(UqTmp,0,angtmp);
+        UqTmp = PID_Process(&PositionPID,Angle);
+
+        printf("FOC:%.2f,%.2f,%.2f\n",UqTmp,Angle,Addval);
+        N_Transform(_constrain(UqTmp,-6.0,6.0),0,angtmp);
+        // SVPWM_CTL(_constrain(UqTmp,-6.0,6.0),0,angtmp);
         FOC_TickTask();
-		vTaskDelayUntil(&Time,10/portTICK_PERIOD_MS);
+		vTaskDelayUntil(&Time,1/portTICK_PERIOD_MS);
     }
 	vTaskDelete(NULL);
 }
+
+
+
 
 
 
@@ -302,4 +380,105 @@ void FOC_TickTask()
     SetPWMDuty(UA_Phase,(uint8_t)(Ua*100/VCC_MOTOR));
     SetPWMDuty(UB_Phase,(uint8_t)(Ub*100/VCC_MOTOR));
     SetPWMDuty(UC_Phase,(uint8_t)(Uc*100/VCC_MOTOR));
+
+    // printf("FOC:%.2f,%.2f,%.2f\n",(Ua*100/VCC_MOTOR),(Ub*100/VCC_MOTOR),(Uc*100/VCC_MOTOR));
+
 }
+
+
+
+// void BLDCMotor::setPhaseVoltage(float Uq, float angle_el) {
+//   switch (foc_modulation)
+//   {
+//     case FOCModulationType::SinePWM :
+//       // 正弦PWM调制
+//       // 逆派克+克拉克变换
+
+//       // 在0到360°之间的角度归一化
+//       // 只有在使用 _sin和 _cos 近似函数时才需要
+//       angle_el = normalizeAngle(angle_el + zero_electric_angle);
+//       // 逆派克变换
+//       Ualpha =  -_sin(angle_el) * Uq;  // -sin(angle) * Uq;
+//       Ubeta =  _cos(angle_el) * Uq;    //  cos(angle) * Uq;
+
+//       // 克拉克变换
+//       Ua = Ualpha + voltage_power_supply/2;
+//       Ub = -0.5 * Ualpha  + _SQRT3_2 * Ubeta + voltage_power_supply/2;
+//       Uc = -0.5 * Ualpha - _SQRT3_2 * Ubeta + voltage_power_supply/2;
+//       break;
+
+//     case FOCModulationType::SpaceVectorPWM :
+//       // 解释空间矢量调制(SVPWM)算法视频
+//       // https://www.youtube.com/watch?v=QMSWUMEAejg
+
+//       // 如果负电压的变化与相位相反
+//       // 角度+180度
+//       if(Uq < 0) angle_el += _PI;
+//       Uq = abs(Uq);
+
+//       // 在0到360°之间的角度归一化
+//       // 只有在使用 _sin和 _cos 近似函数时才需要
+//       angle_el = normalizeAngle(angle_el + zero_electric_angle + _PI_2);
+
+//       // 找到我们目前所处的象限
+//       int sector = floor(angle_el / _PI_3) + 1;
+//       // 计算占空比
+//       float T1 = _SQRT3*_sin(sector*_PI_3 - angle_el) * Uq/voltage_power_supply;
+//       float T2 = _SQRT3*_sin(angle_el - (sector-1.0)*_PI_3) * Uq/voltage_power_supply;
+//       // 两个版本
+//       // 以电压电源为中心/2
+//       float T0 = 1 - T1 - T2;
+//       // 低电源电压，拉到0
+//       //float T0 = 0;
+
+//       // 计算占空比（时间）
+//       float Ta,Tb,Tc; 
+//       switch(sector){
+//         case 1:
+//           Ta = T1 + T2 + T0/2;
+//           Tb = T2 + T0/2;
+//           Tc = T0/2;
+//           break;
+//         case 2:
+//           Ta = T1 +  T0/2;
+//           Tb = T1 + T2 + T0/2;
+//           Tc = T0/2;
+//           break;
+//         case 3:
+//           Ta = T0/2;
+//           Tb = T1 + T2 + T0/2;
+//           Tc = T2 + T0/2;
+//           break;
+//         case 4:
+//           Ta = T0/2;
+//           Tb = T1+ T0/2;
+//           Tc = T1 + T2 + T0/2;
+//           break;
+//         case 5:
+//           Ta = T2 + T0/2;
+//           Tb = T0/2;
+//           Tc = T1 + T2 + T0/2;
+//           break;
+//         case 6:
+//           Ta = T1 + T2 + T0/2;
+//           Tb = T0/2;
+//           Tc = T1 + T0/2;
+//           break;
+//         default:
+//          // 可能的错误状态
+//           Ta = 0;
+//           Tb = 0;
+//           Tc = 0;
+//       }
+
+//       // 计算相电压和中心
+//       Ua = Ta*voltage_power_supply;
+//       Ub = Tb*voltage_power_supply;
+//       Uc = Tc*voltage_power_supply;
+//       break;
+//   }
+  
+//   // 设置硬件中的电压
+//   setPwm(Ua, Ub, Uc);
+// }
+
