@@ -95,31 +95,27 @@ static void tcp_client_task(void *pvParameters)
             // Data received
             else
             {
-                Addval = atof(rx_buffer);
-
                 // memcpy((uint8_t *)&Addval,rx_buffer,sizeof(float));
-                    // switch (rx_buffer[0])
-                    // {
-                    // case 'P':
-                    //     // RotateEye(0x01,1);
-                    //     Addval +=1;
-                    //     break;
-                    //   case 'N':
-                    //     Addval -=1;
-                    //     // RotateEye(0xFF,1);
-                    //     break;   
-                    //   case '1':
-                    //     Addval = 5;
-                    //     // ChangeEyeFocalize('1'- 0x30);
-                    //     break;  
-                                       
-                    // default:
-                    //     // printf("times:%d\r\n",(uint8_t)(rx_buffer[0]- 0x30));
-                    //     // ChangeEyeFocalize(rx_buffer[0]- 0x30);
-                    //     break;
-                    // }
-
-                rx_buffer[0] = Addval;
+                switch (rx_buffer[0])
+                {
+                    case 'P':
+                        G_P = atof(&rx_buffer[1]);
+                        break;
+                    case 'I':
+                        G_I = atof(&rx_buffer[1]);
+                        break;   
+                    case 'D':
+                        G_D = atof(&rx_buffer[1]);
+                        break;  
+                    case 'T':
+                        G_A = atof(&rx_buffer[1]);
+                        break;  
+                    default:
+                        G_P = 0.0;
+                        G_I = 0.0;
+                        G_D = 0.0;                   
+                    break;
+                }
                 err = send(sock, rx_buffer, strlen(rx_buffer), 0);
                 if(err <0)
                 {

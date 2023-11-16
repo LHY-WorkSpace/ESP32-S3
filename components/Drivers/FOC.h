@@ -17,7 +17,10 @@ typedef enum
     PWM_PIN_NULL = 0XFF,
 }PwmChannel_e;
 
-extern float Addval;
+extern float G_P;
+extern float G_I;
+extern float G_D;
+extern float G_A;
 void FOC_GPIO_Init(void);
 void FOC_main(void);
 void PWM_Task(void);

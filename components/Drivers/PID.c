@@ -73,20 +73,14 @@ void PID_SetTarget(PID_t *PID_Data, float k)
 float PID_Process(PID_t *PID_Data,float Actual)
 {
 	PID_Data->err = PID_Data->TargetValue - Actual;
-	PID_Data->IntegralValue +=PID_Data->err;
+
+	PID_Data->IntegralValue += PID_Data->err;
+
     PID_Data->OutValue = PID_Data->Kp*(PID_Data->err) 
-				   + PID_Data->Ki*(PID_Data->IntegralValue) 
-				   + PID_Data->Kd*(PID_Data->err - PID_Data->err_last);
+					   + PID_Data->Ki*(PID_Data->IntegralValue) 
+					   + PID_Data->Kd*(PID_Data->err - PID_Data->err_last);
+
 	PID_Data->err_last = PID_Data->err;
+
 	return PID_Data->OutValue;
-
-	// float incrementValue;
-
-	// PID_Data->ActualValue = Actual;
-	// PID_Data->err = PID_Data->SetValue - PID_Data->ActualValue;
-    // incrementValue = PID_Data->Kp*(PID_Data->err - PID_Data->err_next) + PID_Data->Ki*PID_Data->err + PID_Data->Kd*(PID_Data->err - 2 * PID_Data->err_next + PID_Data->err_last);//计算出增量
-	// PID_Data->ActualValue += incrementValue;
-	// PID_Data->err_last = PID_Data->err_next;
-	// PID_Data->err_next = PID_Data->err;
-	// return PID_Data->ActualValue;
 }
