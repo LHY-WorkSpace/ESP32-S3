@@ -20,6 +20,7 @@
 
 
 // 33 34 35 36 37 在八线SPI时被SRAM和flash占用
+//效果异常时可调整任意2相序
 #define UA_A_PIN    (4)
 #define UA_B_PIN    (PWM_PIN_NULL)
 #define UB_A_PIN    (6)
@@ -262,15 +263,15 @@ void SVPWM_CTL(float uq, float ud, float Angle)
             Tc = 0;
       }
 
-    //   // 计算相电压和中心
-    //   Ua = Ta*VCC_MOTOR;
-    //   Ub = Tb*VCC_MOTOR;
-    //   Uc = Tc*VCC_MOTOR;
+      // 计算相电压和中心
+      Ua = Ta*VCC_MOTOR;
+      Ub = Tb*VCC_MOTOR;
+      Uc = Tc*VCC_MOTOR;
 
 
-    PWM_SetDuty(UA_Phase,(uint8_t)(Ta*100/VCC_MOTOR));
-    PWM_SetDuty(UB_Phase,(uint8_t)(Tb*100/VCC_MOTOR));
-    PWM_SetDuty(UC_Phase,(uint8_t)(Tc*100/VCC_MOTOR));
+    PWM_SetDuty(UA_Phase,(uint8_t)(Ua*100/VCC_MOTOR));
+    PWM_SetDuty(UB_Phase,(uint8_t)(Ub*100/VCC_MOTOR));
+    PWM_SetDuty(UC_Phase,(uint8_t)(Uc*100/VCC_MOTOR));
 }
 
 
@@ -335,21 +336,19 @@ void Foc_CTL()
         // PID_Change_Kd(&PositionPID,G_D);
         // PID_SetTarget(&PositionPID,G_A);
         Angle = AS5600_Angle(ANGLE_TURN_MODE);
-        printf("FOC:%.2f\n",Angle);
-
         angtmp = AngleLimit(Angle);
-        Angle =  ValueLimit(0.1*(50.0-DIR*Angle),-2.0,2.0);
+        Angle =  ValueLimit(0.133*(50.0-DIR*Angle),-2.0,2.0);
         // UqTmp = PID_Process(&PositionPID,Angle);
         UqTmp = ElectricalAngle(angtmp,POLE_PAIR)*DIR;
         UqTmp = AngleLimit(UqTmp);
 
         // printf("FOC:%.2f,%.2f\n",UqTmp,Angle);
         SIN_CTL(Angle,0,UqTmp);
-        // SIN_CTL(ValueLimit(UqTmp,-6.0,6.0),0,angtmp);
         // SVPWM_CTL(Angle,0,UqTmp);
 
+
 		// vTaskDelayUntil(&Time,500/portTICK_PERIOD_MS);
-        vTaskDelay(5/portTICK_PERIOD_MS);
+        // vTaskDelay(2/portTICK_PERIOD_MS);
     }
 	vTaskDelete(NULL);
 }
