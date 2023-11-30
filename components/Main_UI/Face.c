@@ -19,18 +19,18 @@
 #define EYE_HOLE_MIN_SIZE		(25)
 
 //高光直径
-#define EYE_HIGHLIGHT_SIZE			(15)
+#define EYE_HIGHLIGHT_SIZE			(18)
 
 //高光移动角度倍数(越大移动越远)
 #define EYE_HIGHLIGHT_ANGLE_G		(8)
 
 //上部高光初始位置
-#define EYE_HIGHLIGHT_HIGH_X	( 15)
-#define EYE_HIGHLIGHT_HIGH_Y	(-15)
+#define EYE_HIGHLIGHT_HIGH_X	( 12)
+#define EYE_HIGHLIGHT_HIGH_Y	(-12)
 
 //下部高光初始位置
-#define EYE_HIGHLIGHT_LOW_X		(-18)
-#define EYE_HIGHLIGHT_LOW_Y		( 18)
+#define EYE_HIGHLIGHT_LOW_X		(-15)
+#define EYE_HIGHLIGHT_LOW_Y		( 15)
 
 
 #define ROTATEDIR_FORWARD     (0x01)//顺时针
@@ -183,11 +183,13 @@ static void ChangeEyeFocalize_CB(void *var, int32_t v)
         x1=(EYE_HIGHLIGHT_HIGH_X)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))+(EYE_HIGHLIGHT_HIGH_Y)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G));
         y1=(EYE_HIGHLIGHT_HIGH_Y)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))-(EYE_HIGHLIGHT_HIGH_X)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G)); 
         lv_obj_align_to(Eye_in_high[i],Eye_Group[i],LV_ALIGN_CENTER,x1,y1);
+		lv_obj_set_size(Eye_in_high[i],EYE_HIGHLIGHT_SIZE+(EYE_HOLE_SIZE-v)/2,EYE_HIGHLIGHT_SIZE+(EYE_HOLE_SIZE-v)/2);
 
         //逆时针
         x1=(EYE_HIGHLIGHT_LOW_X)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))+(EYE_HIGHLIGHT_LOW_Y)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G));
         y1=(EYE_HIGHLIGHT_LOW_Y)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))-(EYE_HIGHLIGHT_LOW_X)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G));  
         lv_obj_align_to(Eye_in_low[i],Eye_Group[i],LV_ALIGN_CENTER,x1,y1);
+        lv_obj_set_size(Eye_in_low[i],EYE_HIGHLIGHT_SIZE/2+(EYE_HOLE_SIZE-v)/2,EYE_HIGHLIGHT_SIZE/2+(EYE_HOLE_SIZE-v)/2);
     }
 }
 
@@ -229,6 +231,7 @@ static void Eye_BodyCreate()
 		lv_obj_align_to(Eye_in_high[i],Eye_Group[i],LV_ALIGN_CENTER,EYE_HIGHLIGHT_HIGH_X,EYE_HIGHLIGHT_HIGH_Y);
 		lv_obj_set_scrollbar_mode(Eye_in_high[i],LV_SCROLLBAR_MODE_OFF);
 		lv_obj_clear_flag(Eye_in_high[i],LV_OBJ_FLAG_CLICKABLE );
+		lv_obj_set_style_opa(Eye_in_high[i],150,LV_PART_MAIN);
 
 		//眼部高光(下部)
 		Eye_in_low[i] = lv_obj_create(Eye_Group[i]);
@@ -237,6 +240,7 @@ static void Eye_BodyCreate()
 		lv_obj_align_to(Eye_in_low[i],Eye_Group[i],LV_ALIGN_CENTER,EYE_HIGHLIGHT_LOW_X,EYE_HIGHLIGHT_LOW_Y);
 		lv_obj_set_scrollbar_mode(Eye_in_low[i],LV_SCROLLBAR_MODE_OFF);
 		lv_obj_clear_flag(Eye_in_low[i],LV_OBJ_FLAG_CLICKABLE );
+		lv_obj_set_style_opa(Eye_in_low[i],150,LV_PART_MAIN);
 
     }
 }
