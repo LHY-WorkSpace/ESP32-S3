@@ -361,29 +361,29 @@ static void encoder_handler(void)
 {
     static float Key=0.0f;
 
-    /*Your code comes here*/
-    if(Key > AS5600_Angle(ANGLE_TURN_MODE))
-    {    
-        encoder_diff = -1;
-    }
-    else if( Key < AS5600_Angle(ANGLE_TURN_MODE))
-    {
-        encoder_diff = 1;
-    }
-    else 
-    {
-      encoder_diff = 0;  
-    }
+    // /*Your code comes here*/
+    // if(Key > AS5600_Angle(ANGLE_TURN_MODE))
+    // {    
+    //     encoder_diff = -1;
+    // }
+    // else if( Key < AS5600_Angle(ANGLE_TURN_MODE))
+    // {
+    //     encoder_diff = 1;
+    // }
+    // else 
+    // {
+    //   encoder_diff = 0;  
+    // }
 
-    if(gpio_get_level(1))
-    {
-        encoder_state = LV_INDEV_STATE_PR;
-    }
-    else
-    {
-        encoder_state = LV_INDEV_STATE_REL;
-    }
-    Key= AS5600_Angle(ANGLE_TURN_MODE);
+    // if(gpio_get_level(1))
+    // {
+    //     encoder_state = LV_INDEV_STATE_PR;
+    // }
+    // else
+    // {
+    //     encoder_state = LV_INDEV_STATE_REL;
+    // }
+    // Key= AS5600_Angle(ANGLE_TURN_MODE);
 }
 
 /*------------------

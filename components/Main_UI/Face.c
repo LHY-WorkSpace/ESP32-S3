@@ -137,20 +137,22 @@ static void Eye_BodyAnimPath_CB(void *var, int32_t v)
 {
     uint8_t i;
     int16_t x1,y1;
-
+    float SinVal,CosVal;
+    SinVal = FastSin(DEGTORAD(v));
+    CosVal = FastCos(DEGTORAD(v));
     for ( i = 0; i < 4; i++)
     {
         if( RotateDir == 1)
         {
             //Ë³Ê±Õë
-            x1=(Eye_Position[Eye_Position[i][2]][0])*FastCos(DEGTORAD(v))-(Eye_Position[Eye_Position[i][2]][1])*FastSin(DEGTORAD(v));
-            y1=(Eye_Position[Eye_Position[i][2]][1])*FastCos(DEGTORAD(v))+(Eye_Position[Eye_Position[i][2]][0])*FastSin(DEGTORAD(v));  
+            x1=(Eye_Position[Eye_Position[i][2]][0])*CosVal-(Eye_Position[Eye_Position[i][2]][1])*SinVal;
+            y1=(Eye_Position[Eye_Position[i][2]][1])*CosVal+(Eye_Position[Eye_Position[i][2]][0])*SinVal;  
         }
         else
         {
             //ÄæÊ±Õë
-            x1=(Eye_Position[Eye_Position[i][2]][0])*FastCos(DEGTORAD(v))+(Eye_Position[Eye_Position[i][2]][1])*FastSin(DEGTORAD(v));
-            y1=(Eye_Position[Eye_Position[i][2]][1])*FastCos(DEGTORAD(v))-(Eye_Position[Eye_Position[i][2]][0])*FastSin(DEGTORAD(v));  
+            x1=(Eye_Position[Eye_Position[i][2]][0])*CosVal+(Eye_Position[Eye_Position[i][2]][1])*SinVal;
+            y1=(Eye_Position[Eye_Position[i][2]][1])*CosVal-(Eye_Position[Eye_Position[i][2]][0])*SinVal;  
         }
 
         lv_obj_align_to(Eye_Group[i],Face,LV_ALIGN_CENTER,x1,y1);
@@ -172,6 +174,9 @@ static void ChangeEyeFocalize_CB(void *var, int32_t v)
 {
 	uint8_t i;
     int16_t x1,y1;
+    float SinVal,CosVal;
+    SinVal = FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G));
+    CosVal = FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G));
 
     for ( i = 0; i < 4; i++)
     {
@@ -180,14 +185,14 @@ static void ChangeEyeFocalize_CB(void *var, int32_t v)
         lv_obj_align_to(Eye_base[i],Eye_Group[i],LV_ALIGN_CENTER,0,0);
 
         //ÄæÊ±Õë
-        x1=(EYE_HIGHLIGHT_HIGH_X)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))+(EYE_HIGHLIGHT_HIGH_Y)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G));
-        y1=(EYE_HIGHLIGHT_HIGH_Y)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))-(EYE_HIGHLIGHT_HIGH_X)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G)); 
+        x1=(EYE_HIGHLIGHT_HIGH_X)*CosVal+(EYE_HIGHLIGHT_HIGH_Y)*SinVal;
+        y1=(EYE_HIGHLIGHT_HIGH_Y)*CosVal-(EYE_HIGHLIGHT_HIGH_X)*SinVal; 
         lv_obj_align_to(Eye_in_high[i],Eye_Group[i],LV_ALIGN_CENTER,x1,y1);
 		lv_obj_set_size(Eye_in_high[i],EYE_HIGHLIGHT_SIZE+(EYE_HOLE_SIZE-v)/2,EYE_HIGHLIGHT_SIZE+(EYE_HOLE_SIZE-v)/2);
 
         //ÄæÊ±Õë
-        x1=(EYE_HIGHLIGHT_LOW_X)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))+(EYE_HIGHLIGHT_LOW_Y)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G));
-        y1=(EYE_HIGHLIGHT_LOW_Y)*FastCos(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G))-(EYE_HIGHLIGHT_LOW_X)*FastSin(DEGTORAD((EYE_HOLE_SIZE-v)*EYE_HIGHLIGHT_ANGLE_G));  
+        x1=(EYE_HIGHLIGHT_LOW_X)*CosVal+(EYE_HIGHLIGHT_LOW_Y)*SinVal;
+        y1=(EYE_HIGHLIGHT_LOW_Y)*CosVal-(EYE_HIGHLIGHT_LOW_X)*SinVal;  
         lv_obj_align_to(Eye_in_low[i],Eye_Group[i],LV_ALIGN_CENTER,x1,y1);
         lv_obj_set_size(Eye_in_low[i],EYE_HIGHLIGHT_SIZE/2+(EYE_HOLE_SIZE-v)/2,EYE_HIGHLIGHT_SIZE/2+(EYE_HOLE_SIZE-v)/2);
     }

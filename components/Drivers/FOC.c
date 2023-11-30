@@ -308,16 +308,54 @@ void SIN_CTL(float Uq, float Ud, float angle_el)
 
 
 
+void FocOpenLoop_Speed(float Speed)
+{
+  float UqVal = 1.0;
+  static float angtmp = 0.0f;
+  angtmp = AngleLimit(angtmp+Speed);  
+  SIN_CTL(UqVal,0,ElectricalAngle(angtmp,POLE_PAIR));
+//   Delay_ms(5);
+}
 
-
-
-
-
-float G_P = 0.01;
+float G_P = 0.03;
 float G_I = 0.0;
-float G_A = 0.0;
+float Tarang = 0.0;
 float G_D = 0.0;
-float DIR = 1.0;
+float MAX = 2.0;
+float G_A;
+
+void FocCloseLoop_Position(float Target)
+{
+  float angtmp = 0.0f;
+  float Angle = 0.0f;  
+  float UqTmp;
+  float DIR = 1.0;
+
+
+    PID_Change_Kp(&PositionPID,G_P);
+    PID_Change_Ki(&PositionPID,G_I);
+    PID_Change_Kd(&PositionPID,G_D);
+    PID_SetTarget(&PositionPID,Target);
+
+  Angle = AS5600_Angle(ANGLE_TURN_MODE);
+  printf("FOC:%.1f,%.1f\n",Target,Angle);
+
+
+  
+  angtmp = AngleLimit(Angle);
+
+  Angle = PID_Process(&PositionPID,Angle);
+
+
+  Angle =  ValueLimit(Angle,-MAX,MAX);
+  UqTmp = ElectricalAngle(angtmp,POLE_PAIR)*DIR;
+  UqTmp = AngleLimit(UqTmp);
+
+  SIN_CTL(Angle,0,UqTmp);
+  // SVPWM_CTL(Angle,0,UqTmp);
+  // Delay_ms(2);
+}
+
 
 void Foc_CTL()
 {
@@ -331,22 +369,7 @@ void Foc_CTL()
     Time = xTaskGetTickCount();
     while (1)
     {
-        // PID_Change_Kp(&PositionPID,G_P);
-        // PID_Change_Ki(&PositionPID,G_I);
-        // PID_Change_Kd(&PositionPID,G_D);
-        // PID_SetTarget(&PositionPID,G_A);
-        Angle = AS5600_Angle(ANGLE_TURN_MODE);
-        angtmp = AngleLimit(Angle);
-        Angle =  ValueLimit(0.133*(50.0-DIR*Angle),-2.0,2.0);
-        // UqTmp = PID_Process(&PositionPID,Angle);
-        UqTmp = ElectricalAngle(angtmp,POLE_PAIR)*DIR;
-        UqTmp = AngleLimit(UqTmp);
-
-        // printf("FOC:%.2f,%.2f\n",UqTmp,Angle);
-        SIN_CTL(Angle,0,UqTmp);
-        // SVPWM_CTL(Angle,0,UqTmp);
-
-
+        FocCloseLoop_Position(10.0);
 		// vTaskDelayUntil(&Time,500/portTICK_PERIOD_MS);
         // vTaskDelay(2/portTICK_PERIOD_MS);
     }
