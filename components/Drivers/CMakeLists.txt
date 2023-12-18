@@ -14,6 +14,7 @@ idf_component_register( SRCS	${SOURCES}
                             LED
                             sdmmc
                             fatfs
+                            espressif_esp32_camera
                             )
 
 

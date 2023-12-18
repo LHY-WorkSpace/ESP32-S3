@@ -16,7 +16,7 @@
 // 6 pair(*2) coil
 
 #define POLE_PAIR	(7)
-#define VCC_MOTOR	(12.0f)
+#define VCC_MOTOR	(10.0f)
 
 
 // 33 34 35 36 37 在八线SPI时被SRAM和flash占用
@@ -338,7 +338,7 @@ void FocCloseLoop_Position(float Target)
     PID_SetTarget(&PositionPID,Target);
 
   Angle = AS5600_Angle(ANGLE_TURN_MODE);
-  printf("FOC:%.1f,%.1f\n",Target,Angle);
+//   printf("FOC:%.1f,%.1f\n",Target,Angle);
 
 
   
@@ -370,7 +370,7 @@ void Foc_CTL()
     while (1)
     {
         FocCloseLoop_Position(10.0);
-		// vTaskDelayUntil(&Time,500/portTICK_PERIOD_MS);
+		vTaskDelayUntil(&Time,2/portTICK_PERIOD_MS);
         // vTaskDelay(2/portTICK_PERIOD_MS);
     }
 	vTaskDelete(NULL);

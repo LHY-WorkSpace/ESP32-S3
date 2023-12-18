@@ -15,4 +15,5 @@ idf_component_register(SRCS "main.c"
                             esp_adc
                             sdmmc
                             fatfs
+                            espressif_esp32_camera
                     )

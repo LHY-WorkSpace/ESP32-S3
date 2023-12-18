@@ -1,4 +1,9 @@
 #include <stdio.h>
+#include <esp_log.h>
+#include <esp_system.h>
+#include <nvs_flash.h>
+#include <sys/param.h>
+#include <string.h>
 #include <inttypes.h>
 #include "sdkconfig.h"
 #include "freertos/FreeRTOS.h"
@@ -27,7 +32,7 @@
 #include "ADC.h"
 #include "SDIO.h"
 #include "Key.h"
-
+#include "Camera.h"
 
 
 

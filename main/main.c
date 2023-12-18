@@ -1,48 +1,50 @@
 #include "main.h"
 
 
-TimerHandle_t Timer1;
+
+
+// TimerHandle_t Timer1;
 
 
 
-void Watch()
-{
-	BaseType_t Sta;
-	float Temp = 0.0;
-	UBaseType_t MsgNum;
+// void Watch()
+// {
+// 	BaseType_t Sta;
+// 	float Temp = 0.0;
+// 	UBaseType_t MsgNum;
 
-    while (1)
-    {    
+//     while (1)
+//     {    
 
-		// MsgNum = uxQueueMessagesWaiting(TemperatureSensor_Queue);
-		// if(MsgNum != 0)
-		// {
-		// 	printf("Msg Num %d \n",MsgNum);
-			Sta = xQueueReceive(TemperatureSensor_Queue,(void *)&Temp,portMAX_DELAY);
-			if( Sta != pdPASS)
-			{
-				printf("RX Err !\n");
-			}
-			else
-			{
-				printf("Temperature is %.1f \n", Temp);
-			}
-		// }
+// 		// MsgNum = uxQueueMessagesWaiting(TemperatureSensor_Queue);
+// 		// if(MsgNum != 0)
+// 		// {
+// 		// 	printf("Msg Num %d \n",MsgNum);
+// 			Sta = xQueueReceive(TemperatureSensor_Queue,(void *)&Temp,portMAX_DELAY);
+// 			if( Sta != pdPASS)
+// 			{
+// 				printf("RX Err !\n");
+// 			}
+// 			else
+// 			{
+// 				printf("Temperature is %.1f \n", Temp);
+// 			}
+// 		// }
 
 
-        // vTaskDelay(20/portTICK_PERIOD_MS);
-        // taskYIELD();
+//         // vTaskDelay(20/portTICK_PERIOD_MS);
+//         // taskYIELD();
         
-    }
-	vTaskDelete(NULL);
-}
+//     }
+// 	vTaskDelete(NULL);
+// }
 
 
 
-void SW_Timer_CB( TimerHandle_t xTimer )
-{
-    printf("SW Timer Run !\n");
-}
+// void SW_Timer_CB( TimerHandle_t xTimer )
+// {
+//     printf("SW Timer Run !\n");
+// }
 
 // https://blog.csdn.net/m0_50064262/article/details/120250151
 void app_main(void)
@@ -59,10 +61,11 @@ void app_main(void)
 	// TCP_Server_Init();
 	//UDP_Client_Init();
 
-	// FOC_GPIO_Init();
+	FOC_GPIO_Init();
 	// Timer_Init();
-	// AS5600_Init();
+	AS5600_Init();
 	LVGL_Init();
+	Camera_Init();
 	// ADC_Init();
 
 	// xTaskCreatePinnedToCore( (TaskFunction_t)LVGL_Task,"LVGL_Task",4500,NULL,11,NULL,0);
@@ -78,11 +81,10 @@ void app_main(void)
 	// xTaskCreate( (TaskFunction_t)ADC_Task,"ADC_Task",4096,NULL,12,NULL);
 	// UART_Task();
 
-	// xTaskCreate( (TaskFunction_t)Foc_CTL,"FOC_Task",4096,NULL,11,NULL);
+	xTaskCreate( (TaskFunction_t)Foc_CTL,"FOC_Task",4096*2,NULL,11,NULL);
   	// xTaskCreate( (TaskFunction_t)IIC_Test,"EE_Task",4500,NULL,11,NULL);
 	// xTaskCreate( (TaskFunction_t)Watch,"Watch",4096,NULL,13,NULL);
 	// xTaskCreate( (TaskFunction_t)UART_Task,"UART_Task",4096,NULL,6,NULL);
-
 
 }
  
