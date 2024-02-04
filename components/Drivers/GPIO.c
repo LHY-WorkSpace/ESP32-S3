@@ -1,6 +1,7 @@
 #include "GPIO.h"
 #include "driver/gpio.h"
-
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #if 0
 
@@ -28,8 +29,8 @@ void GPIO_Init(void)
     gpio_set_level(12, 0);// OutPut Low Level
 
     // InPut Mode
-    esp_rom_gpio_pad_select_gpio(11);
-    gpio_set_direction(11, GPIO_MODE_INPUT);
+    esp_rom_gpio_pad_select_gpio(48);
+    gpio_set_direction(48, GPIO_MODE_INPUT);
     gpio_get_level(11);
 
 }
