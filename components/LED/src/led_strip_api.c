@@ -144,15 +144,15 @@ void LED_Task()
     while (1)
     {
 
-		// LED_ON(5,5,5);
-		vTaskDelayUntil(&Time,10/portTICK_PERIOD_MS);
-        MorseCodeTimerTick();
-		// LED_OFF();
-		// vTaskDelayUntil(&Time,200/portTICK_PERIOD_MS);
-		// LED_ON(5,5,5);
-		// vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
-		// LED_OFF();
-		// vTaskDelayUntil(&Time,2000/portTICK_PERIOD_MS);
+		LED_ON(5,5,5);
+		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
+        // MorseCodeTimerTick();
+		LED_OFF();
+		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
+		LED_ON(5,5,5);
+		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
+		LED_OFF();
+		vTaskDelayUntil(&Time,2000/portTICK_PERIOD_MS);
 
     }
 	vTaskDelete(NULL);

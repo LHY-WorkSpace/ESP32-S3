@@ -12,6 +12,8 @@
 #include "freertos/semphr.h"
 #include "freertos/timers.h"
 #include "freertos/event_groups.h"
+#include "freertos/stream_buffer.h"
+#include "freertos/message_buffer.h"
 #include "Timer.h"
 #include "UART.h"
 #include "lvgl.h"
@@ -34,7 +36,7 @@
 #include "Key.h"
 #include "Camera.h"
 #include "MorseCode.h"
-
+#include "mpu6050.h"
 
 
 

@@ -16,4 +16,5 @@ idf_component_register(SRCS "main.c"
                             sdmmc
                             fatfs
                             espressif_esp32_camera
+                            MPU6050
                     )

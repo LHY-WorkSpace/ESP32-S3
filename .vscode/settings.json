@@ -58,6 +58,9 @@
         "cmath": "c",
         "math.h": "c",
         "timer.h": "c",
-        "morsecode.h": "c"
+        "morsecode.h": "c",
+        "nvs_flash.h": "c",
+        "message_buffer.h": "c",
+        "unity.h": "c"
     }
 }
