@@ -4,4 +4,5 @@
 
 
 void WIFI_Init(void);
+void SmartConfig_Init(void);
 #endif

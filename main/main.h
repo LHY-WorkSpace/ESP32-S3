@@ -37,6 +37,6 @@
 #include "Camera.h"
 #include "MorseCode.h"
 #include "mpu6050.h"
-
+#include "esp_smartconfig.h"
 
 

@@ -1,4 +1,4 @@
-idf_component_register(SRCS "main.c"
+idf_component_register(SRCS "esp_qrcode_wrapper.c" "main.c" "esp_qrcode_main.c"
                     INCLUDE_DIRS "./"
                     REQUIRES  
                             lvgl
@@ -17,4 +17,5 @@ idf_component_register(SRCS "main.c"
                             fatfs
                             espressif_esp32_camera
                             MPU6050
+                            wpa_supplicant
                     )

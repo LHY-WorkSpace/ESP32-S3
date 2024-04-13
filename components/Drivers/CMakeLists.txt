@@ -15,6 +15,7 @@ idf_component_register( SRCS	${SOURCES}
                             sdmmc
                             fatfs
                             espressif_esp32_camera
+                            wpa_supplicant
                             )
 
 
