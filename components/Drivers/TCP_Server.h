@@ -3,6 +3,6 @@
 
 
 
-
+extern QueueHandle_t Tcp_Server_Queue;
 void TCP_Server_Init(void);
 #endif

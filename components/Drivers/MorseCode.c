@@ -73,6 +73,18 @@ const CodeTable_t CodeTable[]=
 
 };
 
+static void MorseCodeSet_High()
+{
+	gpio_set_level(12, 0);
+	LED_ON(30,30,150);//高电平
+}
+
+
+static void MorseCodeSet_Low()
+{
+	gpio_set_level(12, 1);
+	LED_OFF();//低电平
+}
 
 
 
@@ -81,17 +93,17 @@ void MorseCode_Init(void)
 	BufCnt = 0;
 	TotalData = 0;
 	MorseCodeSend("Jack Trust Me");
-	// MorseCodeSend("JACK TRUST ME");
 }
 
 
 void MorseCodeSend(char *Data)
 {
 	u16 i;
+	u16 Length;
 	if(TotalData == 0)
 	{
-		TotalData = strlen(Data);
-		for ( i = 0; i < TotalData; i++)
+		Length = strlen(Data);
+		for ( i = 0; i < Length; i++)
 		{
 			if( ( '0' <= (*Data)) && ((*Data) <= '9') )
 			{
@@ -170,6 +182,7 @@ void MorseCodeSend(char *Data)
 			Data++;
 		}
 		BufCnt = 0;
+		TotalData = Length;
 	}
 }
 
@@ -189,15 +202,11 @@ void MorseCodeTimerTick()
 	{
 		if(CodeTable[MorseCodeBuff[BufCnt]].Letter == ' ')
 		{
-			
-			 gpio_set_level(12, 1);
-			 LED_OFF();//低电平
+			 MorseCodeSet_Low();
 		}
 		else
 		{
-			
-			gpio_set_level(12, 0);
-			LED_ON(30,30,150);//高电平
+			MorseCodeSet_High();
 		}
 	}
 	else
@@ -207,9 +216,7 @@ void MorseCodeTimerTick()
 		{
 			if(TimeCnt < (CodeTable[MorseCodeBuff[BufCnt]].MorseCode[MCoffset] + DOT - 1))
 			{
-				
-				 gpio_set_level(12, 1);
-				 LED_OFF();//低电平
+				 MorseCodeSet_Low();
 			}
 			else
 			{
@@ -231,8 +238,7 @@ void MorseCodeTimerTick()
 		{
 			if(TimeCnt < (CodeTable[MorseCodeBuff[BufCnt]].MorseCode[MCoffset] + 3*DOT - 1))
 			{
-				 gpio_set_level(12, 1);
-				 LED_OFF();//低电平
+				 MorseCodeSet_Low();
 			}
 			else
 			{

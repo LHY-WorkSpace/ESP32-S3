@@ -3,17 +3,22 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
+#include <stdio.h>
 #include "esp_log.h"
 #include "esp_check.h"
 #include "led_strip.h"
 #include "led_strip_interface.h"
 #include "driver/gpio.h"
 #include "freertos/FreeRTOS.h"
+#include "freertos/queue.h"
 #include "freertos/task.h"
 #include "MathFun.h"
 #include "freertos/event_groups.h"
 #include "DataType.h"
 #include "MorseCode.h"
+#include "TCP_Client.h"
+#include "TCP_Server.h"
+#include <string.h>
 
 static const char *TAG = "led_strip";
 static led_strip_handle_t led_strip;
@@ -140,19 +145,24 @@ void LED_Task()
 {
     TickType_t Time;	
     Time=xTaskGetTickCount();
-
+    unsigned char Buff[12];
+    
+    uint32_t R,G,B;
     while (1)
     {
-
-		LED_ON(5,5,5);
-		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
+        xQueuePeek(Tcp_Server_Queue,Buff,portMAX_DELAY);
+        memcpy((unsigned char *)&R,Buff,sizeof(uint32_t));
+        memcpy((unsigned char *)&G,Buff+4,sizeof(uint32_t));
+        memcpy((unsigned char *)&B,Buff+8,sizeof(uint32_t));       
+		LED_ON(R,G,B);
+		// vTaskDelayUntil(&Time,500/portTICK_PERIOD_MS);
         // MorseCodeTimerTick();
-		LED_OFF();
-		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
-		LED_ON(5,5,5);
-		vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
-		LED_OFF();
-		vTaskDelayUntil(&Time,2000/portTICK_PERIOD_MS);
+		// LED_OFF();
+		// vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
+		// LED_ON(5,5,5);
+		// vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
+		// LED_OFF();
+		// vTaskDelayUntil(&Time,2000/portTICK_PERIOD_MS);
 
     }
 	vTaskDelete(NULL);

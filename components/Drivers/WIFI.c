@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <inttypes.h>
 #include <lwip/netdb.h>
 #include "sdkconfig.h"
@@ -181,6 +182,8 @@ void SmartConfig_Init()
     // 获取已经保存WIFI的配置
     esp_wifi_get_config(ESP_IF_WIFI_STA, &Savedconfig);
 
+    // bzero(&Savedconfig, sizeof(wifi_config_t));
+
      if(strlen((char*)Savedconfig.sta.ssid) > 0)
     {
         ESP_LOGI(TAG, "Last Connect WiFi SSID:%s", Savedconfig.sta.ssid);
@@ -227,7 +230,7 @@ void SmartConfig_Init()
         ESP_LOGW(TAG, "Please Make Your Phone Connnect Targer WIFI ");
         ESP_LOGW(TAG, "if You has Connectted Targer WIFI,Then Turn On Your Phone [ GPS ] and Open [ ESPTOUCH APP]");
 
-        ESP_ERROR_CHECK( esp_wifi_disconnect() );
+        // ESP_ERROR_CHECK( esp_wifi_disconnect() );
         ESP_ERROR_CHECK( esp_wifi_stop() );
 
         ESP_ERROR_CHECK( esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &sc_event_handler, NULL) );

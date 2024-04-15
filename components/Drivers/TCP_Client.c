@@ -21,10 +21,18 @@
 
 //================= Client ===============================
 #define CONFIG_EXAMPLE_IPV4
-#define SERVER_IP_ADDR "192.168.31.139"
+#define SERVER_IP_ADDR "192.168.0.6"
 #define SERVER_PORT 6666
 static const char *Client_TAG = "Client:";
 static const char *payload = " ESP32 Online!\r\n";
+
+
+
+#define TCP_CLIENT_QUEUE_LEN   (1)
+
+QueueHandle_t Tcp_Client_Queue;
+
+
 
 
 
@@ -36,6 +44,7 @@ static void tcp_client_task(void *pvParameters)
     int ip_protocol = 0;
     int err,sock;
     struct sockaddr_in dest_addr;
+    unsigned char Buff[12];
 
     while (1) 
     {
@@ -98,24 +107,27 @@ static void tcp_client_task(void *pvParameters)
                 // memcpy((uint8_t *)&Addval,rx_buffer,sizeof(float));
                 switch (rx_buffer[0])
                 {
-                    case 'P':
-                        G_P = atof(&rx_buffer[1]);
+                    case 'R':
+                        ip_protocol = atoi(&rx_buffer[1]);
+                        memcpy(Buff,(unsigned char *)&ip_protocol,sizeof(ip_protocol));
+                        xQueueOverwrite(Tcp_Client_Queue,Buff);
                         break;
-                    case 'I':
-                        G_I = atof(&rx_buffer[1]);
+                    case 'G':
+                        ip_protocol = atoi(&rx_buffer[1]);
+                        memcpy((Buff+4),(unsigned char *)&ip_protocol,sizeof(ip_protocol));
+                        xQueueOverwrite(Tcp_Client_Queue,Buff);
                         break;   
-                    case 'D':
-                        G_D = atof(&rx_buffer[1]);
-                        break;  
-                    case 'T':
-                        G_A = atof(&rx_buffer[1]);
+                    case 'B':
+                        ip_protocol = atoi(&rx_buffer[1]);
+                        memcpy((Buff+8),(unsigned char *)&ip_protocol,sizeof(ip_protocol));
+                        xQueueOverwrite(Tcp_Client_Queue,Buff);
                         break;  
                     default:
-                        G_P = 0.0;
-                        G_I = 0.0;
-                        G_D = 0.0;                   
+                        memset(Buff,0,sizeof(Buff));
+                        xQueueOverwrite(Tcp_Client_Queue,Buff);               
                     break;
                 }
+                printf("Get %d\r\n",ip_protocol);
                 err = send(sock, rx_buffer, strlen(rx_buffer), 0);
                 if(err <0)
                 {
@@ -141,6 +153,7 @@ static void tcp_client_task(void *pvParameters)
 
 void TCP_Client_Init(void)
 {
+    Tcp_Client_Queue = xQueueCreate(TCP_CLIENT_QUEUE_LEN,sizeof(int)*3);
     xTaskCreate(tcp_client_task, "tcp_client", 4096, NULL, 5, NULL);
 }
 

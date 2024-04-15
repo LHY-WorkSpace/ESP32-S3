@@ -19,17 +19,22 @@
 
 
 //================= Server ===============================
-#define OPEN_PORT                   8888
+#define OPEN_PORT                   6666
 #define KEEPALIVE_IDLE              5
 #define KEEPALIVE_INTERVAL          5
 #define KEEPALIVE_COUNT             5
 static const char *Server_TAG = "Server:";
+
+#define TCP_SERVER_QUEUE_LEN   (1)
+QueueHandle_t Tcp_Server_Queue;
 
 
 static void do_retransmit(const int sock)
 {
     int len;
     char rx_buffer[128];
+    int ip_protocol = 0;
+    unsigned char Buff[12];
 
     do 
     {
@@ -44,21 +49,45 @@ static void do_retransmit(const int sock)
         } 
         else 
         {
-            rx_buffer[len] = 0; // Null-terminate whatever is received and treat it like a string
-            ESP_LOGI(Server_TAG, "Received %d bytes: %s", len, rx_buffer);
-
-            // send() can return less bytes than supplied length.
-            // Walk-around for robust implementation.
-            int to_write = len;
-            while (to_write > 0) 
+            switch (rx_buffer[0])
             {
-                int written = send(sock, rx_buffer + (len - to_write), to_write, 0);
-                if (written < 0) 
-                {
-                    ESP_LOGE(Server_TAG, "Error occurred during sending: errno %d", errno);
-                }
-                to_write -= written;
+                case 'R':
+                    ip_protocol = atoi(&rx_buffer[1]);
+                    memcpy(Buff,(unsigned char *)&ip_protocol,sizeof(ip_protocol));
+                    xQueueOverwrite(Tcp_Server_Queue,Buff);
+                    break;
+                case 'G':
+                    ip_protocol = atoi(&rx_buffer[1]);
+                    memcpy((Buff+4),(unsigned char *)&ip_protocol,sizeof(ip_protocol));
+                    xQueueOverwrite(Tcp_Server_Queue,Buff);
+                    break;   
+                case 'B':
+                    ip_protocol = atoi(&rx_buffer[1]);
+                    memcpy((Buff+8),(unsigned char *)&ip_protocol,sizeof(ip_protocol));
+                    xQueueOverwrite(Tcp_Server_Queue,Buff);
+                    break;  
+                default:
+                    memset(Buff,0,sizeof(Buff));
+                    xQueueOverwrite(Tcp_Server_Queue,Buff);               
+                break;
             }
+            printf("Get %d\r\n",ip_protocol);
+
+            // rx_buffer[len] = 0; // Null-terminate whatever is received and treat it like a string
+            // ESP_LOGI(Server_TAG, "Received %d bytes: %s", len, rx_buffer);
+
+            // // send() can return less bytes than supplied length.
+            // // Walk-around for robust implementation.
+            // int to_write = len;
+            // while (to_write > 0) 
+            // {
+            //     int written = send(sock, rx_buffer + (len - to_write), to_write, 0);
+            //     if (written < 0) 
+            //     {
+            //         ESP_LOGE(Server_TAG, "Error occurred during sending: errno %d", errno);
+            //     }
+            //     to_write -= written;
+            // }
         }
 
     } while (len > 0);
@@ -157,6 +186,7 @@ CLEAN_UP:
 
 void TCP_Server_Init(void)
 {
+    Tcp_Server_Queue = xQueueCreate(TCP_SERVER_QUEUE_LEN,sizeof(int)*3);
     xTaskCreate(tcp_server_task, "tcp_server", 4096, (void*)AF_INET, 5, NULL);
 }
 
