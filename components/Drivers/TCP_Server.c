@@ -52,17 +52,17 @@ static void do_retransmit(const int sock)
             switch (rx_buffer[0])
             {
                 case 'R':
-                    ip_protocol = atoi(&rx_buffer[1]);
+                    ip_protocol = atoi(&rx_buffer[2]);
                     memcpy(Buff,(unsigned char *)&ip_protocol,sizeof(ip_protocol));
                     xQueueOverwrite(Tcp_Server_Queue,Buff);
                     break;
                 case 'G':
-                    ip_protocol = atoi(&rx_buffer[1]);
+                    ip_protocol = atoi(&rx_buffer[2]);
                     memcpy((Buff+4),(unsigned char *)&ip_protocol,sizeof(ip_protocol));
                     xQueueOverwrite(Tcp_Server_Queue,Buff);
                     break;   
                 case 'B':
-                    ip_protocol = atoi(&rx_buffer[1]);
+                    ip_protocol = atoi(&rx_buffer[2]);
                     memcpy((Buff+8),(unsigned char *)&ip_protocol,sizeof(ip_protocol));
                     xQueueOverwrite(Tcp_Server_Queue,Buff);
                     break;  

@@ -16,6 +16,8 @@ idf_component_register( SRCS	${SOURCES}
                             fatfs
                             espressif_esp32_camera
                             wpa_supplicant
+                            esp_https_ota
+                            app_update
                             )
 
 

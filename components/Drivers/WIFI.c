@@ -19,7 +19,7 @@
 #include "esp_smartconfig.h"
 
 
-#define EXAMPLE_ESP_MAXIMUM_RETRY  3
+#define EXAMPLE_ESP_MAXIMUM_RETRY  20
 
 #define WIFI_CONNECTED_BIT  BIT0
 #define WIFI_FAIL_BIT       BIT1
@@ -54,13 +54,16 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
     } 
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) 
     {
+
+        wifi_event_sta_disconnected_t *event = (wifi_event_sta_disconnected_t *)event_data;
+        ESP_LOGI(WIFI_TAG, "Disconnnect reason: 0x%x",event->reason);
         if (Def_wifi_retry_num < EXAMPLE_ESP_MAXIMUM_RETRY) 
         {            
             ESP_LOGI(WIFI_TAG, "retry to connect to the AP");
-           	vTaskDelay(2000/portTICK_PERIOD_MS);//延时一段时间后重试
+            esp_wifi_disconnect();
+           	vTaskDelay(1000/portTICK_PERIOD_MS);//延时一段时间后重试
             esp_wifi_connect();
             Def_wifi_retry_num++;
-
         }
         else 
         {
@@ -184,7 +187,7 @@ void SmartConfig_Init()
 
     // bzero(&Savedconfig, sizeof(wifi_config_t));
 
-     if(strlen((char*)Savedconfig.sta.ssid) > 0)
+    if(strlen((char*)Savedconfig.sta.ssid) > 0)
     {
         ESP_LOGI(TAG, "Last Connect WiFi SSID:%s", Savedconfig.sta.ssid);
         ESP_LOGI(TAG, "Last Connect WiFi Password:%s", Savedconfig.sta.password);
@@ -203,6 +206,10 @@ void SmartConfig_Init()
                                                             NULL,
                                                             &instance_got_ip));
 
+
+
+        Savedconfig.sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK;
+        Savedconfig.sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
         ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
         ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &Savedconfig) );
         ESP_ERROR_CHECK(esp_wifi_start());
@@ -216,7 +223,7 @@ void SmartConfig_Init()
 
     EventBits_t bits = xEventGroupWaitBits(Def_wifi_event_group,
             WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
-            pdFALSE,
+            pdTRUE,
             pdFALSE,
             portMAX_DELAY);
 

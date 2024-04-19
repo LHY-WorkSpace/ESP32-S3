@@ -103,7 +103,7 @@ void app_main(void)
 	// GPIO_Init();
 
     SmartConfig_Init();
-
+	OTA_Init();
     //Initialize NVS
     // esp_err_t ret = nvs_flash_init();
     // if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -126,7 +126,7 @@ void app_main(void)
 	// TemperatureSensor_Init();
 	// WIFI_Init();
 	// TCP_Client_Init();
-	TCP_Server_Init();
+	// TCP_Server_Init();
 	//UDP_Client_Init();
 
 	// FOC_GPIO_Init();

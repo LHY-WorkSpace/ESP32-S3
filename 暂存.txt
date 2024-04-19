@@ -1,4 +1,10 @@
 
+
+python -m http.server 8070
+
+
+
+
 // https://www.cnblogs.com/kerwincui/p/13958590.html
 /* URI 处理函数，在客户端发起 GET /uri 请求时被调用 */
 esp_err_t get_handler(httpd_req_t *req)

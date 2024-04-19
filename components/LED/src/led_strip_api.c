@@ -147,20 +147,21 @@ void LED_Task()
     Time=xTaskGetTickCount();
     unsigned char Buff[12];
     
-    uint32_t R,G,B;
+    uint32_t R =0,G = 0,B = 0;
     while (1)
     {
-        xQueuePeek(Tcp_Server_Queue,Buff,portMAX_DELAY);
-        memcpy((unsigned char *)&R,Buff,sizeof(uint32_t));
-        memcpy((unsigned char *)&G,Buff+4,sizeof(uint32_t));
-        memcpy((unsigned char *)&B,Buff+8,sizeof(uint32_t));       
-		LED_ON(R,G,B);
+        // xQueuePeek(Tcp_Server_Queue,Buff,portMAX_DELAY);
+        // memcpy((unsigned char *)&R,Buff,sizeof(uint32_t));
+        // memcpy((unsigned char *)&G,Buff+4,sizeof(uint32_t));
+        // memcpy((unsigned char *)&B,Buff+8,sizeof(uint32_t));       
+		// LED_ON(R,G,B);
 		// vTaskDelayUntil(&Time,500/portTICK_PERIOD_MS);
         // MorseCodeTimerTick();
-		// LED_OFF();
-		// vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
-		// LED_ON(5,5,5);
-		// vTaskDelayUntil(&Time,100/portTICK_PERIOD_MS);
+		LED_OFF();
+		vTaskDelayUntil(&Time,1000/portTICK_PERIOD_MS);
+		LED_ON(5,5,5);
+		vTaskDelayUntil(&Time,1000/portTICK_PERIOD_MS);
+        printf("2222 -ver");
 		// LED_OFF();
 		// vTaskDelayUntil(&Time,2000/portTICK_PERIOD_MS);
 
