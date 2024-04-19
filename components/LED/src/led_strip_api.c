@@ -20,7 +20,7 @@
 #include "TCP_Server.h"
 #include <string.h>
 
-static const char *TAG = "led_strip";
+static const char *TAG = "LED";
 static led_strip_handle_t led_strip;
 EventGroupHandle_t LED_EventGroup;
 
@@ -161,7 +161,7 @@ void LED_Task()
 		vTaskDelayUntil(&Time,1000/portTICK_PERIOD_MS);
 		LED_ON(5,5,5);
 		vTaskDelayUntil(&Time,1000/portTICK_PERIOD_MS);
-        printf("2222 -ver");
+        ESP_LOGI(TAG,"Ver - 1");
 		// LED_OFF();
 		// vTaskDelayUntil(&Time,2000/portTICK_PERIOD_MS);
 

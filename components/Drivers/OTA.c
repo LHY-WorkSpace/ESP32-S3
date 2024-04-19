@@ -25,7 +25,7 @@
 
 
 #define HASH_LEN 32
-#define SERVER_URL "http://192.168.0.11:8070/lvgl_v8_v1.bin"
+#define SERVER_URL "http://192.168.0.11:8070/lvgl_v8_v2.bin"
 
 static const char *TAG = "OTA";
 
@@ -114,10 +114,6 @@ static void OTA_task(void *pvParameters)
     else 
     {
         ESP_LOGE(TAG, "Firmware upgrade failed");
-    }
-    while (1) 
-    {
-        vTaskDelay(1000 / portTICK_PERIOD_MS);
     }
     vTaskDelete(NULL);
 }

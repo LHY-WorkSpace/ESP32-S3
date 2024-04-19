@@ -19,7 +19,14 @@
 #include "esp_smartconfig.h"
 
 
+
+// 连接重试次数
 #define EXAMPLE_ESP_MAXIMUM_RETRY  20
+
+//WIFI最大扫描数量
+#define SCAN_LIST_SIZE  20
+
+
 
 #define WIFI_CONNECTED_BIT  BIT0
 #define WIFI_FAIL_BIT       BIT1
@@ -159,6 +166,30 @@ static void sc_event_handler(void* arg, esp_event_base_t event_base,
 
 
 
+
+static void wifi_scan(void)
+{
+    uint16_t number = SCAN_LIST_SIZE;
+    wifi_ap_record_t ap_info[SCAN_LIST_SIZE];
+    uint16_t ap_count = 0;
+    memset(ap_info, 0, sizeof(ap_info));
+
+    ESP_ERROR_CHECK(esp_wifi_start());
+    esp_wifi_scan_start(NULL, true);
+    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_records(&number, ap_info));
+    ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
+    ESP_LOGI(TAG, "Total WIFI scanned = %u", ap_count);
+    for (int i = 0; (i < SCAN_LIST_SIZE) && (i < ap_count); i++) 
+    {
+        ESP_LOGI(TAG, "SSID \t\t%s", ap_info[i].ssid);
+        ESP_LOGI(TAG, "RSSI \t\t%d dB", ap_info[i].rssi);
+        ESP_LOGI(TAG, "Channel \t\t%d\n", ap_info[i].primary);
+    }
+    ESP_ERROR_CHECK( esp_wifi_stop() );
+    ESP_LOGI(TAG, "Scan Done");
+}
+
+
 void SmartConfig_Init()
 {
     esp_err_t ret = nvs_flash_init();
@@ -179,6 +210,8 @@ void SmartConfig_Init()
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
+
+    wifi_scan();
 
     wifi_config_t Savedconfig;
 
@@ -237,7 +270,6 @@ void SmartConfig_Init()
         ESP_LOGW(TAG, "Please Make Your Phone Connnect Targer WIFI ");
         ESP_LOGW(TAG, "if You has Connectted Targer WIFI,Then Turn On Your Phone [ GPS ] and Open [ ESPTOUCH APP]");
 
-        // ESP_ERROR_CHECK( esp_wifi_disconnect() );
         ESP_ERROR_CHECK( esp_wifi_stop() );
 
         ESP_ERROR_CHECK( esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &sc_event_handler, NULL) );
