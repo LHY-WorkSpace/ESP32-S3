@@ -102,8 +102,8 @@ void app_main(void)
     printf("System Online !\n");
 	// GPIO_Init();
 
-    SmartConfig_Init();
-	OTA_Init();
+    // SmartConfig_Init();
+	// OTA_Init();
     //Initialize NVS
     // esp_err_t ret = nvs_flash_init();
     // if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -132,7 +132,7 @@ void app_main(void)
 	// FOC_GPIO_Init();
 	// Timer_Init();
 	// AS5600_Init();
-	// LVGL_Init();
+	LVGL_Init();
 	// Camera_Init();
 	// ADC_Init();
 
@@ -141,7 +141,7 @@ void app_main(void)
 
 	// Timer1 = xTimerCreate("Timer1",pdMS_TO_TICKS( 500 ),pdTRUE,(void *)0,SW_Timer_CB);
 	// xTimerStart(Timer1,0);
-	// xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4096*3,NULL,4,NULL);
+	xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4096*3,NULL,4,NULL);
     // xTaskCreate(tx_task, "uart_tx_task", 1024*2, NULL, 12, NULL);
 	xTaskCreate( (TaskFunction_t)LED_Task,"LED_Task",4096,NULL,5,NULL);
 	// xTaskCreate( (TaskFunction_t)MPU6050_Test,"LED_Task",4096,NULL,5,NULL);

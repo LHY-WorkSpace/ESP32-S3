@@ -61,6 +61,46 @@ LV_IMG_DECLARE(ui_img_smallpoint_png);    // assets\SmallPoint.png
 LV_FONT_DECLARE(ui_font_Seg40);
 LV_FONT_DECLARE(ui_font_Seg48);
 
+
+
+
+
+
+
+// SCREEN: ui_Screen1
+
+void eye1_mov_Animation(lv_obj_t * TargetObject, int delay);
+void eye2_mov_Animation(lv_obj_t * TargetObject, int delay);
+void eye3_mov_Animation(lv_obj_t * TargetObject, int delay);
+void BT_test_Animation(lv_obj_t * TargetObject, int delay);
+// SCREEN: ui_Screen1
+void ui_Screen1_screen_init(void);
+extern lv_obj_t * ui_Screen1;
+extern lv_obj_t * ui_Container1;
+extern lv_obj_t * ui_Container2;
+extern lv_obj_t * ui_Container3;
+void ui_event_Button1(lv_event_t * e);
+extern lv_obj_t * ui_Button1;
+extern lv_obj_t * ui_Image1;
+extern lv_obj_t * ui____initial_actions0;
+
+
+LV_IMG_DECLARE(ui_img_eye_rr_png);    // assets/eye_RR.png
+LV_IMG_DECLARE(ui_img_eye_1_png);    // assets/eye_1.png
+LV_IMG_DECLARE(ui_img_eye_2_png);    // assets/eye_2.png
+LV_IMG_DECLARE(ui_img_eye_3_png);    // assets/eye_3.png
+LV_IMG_DECLARE(ui_img_eye_r_png);    // assets/eye_R.png
+
+
+
+
+
+
+
+
+
+
+
 void ui_init(void);
 
 #ifdef __cplusplus

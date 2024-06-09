@@ -118,8 +118,8 @@ void ui_BoostModeA_screen_init(void)
         lv_obj_set_align(ui_ChargeIndecA[i], LV_ALIGN_CENTER);
         lv_obj_add_flag(ui_ChargeIndecA[i], LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
         lv_obj_clear_flag(ui_ChargeIndecA[i], LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-        lv_img_set_pivot(ui_ChargeIndecA[i], -20, 10);
-        lv_img_set_angle(ui_ChargeIndecA[i], -75*i);
+        lv_img_set_pivot(ui_ChargeIndecA[i], -43, 12);
+        lv_img_set_angle(ui_ChargeIndecA[i], -66*i);
         lv_obj_add_flag(ui_ChargeIndecA[i], LV_OBJ_FLAG_HIDDEN);     /// Flags
     }
 
