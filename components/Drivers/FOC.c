@@ -27,12 +27,12 @@
 #define UB_B_PIN    (PWM_PIN_NULL)
 #define UC_A_PIN    (15)
 #define UC_B_PIN    (PWM_PIN_NULL)
-#define TICK_HZ     (10*1000*1000)//10MHz
-#define PWM_FREQ    (30*1000)//HZ
+#define TICK_HZ     (16*1000*1000)//10MHz
+#define PWM_FREQ    (160*1000)//HZ
 #define ValueLimit(Val,Min,Max) ((Val)<(Min)?(Min):((Val)>(Max)?(Max):(Val)))
 #define SQRT_3      (1.7320508075f)//sqrt(3)
 #define SQRT_3_2    (0.8660254037f)//sqrt(3)/2
-
+static uint32_t  TIM_PeriodVal = TICK_HZ/PWM_FREQ;
 
 uint8_t PinGroup[U_PhaseMax][PWM_Max]=
 {
@@ -51,6 +51,14 @@ void FOC_GPIO_Init(void)
 {
     uint8_t i;
 
+    if( (TIM_PeriodVal%100) != 0)
+    {
+        while (1)
+        {
+            vTaskDelay(1000/portTICK_PERIOD_MS);
+            printf("TIM_PeriodVal:%d Not Multiple of 100\r\n",TIM_PeriodVal);//必须是100的整数倍，确保占空比1%的控制精度
+        }
+    }
     mcpwm_timer_handle_t Timer;
     mcpwm_timer_config_t Timer_Config = 
     {
@@ -363,7 +371,7 @@ void Foc_CTL()
     TickType_t Time;	
     float angtmp = 0.0;
     float UqTmp;   
-
+    
     PID_Init(&PositionPID);
 
     Time = xTaskGetTickCount();

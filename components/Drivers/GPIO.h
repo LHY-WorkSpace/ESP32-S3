@@ -2,6 +2,9 @@
 #define GPIO_H
 
 
+#define TEST_IO_H    gpio_set_level(12,1)
+#define TEST_IO_L    gpio_set_level(12,0)
+
 /*
 ESP32:      OutSide:
 TX_0        CH343
