@@ -117,7 +117,7 @@ void app_main(void)
 
 
 
-    // SmartConfig_Init();
+    SmartConfig_Init();
 	// OTA_Init();
     //Initialize NVS
     // esp_err_t ret = nvs_flash_init();
@@ -128,7 +128,7 @@ void app_main(void)
     // ESP_ERROR_CHECK(ret);
 
     // dpp_enrollee_init();
-	http_task();
+	// http_task();
 	// SDIO_Init();
 	// LED_Init();
 	// MPU6050_Test();
