@@ -56,7 +56,7 @@ void FOC_GPIO_Init(void)
         while (1)
         {
             vTaskDelay(1000/portTICK_PERIOD_MS);
-            printf("TIM_PeriodVal:%d Not Multiple of 100\r\n",TIM_PeriodVal);//必须是100的整数倍，确保占空比1%的控制精度
+            printf("TIM_PeriodVal:%ld Not Multiple of 100\r\n",TIM_PeriodVal);//必须是100的整数倍，确保占空比1%的控制精度
         }
     }
     mcpwm_timer_handle_t Timer;

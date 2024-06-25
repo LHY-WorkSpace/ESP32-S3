@@ -18,4 +18,5 @@ idf_component_register(SRCS  "main.c"
                             espressif_esp32_camera
                             MPU6050
                             wpa_supplicant
+                            json
                     )

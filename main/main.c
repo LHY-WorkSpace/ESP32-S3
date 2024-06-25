@@ -102,6 +102,21 @@ void app_main(void)
     printf("System Online !\n");
 	// GPIO_Init();
 
+    // cJSON* cjson_root = cJSON_CreateObject();
+
+    // /* 添加一条字符串类型的JSON数据(添加一个链表节点) */
+    // cJSON_AddStringToObject(cjson_root, "name", "Jack");
+
+    // /* 添加一条整数类型的JSON数据(添加一个链表节点) */
+    // cJSON_AddNumberToObject(cjson_root, "age", 22);
+
+
+
+
+
+
+
+
     // SmartConfig_Init();
 	// OTA_Init();
     //Initialize NVS
@@ -113,9 +128,9 @@ void app_main(void)
     // ESP_ERROR_CHECK(ret);
 
     // dpp_enrollee_init();
-
+	http_task();
 	// SDIO_Init();
-	LED_Init();
+	// LED_Init();
 	// MPU6050_Test();
 	// MorseCode_Init();
 	// vTaskDelay(500);
@@ -129,7 +144,7 @@ void app_main(void)
 	// TCP_Server_Init();
 	//UDP_Client_Init();
 
-	FOC_GPIO_Init();
+	// FOC_GPIO_Init();
 	// Timer_Init();
 	// AS5600_Init();
 	// LVGL_Init();
@@ -143,14 +158,14 @@ void app_main(void)
 	// xTimerStart(Timer1,0);
 	// xTaskCreate( (TaskFunction_t)LVGL_Task,"LVGL_Task",4096*3,NULL,4,NULL);
     // xTaskCreate(tx_task, "uart_tx_task", 1024*2, NULL, 12, NULL);
-	xTaskCreate( (TaskFunction_t)LED_Task,"LED_Task",4096,NULL,5,NULL);
+	// xTaskCreate( (TaskFunction_t)LED_Task,"LED_Task",4096,NULL,5,NULL);
 	// xTaskCreate( (TaskFunction_t)MPU6050_Test,"LED_Task",4096,NULL,5,NULL);
 	// xTaskCreate( (TaskFunction_t)TemperatureSensor_Task,"Temperature",4096,NULL,12,NULL);
 	// xTaskCreate( (TaskFunction_t)LEDWave_Task,"Wave_Task",4096,NULL,12,NULL);
 	// xTaskCreate( (TaskFunction_t)ADC_Task,"ADC_Task",4096,NULL,12,NULL);
 	// UART_Task();
 
-	xTaskCreate( (TaskFunction_t)Foc_CTL,"FOC_Task",4096*2,NULL,11,NULL);
+	// xTaskCreate( (TaskFunction_t)Foc_CTL,"FOC_Task",4096*2,NULL,11,NULL);
   	// xTaskCreate( (TaskFunction_t)IIC_Test,"EE_Task",4500,NULL,11,NULL);
 	// xTaskCreate( (TaskFunction_t)Watch,"Watch",4096,NULL,13,NULL);
 	// xTaskCreate( (TaskFunction_t)UART_Task,"UART_Task",4096,NULL,6,NULL);

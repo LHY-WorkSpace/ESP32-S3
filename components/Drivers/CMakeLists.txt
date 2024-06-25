@@ -18,9 +18,10 @@ idf_component_register( SRCS	${SOURCES}
                             wpa_supplicant
                             esp_https_ota
                             app_update
+                            spiffs
                             )
 
-
+spiffs_create_partition_image(storage ./data FLASH_IN_PROJECT)
 
 
                         
