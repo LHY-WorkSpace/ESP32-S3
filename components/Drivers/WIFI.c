@@ -246,10 +246,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
                 break;
 
             case WIFI_EVENT_AP_STACONNECTED:
-                ip_event_got_ip_t *APConevent = (ip_event_got_ip_t *)event_data;
-
-                ESP_LOGI(WIFI_TAG, "Assign IP:" IPSTR, IP2STR(&APConevent->ip_info.ip));
-                xEventGroupSetBits(Web_wifi_event_group, WIFI_AP_CONNECTED_BIT);
+                ESP_LOGI(WIFI_TAG, "Devices Connect");
                 break; 
 
             default:
@@ -267,7 +264,10 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
                 xEventGroupSetBits(Def_wifi_event_group, WIFI_STA_CONNECTED_BIT);
                 break;
              case IP_EVENT_AP_STAIPASSIGNED:
-                ESP_LOGI(WIFI_TAG, "IP Devices Disconnect");
+                ESP_LOGI(WIFI_TAG, "IP Devices Connect");
+                ip_event_got_ip_t *APConevent = (ip_event_got_ip_t *)event_data;
+                ESP_LOGI(WIFI_TAG, "Assign IP:" IPSTR, IP2STR(&APConevent->ip_info.ip));
+                xEventGroupSetBits(Web_wifi_event_group, WIFI_AP_CONNECTED_BIT);
                 break;
 
             default:
@@ -276,16 +276,17 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
     }
 }
 
-static void Web_task(void * parm)
+static void Web_task()
 {
     ESP_LOGI(WIFI_TAG, "Web Task Run ");
     while(1) 
     {
-        ESP_LOGI(WIFI_TAG, "WebSocket Web Server is running ... ...\n");
+        xEventGroupWaitBits(Web_wifi_event_group,WIFI_AP_CONNECTED_BIT,pdTRUE,pdFALSE,portMAX_DELAY);
+        led_state = 0;
+        ESP_LOGI(WIFI_TAG, "WebSocket Web Server is running ... ...\n");      
         initi_web_page_buffer();
         setup_websocket_server();
-        xEventGroupWaitBits(Web_wifi_event_group,WIFI_AP_CONNECTED_BIT,pdTRUE,pdFALSE,portMAX_DELAY);
-        vTaskDelete(NULL);
+        // vTaskDelete(NULL);
     }
 }
 
@@ -337,6 +338,17 @@ void SmartConfig_Init()
     wifi_scan();//Scan WIFI
 
     wifi_config_t Savedconfig;
+
+    // wifi_config_t Savedconfig =
+    // {
+    //     //STA参数
+    //     .sta.ssid = "Redmi_AX3000",
+    //     .sta.password = "9.1.502.",
+    //     .sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK,
+    //     .sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
+    // };
+
+
     wifi_config_t wifi_APconfig =
     {
         //AP Parament
@@ -368,7 +380,7 @@ void SmartConfig_Init()
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT,ESP_EVENT_ANY_ID,&wifi_event_handler,NULL));
     ESP_ERROR_CHECK(esp_wifi_start());// Start WIFI
 
-    xTaskCreate(Web_task, "Web_task", 4096, NULL, 3, NULL);
+    xTaskCreate(Web_task, "Web_task", 4096*2, NULL, 10, NULL);
 
     EventBits_t bits = xEventGroupWaitBits(Def_wifi_event_group,
             WIFI_STA_CONNECTED_BIT,
@@ -379,10 +391,6 @@ void SmartConfig_Init()
     if (bits & WIFI_STA_CONNECTED_BIT) 
     {
         ESP_LOGI(WIFI_TAG, "Connect Sucess ");
-    } 
-    else if (bits & WIFI_FAIL_BIT)
-    {
-        // xEventGroupClearBits(SC_wifi_event_group, SC_CONNECTED_BIT);
     } 
     else 
     {

@@ -151,7 +151,7 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
             uint32_t png_height;            /*Will be the width of the decoded image*/
 
             /*Decode the loaded image in ARGB8888 */
-            error = lodepng_decode32(&img_data, &png_width, &png_height, png_data, png_data_size);
+            error = lodepng_decode32(&img_data, (unsigned*)&png_width, (unsigned*)&png_height, png_data, png_data_size);
             lv_mem_free(png_data); /*Free the loaded file*/
             if(error) {
                 if(img_data != NULL) {
@@ -174,7 +174,7 @@ static lv_res_t decoder_open(lv_img_decoder_t * decoder, lv_img_decoder_dsc_t * 
         uint32_t png_height;            /*No used, just required by he decoder*/
 
         /*Decode the image in ARGB8888 */
-        error = lodepng_decode32(&img_data, &png_width, &png_height, img_dsc->data, img_dsc->data_size);
+        error = lodepng_decode32(&img_data, (unsigned*)&png_width, (unsigned*)&png_height, img_dsc->data, img_dsc->data_size);
 
         if(error) {
             if(img_data != NULL) {

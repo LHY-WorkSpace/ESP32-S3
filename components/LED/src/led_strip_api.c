@@ -145,9 +145,7 @@ void LED_Task()
 {
     TickType_t Time;	
     Time=xTaskGetTickCount();
-    unsigned char Buff[12];
     
-    uint32_t R =0,G = 0,B = 0;
     while (1)
     {
         // xQueuePeek(Tcp_Server_Queue,Buff,portMAX_DELAY);
