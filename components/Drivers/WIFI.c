@@ -22,60 +22,92 @@
 
 #if 1
 // MAX retry Times 
-#define EXAMPLE_ESP_MAXIMUM_RETRY  20
+#define EXAMPLE_ESP_MAXIMUM_RETRY  3
 
 //MAX WIFI name lists
 #define SCAN_LIST_SIZE  20
 
+//spiffs path
+#define INDEX_HTML_PATH "/spiffs/index.html"
 
 #define WIFI_AP_CONNECTED_BIT       BIT0
 #define WIFI_STA_CONNECTED_BIT      BIT1
 
-
-
-
 static EventGroupHandle_t Def_wifi_event_group;
-static EventGroupHandle_t Web_wifi_event_group;
 static const char *WIFI_TAG = "wifi Process:";
 static int Def_wifi_retry_num = 0;
-
-
 httpd_handle_t server = NULL;
 int led_state = 0;
-struct async_resp_arg {
+char *index_html;
+char *response_data;
+struct async_resp_arg 
+{
     httpd_handle_t hd;
     int fd;
 };
 
-#define INDEX_HTML_PATH "/spiffs/index.html"
-char index_html[4096];
-char response_data[4096];
-
 
 static void initi_web_page_buffer(void)
 {
+    struct stat st;
     esp_vfs_spiffs_conf_t conf = {
         .base_path = "/spiffs",
         .partition_label = NULL,
         .max_files = 5,
         .format_if_mount_failed = true};
 
+    ESP_LOGI(WIFI_TAG, "Mount SPIFS");
     ESP_ERROR_CHECK(esp_vfs_spiffs_register(&conf));
 
-    memset((void *)index_html, 0, sizeof(index_html));
-    struct stat st;
+    size_t total = 0, used = 0;
+    //Get spiffs all size and remain size
+    esp_err_t ret = esp_spiffs_info(NULL, &total, &used);
+    if (ret != ESP_OK) 
+    {
+        ESP_LOGE(WIFI_TAG, "Failed to get SPIFFS partition information (%s)", esp_err_to_name(ret));
+    } 
+    else 
+    {
+        ESP_LOGI(WIFI_TAG, "Partition size: total: %d, used: %d", total, used);
+    }
+
+
     if (stat(INDEX_HTML_PATH, &st))
     {
         ESP_LOGE(WIFI_TAG, "index.html not found");
         return;
     }
 
+    ESP_LOGI(WIFI_TAG, "index.html Szie %ld",st.st_size);
+
+    if(st.st_size > 20*1024)
+    {
+        ESP_LOGE(WIFI_TAG, "index.html Too Large,OverSzie 20 KB");
+        return;
+    }
+
+    index_html = malloc(st.st_size*2);
+    response_data = malloc(st.st_size*2);  
+
+    if((index_html == NULL)||(response_data==NULL))
+    {
+        ESP_LOGE(WIFI_TAG, "Memery Not enough");
+        return;
+    }
+
+    memset((void *)index_html, 0, st.st_size*2);
+    memset((void *)response_data, 0, st.st_size*2);
+
     FILE *fp = fopen(INDEX_HTML_PATH, "r");
+
     if (fread(index_html, st.st_size, 1, fp) == 0)
     {
         ESP_LOGE(WIFI_TAG, "fread failed");
     }
     fclose(fp);
+
+    ESP_LOGI(WIFI_TAG, "Unmount SPIFS");
+    ESP_ERROR_CHECK(esp_vfs_spiffs_unregister(NULL));
 }
 
 esp_err_t get_req_handler(httpd_req_t *req)
@@ -177,6 +209,21 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
         ESP_LOGI(WIFI_TAG, "Got packet with message: %s", ws_pkt.payload);
     }
 
+        esp_wifi_disconnect();
+        vTaskDelay(100);
+        wifi_config_t wifi_STAconfig =
+        {
+            //STA参数
+            .sta.ssid = "618_封闭用",
+            .sta.password = "618618618",
+            .sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK,
+            .sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
+        };
+        ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_STAconfig));
+        esp_wifi_connect();
+        ESP_LOGI(WIFI_TAG, "===== Connect");
+
+
     ESP_LOGI(WIFI_TAG, "frame len is %d", ws_pkt.len);
 
     if (ws_pkt.type == HTTPD_WS_TYPE_TEXT &&
@@ -231,7 +278,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
                 if (Def_wifi_retry_num < EXAMPLE_ESP_MAXIMUM_RETRY) 
                 {            
                     ESP_LOGI(WIFI_TAG, "retry to connect to the WIFI");
-                    vTaskDelay(1000/portTICK_PERIOD_MS);//��ʱһ��ʱ�������?
+                    vTaskDelay(1000/portTICK_PERIOD_MS);
                     esp_wifi_connect();
                     Def_wifi_retry_num++;
                 }
@@ -243,13 +290,14 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
 
             case WIFI_EVENT_AP_STADISCONNECTED:
                 ESP_LOGI(WIFI_TAG, "Devices Disconnect");
+                free(index_html);
+                free(response_data);
                 break;
 
             case WIFI_EVENT_AP_STACONNECTED:
-                ip_event_got_ip_t *APConevent = (ip_event_got_ip_t *)event_data;
-
-                ESP_LOGI(WIFI_TAG, "Assign IP:" IPSTR, IP2STR(&APConevent->ip_info.ip));
-                xEventGroupSetBits(Web_wifi_event_group, WIFI_AP_CONNECTED_BIT);
+                // ip_event_got_ip_t *APConevent = (ip_event_got_ip_t *)event_data;
+                // ESP_LOGI(WIFI_TAG, "Assign IP:" IPSTR, IP2STR(&APConevent->ip_info.ip));
+                // xEventGroupSetBits(Def_wifi_event_group, WIFI_AP_CONNECTED_BIT);
                 break; 
 
             default:
@@ -267,7 +315,10 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
                 xEventGroupSetBits(Def_wifi_event_group, WIFI_STA_CONNECTED_BIT);
                 break;
              case IP_EVENT_AP_STAIPASSIGNED:
-                ESP_LOGI(WIFI_TAG, "IP Devices Disconnect");
+                ESP_LOGI(WIFI_TAG, "IP Devices Connect");
+                ip_event_got_ip_t *APConevent = (ip_event_got_ip_t *)event_data;
+                ESP_LOGI(WIFI_TAG, "Assign IP:" IPSTR, IP2STR(&APConevent->ip_info.ip));
+                xEventGroupSetBits(Def_wifi_event_group, WIFI_AP_CONNECTED_BIT);
                 break;
 
             default:
@@ -282,9 +333,9 @@ static void Web_task(void * parm)
     while(1) 
     {
         ESP_LOGI(WIFI_TAG, "WebSocket Web Server is running ... ...\n");
+        xEventGroupWaitBits(Def_wifi_event_group,WIFI_AP_CONNECTED_BIT,pdTRUE,pdFALSE,portMAX_DELAY);
         initi_web_page_buffer();
         setup_websocket_server();
-        xEventGroupWaitBits(Web_wifi_event_group,WIFI_AP_CONNECTED_BIT,pdTRUE,pdFALSE,portMAX_DELAY);
         vTaskDelete(NULL);
     }
 }
@@ -325,7 +376,6 @@ void SmartConfig_Init()
 
     ESP_ERROR_CHECK(esp_netif_init());
     Def_wifi_event_group = xEventGroupCreate();
-    Web_wifi_event_group = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_create_default_wifi_sta();
@@ -334,9 +384,18 @@ void SmartConfig_Init()
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK( esp_wifi_init(&cfg) );
 
-    wifi_scan();//Scan WIFI
+    // wifi_scan();//Scan WIFI
 
-    wifi_config_t Savedconfig;
+    // wifi_config_t wifi_STAconfig;
+    wifi_config_t wifi_STAconfig =
+    {
+        //STA参数
+        .sta.ssid = "618_封闭用",
+        .sta.password = "123456",
+        .sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK,
+        .sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
+    };
+
     wifi_config_t wifi_APconfig =
     {
         //AP Parament
@@ -351,18 +410,18 @@ void SmartConfig_Init()
     };
 
     // get last connect info
-    esp_wifi_get_config(ESP_IF_WIFI_STA, &Savedconfig);
+    // esp_wifi_get_config(ESP_IF_WIFI_STA, &wifi_STAconfig);
 
-    Savedconfig.sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK;
-    Savedconfig.sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
+    // wifi_STAconfig.sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK;
+    // wifi_STAconfig.sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));// AP+STA Mode
 
-    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &Savedconfig));
+    ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_STAconfig));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_APconfig));
 
-    ESP_LOGI(WIFI_TAG, "Last Connect WiFi SSID:%s", Savedconfig.sta.ssid);
-    ESP_LOGI(WIFI_TAG, "Last Connect WiFi Password:%s", Savedconfig.sta.password);
+    ESP_LOGI(WIFI_TAG, "Last Connect WiFi SSID:%s", wifi_STAconfig.sta.ssid);
+    ESP_LOGI(WIFI_TAG, "Last Connect WiFi Password:%s", wifi_STAconfig.sta.password);
 
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT,ESP_EVENT_ANY_ID,&wifi_event_handler,NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT,ESP_EVENT_ANY_ID,&wifi_event_handler,NULL));
@@ -379,10 +438,6 @@ void SmartConfig_Init()
     if (bits & WIFI_STA_CONNECTED_BIT) 
     {
         ESP_LOGI(WIFI_TAG, "Connect Sucess ");
-    } 
-    else if (bits & WIFI_FAIL_BIT)
-    {
-        // xEventGroupClearBits(SC_wifi_event_group, SC_CONNECTED_BIT);
     } 
     else 
     {
@@ -890,7 +945,7 @@ void connect_wifi(void)
     wifi_config_t wifi_STAconfig =
     {
         //STA参数
-        .sta.ssid = "618_封闭用",
+        .sta.ssid = "618_封闭�?",
         .sta.password = "618618618",
         .sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK,
         .sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH,

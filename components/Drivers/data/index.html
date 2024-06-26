@@ -1,4 +1,5 @@
 <!DOCTYPE HTML>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" /> 
 <html>
 
 <head>
@@ -6,48 +7,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="data:,">
     <style>
-        html {
+        html 
+        {
             font-family: New Times Roman;
             text-align: center;
         }
 
-        h1 {
+        h1 
+        {
             font-size: 1.8rem;
             color: white;
         }
 
-        h2 {
+        h2 
+        {
             font-size: 1.5rem;
             font-weight: bold;
             color: #07156d;
         }
 
-        .card {
+        .card 
+        {
             background-color: #F8F7F9;
-            ;
             box-shadow: 2px 2px 12px 1px rgba(140, 140, 140, .5);
             padding-top: 10px;
             padding-bottom: 20px;
         }
 
-        .topnav {
+        .topnav 
+        {
             overflow: hidden;
             background-color: #04296d;
         }
 
-        body {
+        body 
+        {
             margin: 0;
         }
 
-        .content {
+        .content 
+        {
             padding: 30px;
             max-width: 600px;
             margin: 0 auto;
         }
 
-        .button {
-            padding: 15px 50px;
-            font-size: 24px;
+        .wifi_set 
+        {
+            padding: 5px 15px;
+            font-size: 16px;
             text-align: center;
             outline: none;
             color: #fff;
@@ -63,12 +71,14 @@
             -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
         }
 
-        .button:active {
+        .wifi_set:active 
+        {
             background-color: #fa0f0f;
             transform: translateY(2px);
         }
 
-        .state {
+        .state 
+        {
             font-size: 1.5rem;
             color: #120707;
             font-weight: bold;
@@ -85,8 +95,11 @@
     </div>
     <div class="content">
         <div class="card">
-            <h2>ONBOARD LED GPIO2</h2>
-            <p><button id="button" class="button">Toggle LED</button></p>
+            <h3>wifi设置</h3>
+            <p>wifi名称 <input id="wifi_name" name="wifi_name" maxlength="63" type="name" class="input-txt" /> </p>
+            <p>wifi密码 <input id="wifi_pwd" name="wifi_pwd" maxlength="63" type="password" class="input-txt" /> </p>
+            <p><button id="wifi_set" class="wifi_set">确认</button></p>
+            <!-- <p><button id="button" class="button">Toggle LED</button></p> -->
             <p class="state">State: <span id="state">%s</span></p>
         </div>
     </div>
@@ -95,39 +108,48 @@
         var gateway = `ws://${window.location.hostname}/ws`;
         var websocket;
         window.addEventListener('load', onLoad);
-        function initWebSocket() {
+        function initWebSocket() 
+        {
             console.log('Trying to open a WebSocket connection...');
             websocket = new WebSocket(gateway);
             websocket.onopen = onOpen;
             websocket.onclose = onClose;
             websocket.onmessage = onMessage; // <-- add this line
         }
-        function onOpen(event) {
+        function onOpen(event) 
+        {
             console.log('Connection opened');
         }
-        function onClose(event) {
+        function onClose(event) 
+        {
             console.log('Connection closed');
             setTimeout(initWebSocket, 2000);
         }
-        function onMessage(event) {
+        function onMessage(event) 
+        {
             var state;
             console.log(event.data);
-            if (event.data == "1") {
+            if (event.data == "1") 
+            {
                 state = "ON";
             }
-            else {
+            else 
+            {
                 state = "OFF";
             }
             document.getElementById('state').innerHTML = state;
         }
-        function onLoad(event) {
+        function onLoad(event) 
+        {
             initWebSocket();
             initButton();
         }
-        function initButton() {
-            document.getElementById('button').addEventListener('click', toggle);
+        function initButton() 
+        {
+            document.getElementById('wifi_set').addEventListener('click', toggle);
         }
-        function toggle() {
+        function toggle() 
+        {
             websocket.send('toggle');
         }
     </script>
