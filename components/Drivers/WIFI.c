@@ -295,13 +295,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
                 break;
 
             case WIFI_EVENT_AP_STACONNECTED:
-<<<<<<< HEAD
-                // ip_event_got_ip_t *APConevent = (ip_event_got_ip_t *)event_data;
-                // ESP_LOGI(WIFI_TAG, "Assign IP:" IPSTR, IP2STR(&APConevent->ip_info.ip));
-                // xEventGroupSetBits(Def_wifi_event_group, WIFI_AP_CONNECTED_BIT);
-=======
                 ESP_LOGI(WIFI_TAG, "Devices Connect");
->>>>>>> dc45e98121917e9e907fa4852d79a9520544d87b
                 break; 
 
             default:
@@ -322,11 +316,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
                 ESP_LOGI(WIFI_TAG, "IP Devices Connect");
                 ip_event_got_ip_t *APConevent = (ip_event_got_ip_t *)event_data;
                 ESP_LOGI(WIFI_TAG, "Assign IP:" IPSTR, IP2STR(&APConevent->ip_info.ip));
-<<<<<<< HEAD
-                xEventGroupSetBits(Def_wifi_event_group, WIFI_AP_CONNECTED_BIT);
-=======
                 xEventGroupSetBits(Web_wifi_event_group, WIFI_AP_CONNECTED_BIT);
->>>>>>> dc45e98121917e9e907fa4852d79a9520544d87b
                 break;
 
             default:
@@ -340,20 +330,12 @@ static void Web_task()
     ESP_LOGI(WIFI_TAG, "Web Task Run ");
     while(1) 
     {
-<<<<<<< HEAD
-        ESP_LOGI(WIFI_TAG, "WebSocket Web Server is running ... ...\n");
-        xEventGroupWaitBits(Def_wifi_event_group,WIFI_AP_CONNECTED_BIT,pdTRUE,pdFALSE,portMAX_DELAY);
-        initi_web_page_buffer();
-        setup_websocket_server();
-        vTaskDelete(NULL);
-=======
         xEventGroupWaitBits(Web_wifi_event_group,WIFI_AP_CONNECTED_BIT,pdTRUE,pdFALSE,portMAX_DELAY);
         led_state = 0;
         ESP_LOGI(WIFI_TAG, "WebSocket Web Server is running ... ...\n");      
         initi_web_page_buffer();
         setup_websocket_server();
         // vTaskDelete(NULL);
->>>>>>> dc45e98121917e9e907fa4852d79a9520544d87b
     }
 }
 
@@ -413,8 +395,6 @@ void SmartConfig_Init()
         .sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
     };
 
-<<<<<<< HEAD
-=======
     wifi_config_t Savedconfig;
 
     // wifi_config_t Savedconfig =
@@ -427,7 +407,6 @@ void SmartConfig_Init()
     // };
 
 
->>>>>>> dc45e98121917e9e907fa4852d79a9520544d87b
     wifi_config_t wifi_APconfig =
     {
         //AP Parament
