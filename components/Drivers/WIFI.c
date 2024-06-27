@@ -34,7 +34,7 @@
 #define WIFI_STA_CONNECTED_BIT      BIT1
 
 static EventGroupHandle_t Def_wifi_event_group;
-static const char *WIFI_TAG = "wifi Process:";
+static const char *WIFI_TAG = "wifi Process";
 static int Def_wifi_retry_num = 0;
 httpd_handle_t server = NULL;
 int led_state = 0;
@@ -173,6 +173,7 @@ static esp_err_t trigger_async_send(httpd_handle_t handle, httpd_req_t *req)
 
 static esp_err_t handle_ws_req(httpd_req_t *req)
 {
+    char Type[2];
     if (req->method == HTTP_GET)
     {
         ESP_LOGI(WIFI_TAG, "Handshake done, the new connection was opened");
@@ -208,23 +209,58 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
         }
         ESP_LOGI(WIFI_TAG, "Got packet with message: %s", ws_pkt.payload);
     }
+    else
+    {
+        ESP_LOGI(WIFI_TAG, "frame len is 0");
+        return ESP_FAIL;
+    }
 
-        esp_wifi_disconnect();
-        vTaskDelay(100);
-        wifi_config_t wifi_STAconfig =
-        {
-            //STA参数
-            .sta.ssid = "618_封闭用",
-            .sta.password = "618618618",
-            .sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK,
-            .sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
-        };
-        ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_STAconfig));
-        esp_wifi_connect();
-        ESP_LOGI(WIFI_TAG, "===== Connect");
-
+        // esp_wifi_disconnect();
+        // vTaskDelay(100);
+        // wifi_config_t wifi_STAconfig =
+        // {
+        //     //STA参数
+        //     .sta.ssid = "618_封闭用",
+        //     .sta.password = "618618618",
+        //     .sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK,
+        //     .sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
+        // };
+        // ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_STAconfig));
+        // esp_wifi_connect();
+        // ESP_LOGI(WIFI_TAG, "===== Connect");
 
     ESP_LOGI(WIFI_TAG, "frame len is %d", ws_pkt.len);
+
+    switch (ws_pkt.type)
+    {
+        case HTTPD_WS_TYPE_CONTINUE:
+            /* code */
+            break;
+        case HTTPD_WS_TYPE_TEXT:
+            if(strcmp((char *)ws_pkt.payload, "toggle") == 0)
+            {
+
+            }
+            else if()
+            {
+
+            }
+            break;
+        case HTTPD_WS_TYPE_BINARY:
+            /* code */
+            break;
+        case HTTPD_WS_TYPE_CLOSE:
+            /* code */
+            break;
+        case HTTPD_WS_TYPE_PING:
+            /* code */
+            break;
+        case HTTPD_WS_TYPE_PONG:
+            /* code */
+            break;                   
+        default:
+            break;
+    }
 
     if (ws_pkt.type == HTTPD_WS_TYPE_TEXT &&
         strcmp((char *)ws_pkt.payload, "toggle") == 0)
@@ -290,8 +326,16 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
 
             case WIFI_EVENT_AP_STADISCONNECTED:
                 ESP_LOGI(WIFI_TAG, "Devices Disconnect");
-                free(index_html);
-                free(response_data);
+                if(index_html != NULL)
+                {
+                    free(index_html);
+                    index_html = NULL;
+                }
+                if(response_data != NULL)
+                {
+                    free(response_data);
+                    response_data = NULL;
+                }
                 break;
 
             case WIFI_EVENT_AP_STACONNECTED:
@@ -316,7 +360,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
                 ESP_LOGI(WIFI_TAG, "IP Devices Connect");
                 ip_event_got_ip_t *APConevent = (ip_event_got_ip_t *)event_data;
                 ESP_LOGI(WIFI_TAG, "Assign IP:" IPSTR, IP2STR(&APConevent->ip_info.ip));
-                xEventGroupSetBits(Web_wifi_event_group, WIFI_AP_CONNECTED_BIT);
+                xEventGroupSetBits(Def_wifi_event_group, WIFI_AP_CONNECTED_BIT);
                 break;
 
             default:
@@ -327,16 +371,16 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
 
 static void Web_task()
 {
-    ESP_LOGI(WIFI_TAG, "Web Task Run ");
     while(1) 
     {
-        xEventGroupWaitBits(Web_wifi_event_group,WIFI_AP_CONNECTED_BIT,pdTRUE,pdFALSE,portMAX_DELAY);
+        xEventGroupWaitBits(Def_wifi_event_group,WIFI_AP_CONNECTED_BIT,pdTRUE,pdFALSE,portMAX_DELAY);
         led_state = 0;
-        ESP_LOGI(WIFI_TAG, "WebSocket Web Server is running ... ...\n");      
+        ESP_LOGI(WIFI_TAG, "WebSocket Web Server is running\n");      
         initi_web_page_buffer();
         setup_websocket_server();
-        // vTaskDelete(NULL);
+        break;
     }
+    vTaskDelete(NULL);
 }
 
 

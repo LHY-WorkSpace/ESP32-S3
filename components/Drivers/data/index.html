@@ -123,7 +123,7 @@
         function onClose(event) 
         {
             console.log('Connection closed');
-            setTimeout(initWebSocket, 2000);
+            // setTimeout(initWebSocket, 2000);
         }
         function onMessage(event) 
         {
@@ -150,7 +150,10 @@
         }
         function toggle() 
         {
-            websocket.send('toggle');
+            var Type = 32;
+            var pwd = document.getElementById("wifi_name").value;
+            var name = document.getElementById("wifi_pwd").value;
+            websocket.send(Type+"wifi_pwd:"+pwd+"+"+"wifi_name:"+name);
         }
     </script>
 </body>
