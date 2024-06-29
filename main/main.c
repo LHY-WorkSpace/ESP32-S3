@@ -100,6 +100,7 @@ void SSSSS()
 void app_main(void)
 {
     printf("System Online !\n");
+	printf("SPI With DMA: Max Len 262144 bit = 32768 Byte!\n");
 	// GPIO_Init();
 
     // cJSON* cjson_root = cJSON_CreateObject();
@@ -138,7 +139,7 @@ void app_main(void)
 	// vTaskDelay(500);
 	// Key_Init();
     // UART_Init();
-	// TemperatureSensor_Init();
+	TemperatureSensor_Init();
 	// WIFI_Init();
 	// TCP_Client_Init();
 	// TCP_Server_Init();
@@ -160,7 +161,7 @@ void app_main(void)
     // xTaskCreate(tx_task, "uart_tx_task", 1024*2, NULL, 12, NULL);
 	// xTaskCreate( (TaskFunction_t)LED_Task,"LED_Task",4096,NULL,5,NULL);
 	// xTaskCreate( (TaskFunction_t)MPU6050_Test,"LED_Task",4096,NULL,5,NULL);
-	// xTaskCreate( (TaskFunction_t)TemperatureSensor_Task,"Temperature",4096,NULL,12,NULL);
+	xTaskCreate( (TaskFunction_t)TemperatureSensor_Task,"Temperature",4096,NULL,12,NULL);
 	// xTaskCreate( (TaskFunction_t)LEDWave_Task,"Wave_Task",4096,NULL,12,NULL);
 	// xTaskCreate( (TaskFunction_t)ADC_Task,"ADC_Task",4096,NULL,12,NULL);
 	// UART_Task();

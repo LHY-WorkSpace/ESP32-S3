@@ -43,7 +43,7 @@ void TemperatureSensor_Task()
 		ESP_ERROR_CHECK(temperature_sensor_get_celsius(temp_handle, &tsens_out));
 		printf("Temperature is %.1f \n", tsens_out);
 		xQueueSendToBack(TemperatureSensor_Queue,(void *)&tsens_out,0);
-		vTaskDelayUntil(&Time,3000/portTICK_PERIOD_MS);
+		vTaskDelayUntil(&Time,1000/portTICK_PERIOD_MS);
     }
 
 	ESP_ERROR_CHECK(temperature_sensor_disable(temp_handle));

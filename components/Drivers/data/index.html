@@ -58,8 +58,8 @@
             font-size: 16px;
             text-align: center;
             outline: none;
-            color: #fff;
-            background-color: #0ffa6d; //green
+            color: #030303;
+            background-color: #b4b8bbdc; //green
             border: #0ffa6d;
             border-radius: 5px;
             -webkit-touch-callout: none;
@@ -73,8 +73,8 @@
 
         .wifi_set:active 
         {
-            background-color: #fa0f0f;
-            transform: translateY(2px);
+            background-color: #0bc429;
+            transform: translateY(1px);
         }
 
         .state 
@@ -98,15 +98,16 @@
             <h3>wifi设置</h3>
             <p>wifi名称 <input id="wifi_name" name="wifi_name" maxlength="63" type="name" class="input-txt" /> </p>
             <p>wifi密码 <input id="wifi_pwd" name="wifi_pwd" maxlength="63" type="password" class="input-txt" /> </p>
+            <!-- <p>wifi数量 <input id="wifi_num" name="wifi_num" maxlength="63" type="number" class="input-txt" /> </p> -->
             <p><button id="wifi_set" class="wifi_set">确认</button></p>
-            <!-- <p><button id="button" class="button">Toggle LED</button></p> -->
-            <p class="state">State: <span id="state">%s</span></p>
+            <p class="state">温度: <span id="state">%s</span></p>
         </div>
     </div>
     </div>
     <script>
         var gateway = `ws://${window.location.hostname}/ws`;
         var websocket;
+        var TempHdl;
         window.addEventListener('load', onLoad);
         function initWebSocket() 
         {
@@ -127,22 +128,14 @@
         }
         function onMessage(event) 
         {
-            var state;
             console.log(event.data);
-            if (event.data == "1") 
-            {
-                state = "ON";
-            }
-            else 
-            {
-                state = "OFF";
-            }
-            document.getElementById('state').innerHTML = state;
+            document.getElementById('state').innerHTML = event.data;
         }
         function onLoad(event) 
         {
             initWebSocket();
             initButton();
+            TempHdl = setInterval(GetTemperature,3000);//定时间隔调用
         }
         function initButton() 
         {
@@ -150,10 +143,17 @@
         }
         function toggle() 
         {
-            var Type = 32;
+            var Dat = 0XA0;
             var pwd = document.getElementById("wifi_name").value;
             var name = document.getElementById("wifi_pwd").value;
-            websocket.send(Type+"wifi_pwd:"+pwd+"+"+"wifi_name:"+name);
+            websocket.send(parseInt(Dat)+"wifi-name:"+name);
+            websocket.send(Dat+"wifi-pwd:"+pwd);
+            clearInterval(TempHdl);//停止定时调用
+        }
+        function GetTemperature() 
+        {
+            websocket.send("GetTemp");
+
         }
     </script>
 </body>
