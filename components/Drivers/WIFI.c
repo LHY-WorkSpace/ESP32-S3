@@ -40,7 +40,6 @@ static int Def_wifi_retry_num = 0;
 httpd_handle_t server = NULL;
 int led_state = 0;
 char *index_html;
-char *response_data;
 struct async_resp_arg 
 {
     httpd_handle_t hd;
@@ -88,16 +87,14 @@ static void initi_web_page_buffer(void)
     }
 
     index_html = malloc(st.st_size*2);
-    response_data = malloc(st.st_size*2);  
 
-    if((index_html == NULL)||(response_data==NULL))
+    if((index_html == NULL))
     {
         ESP_LOGE(WIFI_TAG, "Memery Not enough");
         return;
     }
 
     memset((void *)index_html, 0, st.st_size*2);
-    memset((void *)response_data, 0, st.st_size*2);
 
     FILE *fp = fopen(INDEX_HTML_PATH, "r");
 
@@ -114,15 +111,8 @@ static void initi_web_page_buffer(void)
 esp_err_t get_req_handler(httpd_req_t *req)
 {
     int response;
-    if(led_state)
-    {
-        sprintf(response_data, index_html, "ON");
-    }
-    else
-    {
-        sprintf(response_data, index_html, "OFF");
-    }
-    response = httpd_resp_send(req, response_data, HTTPD_RESP_USE_STRLEN);
+
+    response = httpd_resp_send(req, index_html, HTTPD_RESP_USE_STRLEN);//上传html界面
     return response;
 }
 
@@ -336,11 +326,6 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
                 {
                     free(index_html);
                     index_html = NULL;
-                }
-                if(response_data != NULL)
-                {
-                    free(response_data);
-                    response_data = NULL;
                 }
                 break;
 

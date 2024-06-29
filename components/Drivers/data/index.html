@@ -95,12 +95,24 @@
     </div>
     <div class="content">
         <div class="card">
+            <!-- Wifi设置 -->
             <h3>wifi设置</h3>
             <p>wifi名称 <input id="wifi_name" name="wifi_name" maxlength="63" type="name" class="input-txt" /> </p>
             <p>wifi密码 <input id="wifi_pwd" name="wifi_pwd" maxlength="63" type="password" class="input-txt" /> </p>
-            <!-- <p>wifi数量 <input id="wifi_num" name="wifi_num" maxlength="63" type="number" class="input-txt" /> </p> -->
             <p><button id="wifi_set" class="wifi_set">确认</button></p>
-            <p class="state">温度: <span id="state">%s</span></p>
+
+            <!--文件上传  -->
+            <input id="FileUpload" name="FileUpload" type="file" />
+            <button id="UpLoadBtn" type="submit">更新</button>
+            <!-- <button id="UpLoadBtn" type="menu">更新</button> -->
+
+             <!--温度获取  -->
+            <p class="state">温度: <span id="state"></span></p>
+            <p class="state2">高度: <span id="state2"></span></p>
+
+            <input type="datetime-local" >
+
+
         </div>
     </div>
     </div>
