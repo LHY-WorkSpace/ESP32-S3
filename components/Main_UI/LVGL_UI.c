@@ -210,7 +210,8 @@ void LVGL_Task()
     {    
         //SPI底层有临界保护，频繁调用此函数会导致长时间占用CPU，导致其他任务不执行
 		lv_task_handler();
-        vTaskDelayUntil(&Time,2/portTICK_PERIOD_MS);
+        // vTaskDelayUntil(&Time,2/portTICK_PERIOD_MS);
+        vTaskDelayUntil(&Time,10);
         // taskYIELD();
         
     }

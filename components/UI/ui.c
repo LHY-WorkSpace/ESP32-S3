@@ -68,11 +68,11 @@ void ui_init(void)
                                                false, LV_FONT_DEFAULT);
     lv_disp_set_theme(dispp, theme);
 
-    // ui_BoostModeA_screen_init();
-    // ui_BoostModeB_screen_init();
+    ui_BoostModeA_screen_init();
+    ui_BoostModeB_screen_init();
     // Eye_Main();
-    ui_Screen1_screen_init();
-    lv_disp_load_scr(ui_Screen1);
-    // lv_disp_load_scr(ui_BoostModeA);
-    // Boost1_Anim_Begin();
+    // ui_Screen1_screen_init();
+    // lv_disp_load_scr(ui_Screen1);
+    lv_disp_load_scr(ui_BoostModeA);
+    Boost1_Anim_Begin();
 }

@@ -62,6 +62,7 @@
         "nvs_flash.h": "c",
         "message_buffer.h": "c",
         "unity.h": "c",
-        "ui_helpers.h": "c"
+        "ui_helpers.h": "c",
+        "compare": "c"
     }
 }

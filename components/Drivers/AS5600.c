@@ -128,8 +128,8 @@ float AS5600_Angle(uint8_t Mode)
 	B16_B08 AngleReg;
 
 	memset(AngleReg.B08,0,sizeof(B16_B08));
-	AS5600_ReadData(RAW_ANGLE_L_REG,1,&AngleReg.B08[0]);
-	AS5600_ReadData(RAW_ANGLE_H_REG,1,&AngleReg.B08[1]);
+	AS5600_ReadData(RAW_ANGLE_H_REG,2,&AngleReg.B08[0]);
+	AngleReg.B16 = (AngleReg.B08[0]<<8)|AngleReg.B08[1];
 	AS5600Angle = (float)AngleReg.B16*360.0f/4096.0f;
 
 	Err = AS5600Angle - PrvAngle;
