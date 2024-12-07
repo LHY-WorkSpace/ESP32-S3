@@ -321,7 +321,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
                 break; 
 
             case WIFI_EVENT_AP_STADISCONNECTED:
-                ESP_LOGI(WIFI_TAG, "Devices Disconnect");
+                ESP_LOGI(WIFI_TAG, "客户端断开");
                 if(index_html != NULL)
                 {
                     free(index_html);
@@ -330,7 +330,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
                 break;
 
             case WIFI_EVENT_AP_STACONNECTED:
-                ESP_LOGI(WIFI_TAG, "Devices Connect");
+                ESP_LOGI(WIFI_TAG, "客户端连接");
                 break; 
 
             default:
@@ -348,10 +348,9 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,int32_t ev
                 xEventGroupSetBits(Def_wifi_event_group, WIFI_STA_CONNECTED_BIT);
                 break;
              case IP_EVENT_AP_STAIPASSIGNED:
-                ESP_LOGI(WIFI_TAG, "IP Devices Connect");
                 ip_event_got_ip_t *APConevent = (ip_event_got_ip_t *)event_data;
-                ESP_LOGI(WIFI_TAG, "Assign IP:" IPSTR, IP2STR(&APConevent->ip_info.ip));
-                xEventGroupSetBits(Def_wifi_event_group, WIFI_AP_CONNECTED_BIT);
+                ESP_LOGI(WIFI_TAG, "客户端-IP:" IPSTR, IP2STR(&APConevent->ip_info.ip));
+                xEventGroupSetBits(Def_wifi_event_group, WIFI_AP_CONNECTED_BIT);//客户端连接成功
                 break;
 
             default:
@@ -420,27 +419,14 @@ void SmartConfig_Init()
 
     // wifi_scan();//Scan WIFI
 
-    // wifi_config_t wifi_STAconfig;
     wifi_config_t wifi_STAconfig =
     {
         //STA参数
-        .sta.ssid = "618_封闭�?",
-        .sta.password = "123456",
+        .sta.ssid = "MeterSoft",
+        .sta.password = "MeterSoft",
         .sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK,
         .sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
     };
-
-    wifi_config_t Savedconfig;
-
-    // wifi_config_t Savedconfig =
-    // {
-    //     //STA参数
-    //     .sta.ssid = "Redmi_AX3000",
-    //     .sta.password = "9.1.502.",
-    //     .sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK,
-    //     .sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
-    // };
-
 
     wifi_config_t wifi_APconfig =
     {
@@ -452,22 +438,19 @@ void SmartConfig_Init()
         .ap.authmode = WIFI_AUTH_WPA_WPA2_PSK,
         .ap.ssid_hidden = false,
         .ap.max_connection = 5,
-        .ap.beacon_interval = 100,
+        .ap.beacon_interval = 200,
     };
 
     // get last connect info
-    // esp_wifi_get_config(ESP_IF_WIFI_STA, &wifi_STAconfig);
+    wifi_config_t Savedconfig;
+    esp_wifi_get_config(ESP_IF_WIFI_STA, &Savedconfig);
+    ESP_LOGI(WIFI_TAG, "Last Connect WiFi SSID:%s", Savedconfig.sta.ssid);
+    ESP_LOGI(WIFI_TAG, "Last Connect WiFi Password:%s", Savedconfig.sta.password);
 
-    // wifi_STAconfig.sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK;
-    // wifi_STAconfig.sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH;
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_APSTA));// AP+STA Mode
-
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_STAconfig));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &wifi_APconfig));
-
-    ESP_LOGI(WIFI_TAG, "Last Connect WiFi SSID:%s", wifi_STAconfig.sta.ssid);
-    ESP_LOGI(WIFI_TAG, "Last Connect WiFi Password:%s", wifi_STAconfig.sta.password);
 
     ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT,ESP_EVENT_ANY_ID,&wifi_event_handler,NULL));
     ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT,ESP_EVENT_ANY_ID,&wifi_event_handler,NULL));
