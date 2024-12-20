@@ -99,7 +99,7 @@ void SSSSS()
 // https://blog.csdn.net/m0_50064262/article/details/120250151
 void app_main(void)
 {
-    printf("System Online !\n");
+    printf("System Online V1.0.0!\n");
 	printf("SPI With DMA: Max Len 262144 bit = 32768 Byte!\n");
 	// GPIO_Init();
 

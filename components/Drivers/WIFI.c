@@ -20,6 +20,11 @@
 #include "esp_http_server.h"
 #include "esp_spiffs.h"
 #include "TemperatureSensor.h"
+#include "cJSON.h"
+#include "esp_ota_ops.h"
+
+
+
 
 #if 1
 // MAX retry Times 
@@ -165,8 +170,6 @@ static esp_err_t trigger_async_send(httpd_handle_t handle, httpd_req_t *req)
 
 static esp_err_t handle_ws_req(httpd_req_t *req)
 {
-    char Type[2];
-    int32_t TypeNum;
     if (req->method == HTTP_GET)
     {
         ESP_LOGI(WIFI_TAG, "Handshake done, the new connection was opened");
@@ -176,7 +179,7 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
     httpd_ws_frame_t ws_pkt;
     uint8_t *buf = NULL;
     memset(&ws_pkt, 0, sizeof(httpd_ws_frame_t));
-    ws_pkt.type = HTTPD_WS_TYPE_TEXT;
+    ws_pkt.type = HTTPD_WS_TYPE_BINARY;
     esp_err_t ret = httpd_ws_recv_frame(req, &ws_pkt, 0);
     if (ret != ESP_OK)
     {
@@ -184,12 +187,14 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
         return ret;
     }
 
+    ESP_LOGI(WIFI_TAG, "Get OTA Data %d\r\n", ws_pkt.len);
+
     if (ws_pkt.len)
     {
-        buf = calloc(1, ws_pkt.len + 1);
+        buf = malloc(ws_pkt.len);
         if (buf == NULL)
         {
-            ESP_LOGE(WIFI_TAG, "Failed to calloc memory for buf");
+            ESP_LOGE(WIFI_TAG, "Failed to malloc memory for buf");
             return ESP_ERR_NO_MEM;
         }
         ws_pkt.payload = buf;
@@ -200,7 +205,49 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
             free(buf);
             return ret;
         }
-        ESP_LOGI(WIFI_TAG, "Got packet with message: %s", ws_pkt.payload);
+        ESP_LOGI(WIFI_TAG, "Received firmware data, len=%d", ws_pkt.len);
+
+        static esp_ota_handle_t update_handle = 0;
+        static const esp_partition_t *update_partition = NULL;
+
+        if (update_partition == NULL) {
+            update_partition = esp_ota_get_next_update_partition(NULL);
+            esp_err_t ota_ret = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle);
+            if (ota_ret != ESP_OK) {
+                ESP_LOGE(WIFI_TAG, "esp_ota_begin failed, error=%d", ota_ret);
+                free(buf);
+                return ota_ret;
+            }
+        }
+
+        esp_err_t ota_ret = esp_ota_write(update_handle, (const void *)buf, ws_pkt.len);
+        if (ota_ret != ESP_OK) {
+            ESP_LOGE(WIFI_TAG, "esp_ota_write failed, error=%d", ota_ret);
+            free(buf);
+            return ota_ret;
+        }
+
+        // Check if this is the last chunk
+        if (ws_pkt.final) {
+            ota_ret = esp_ota_end(update_handle);
+            if (ota_ret != ESP_OK) {
+                ESP_LOGE(WIFI_TAG, "esp_ota_end failed, error=%d", ota_ret);
+                free(buf);
+                return ota_ret;
+            }
+
+            ota_ret = esp_ota_set_boot_partition(update_partition);
+            if (ota_ret != ESP_OK) {
+                ESP_LOGE(WIFI_TAG, "esp_ota_set_boot_partition failed, error=%d", ota_ret);
+                free(buf);
+                return ota_ret;
+            }
+
+            ESP_LOGI(WIFI_TAG, "OTA update successful, restarting...");
+            esp_restart();
+        }
+
+        free(buf);
     }
     else
     {
@@ -208,62 +255,6 @@ static esp_err_t handle_ws_req(httpd_req_t *req)
         return ESP_FAIL;
     }
 
-        // esp_wifi_disconnect();
-        // vTaskDelay(100);
-        // wifi_config_t wifi_STAconfig =
-        // {
-        //     //STA参数
-        //     .sta.ssid = "618_封闭�?",
-        //     .sta.password = "618618618",
-        //     .sta.threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK,
-        //     .sta.sae_pwe_h2e = WPA3_SAE_PWE_BOTH,
-        // };
-        // ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_STAconfig));
-        // esp_wifi_connect();
-        // ESP_LOGI(WIFI_TAG, "===== Connect");
-
-    ESP_LOGI(WIFI_TAG, "frame len is %d", ws_pkt.len);
-
-    // mmecpy(Type,ws_pkt.payload,sizeof(Type));
-    // TypeNum = atoi(Type);
-    // ESP_LOGI(WIFI_TAG, "Type Num %d", ws_pkt.payload[0]);
-    // switch (ws_pkt.type)
-    // {
-    //     case HTTPD_WS_TYPE_CONTINUE:
-    //         /* code */
-    //         break;
-    //     case HTTPD_WS_TYPE_TEXT:
-    //         // if(strcmp((char *)ws_pkt.payload, "toggle") == 0)
-    //         // {
-
-    //         // }
-    //         // else if()
-    //         // {
-
-    //         // }
-    //         // break;
-    //     case HTTPD_WS_TYPE_BINARY:
-    //         /* code */
-    //         break;
-    //     case HTTPD_WS_TYPE_CLOSE:
-    //         /* code */
-    //         break;
-    //     case HTTPD_WS_TYPE_PING:
-    //         /* code */
-    //         break;
-    //     case HTTPD_WS_TYPE_PONG:
-    //         /* code */
-    //         break;                   
-    //     default:
-    //         break;
-    // }
-
-    if (ws_pkt.type == HTTPD_WS_TYPE_TEXT )
-        // strcmp((char *)ws_pkt.payload, "toggle") == 0)
-    {
-        free(buf);
-        return trigger_async_send(req->handle, req);
-    }
     return ESP_OK;
 }
 
@@ -474,97 +465,5 @@ void SmartConfig_Init()
     // }
 }
 
-#endif
-
-
-
-#if 0
-#define SC_CONNECTED_BIT        BIT0
-#define SC_ESPTOUCH_DONE_BIT    BIT1
-
-// ESP_LOGW(WIFI_TAG, "SmartConfig Mode Start !!");
-// ESP_LOGW(WIFI_TAG, "Please Make Your Phone Connnect Targer WIFI ");
-// ESP_LOGW(WIFI_TAG, "if You has Connectted Targer WIFI,Then Turn On Your Phone [ GPS ] and Open [ ESPTOUCH APP]");
-// ESP_ERROR_CHECK( esp_wifi_stop() );
-// //Create SmartConfig Event Process
-// ESP_ERROR_CHECK( esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &sc_event_handler, NULL) );
-// ESP_ERROR_CHECK( esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &sc_event_handler, NULL) );
-// ESP_ERROR_CHECK( esp_event_handler_register(SC_EVENT, ESP_EVENT_ANY_ID, &sc_event_handler, NULL) );
-
-// // ESP_ERROR_CHECK( esp_wifi_set_mode(WIFI_MODE_STA) );
-// ESP_ERROR_CHECK( esp_wifi_start() ); 
-static void smartconfig_task(void * parm)
-{
-    EventBits_t uxBits;
-    ESP_ERROR_CHECK( esp_smartconfig_set_type(SC_TYPE_ESPTOUCH) );
-    smartconfig_start_config_t cfg = SMARTCONFIG_START_CONFIG_DEFAULT();
-    ESP_ERROR_CHECK( esp_smartconfig_start(&cfg) );
-    while (1) 
-    {
-        uxBits = xEventGroupWaitBits(SC_wifi_event_group, SC_CONNECTED_BIT | SC_ESPTOUCH_DONE_BIT, true, false, portMAX_DELAY);
-        if(uxBits & SC_CONNECTED_BIT) 
-        {
-            ESP_LOGI(WIFI_TAG, "WiFi Connected to ap");
-        }
-        if(uxBits & SC_ESPTOUCH_DONE_BIT) 
-        {
-            ESP_LOGI(WIFI_TAG, "smartconfig over");
-            esp_smartconfig_stop();
-            vTaskDelete(NULL);
-        }
-    }
-}
-
-
-static void sc_event_handler(void* arg, esp_event_base_t event_base,
-                                int32_t event_id, void* event_data)
-{
-    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) 
-    {
-        xTaskCreate(smartconfig_task, "smartconfig_task", 4096, NULL, 3, NULL);
-    } 
-    else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) 
-    {
-        esp_wifi_connect();
-        xEventGroupClearBits(SC_wifi_event_group, SC_CONNECTED_BIT);
-    } 
-    else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
-    {
-        xEventGroupSetBits(SC_wifi_event_group, SC_CONNECTED_BIT);
-    } 
-    else if (event_base == SC_EVENT && event_id == SC_EVENT_SCAN_DONE) 
-    {
-        ESP_LOGI(WIFI_TAG, "Scan done");
-    } 
-    else if (event_base == SC_EVENT && event_id == SC_EVENT_FOUND_CHANNEL) 
-    {
-        ESP_LOGI(WIFI_TAG, "Found channel");
-    } 
-    else if (event_base == SC_EVENT && event_id == SC_EVENT_GOT_SSID_PSWD) 
-    {
-        ESP_LOGI(WIFI_TAG, "Got SSID and password");
-
-        smartconfig_event_got_ssid_pswd_t *evt = (smartconfig_event_got_ssid_pswd_t *)event_data;
-        wifi_config_t wifi_config;
-
-        bzero(&wifi_config, sizeof(wifi_config_t));
-        memcpy(wifi_config.sta.ssid, evt->ssid, sizeof(wifi_config.sta.ssid));
-        memcpy(wifi_config.sta.password, evt->password, sizeof(wifi_config.sta.password));
-        wifi_config.sta.bssid_set = evt->bssid_set;
-        if (wifi_config.sta.bssid_set == true) {
-            memcpy(wifi_config.sta.bssid, evt->bssid, sizeof(wifi_config.sta.bssid));
-        }
-        ESP_LOGI(WIFI_TAG, "SSID:%s", evt->ssid);
-        ESP_LOGI(WIFI_TAG, "PASSWORD:%s", evt->password);
-
-        ESP_ERROR_CHECK( esp_wifi_disconnect() );
-        ESP_ERROR_CHECK( esp_wifi_set_config(WIFI_IF_STA, &wifi_config) );
-        esp_wifi_connect();
-    } 
-    else if (event_base == SC_EVENT && event_id == SC_EVENT_SEND_ACK_DONE) 
-    {
-        xEventGroupSetBits(SC_wifi_event_group, SC_ESPTOUCH_DONE_BIT);
-    }
-}
 #endif
 

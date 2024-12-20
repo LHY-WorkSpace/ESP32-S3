@@ -19,6 +19,7 @@ idf_component_register( SRCS	${SOURCES}
                             esp_https_ota
                             app_update
                             spiffs
+                            json
                             )
 
 spiffs_create_partition_image(storage ./data FLASH_IN_PROJECT)

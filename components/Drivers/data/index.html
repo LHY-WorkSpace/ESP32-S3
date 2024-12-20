@@ -9,21 +9,66 @@
     <style>
         html 
         {
-            font-family: New Times Roman;
+            font-family: 'Roboto', sans-serif;
             text-align: center;
+            background-color: #f0f2f5;
         }
 
         h1 
         {
-            font-size: 1.8rem;
-            color: white;
+            font-size: 2rem;
+            color: #D3D3D3;
+            margin: 0;
+            padding: 20px;
+            text-shadow: 2px 2px 0 #000000,
+                         -2px -2px 0 #000000,
+                         2px -2px 0 #000000,
+                         -2px 2px 0 #000000;
         }
 
-        h2 
+        .topnav 
         {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #07156d;
+            background: linear-gradient(135deg, #04296d, #0652c5 40%, #8a2be2 70%);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background: linear-gradient(135deg, #111, #333);
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+        }
+
+        .sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .sidebar ul li {
+            padding: 8px;
+            text-align: center;
+        }
+
+        .sidebar ul li a {
+            color: white;
+            text-decoration: none;
+            display: block;
+        }
+
+        .sidebar ul li a:hover {
+            background-color: #575757;
+        }
+
+        .content {
+            margin-left: 0;
+            padding: 30px;
+            max-width: 600px;
+            margin: 0 auto; /* 居中显示 */
         }
 
         .card 
@@ -34,22 +79,9 @@
             padding-bottom: 20px;
         }
 
-        .topnav 
-        {
-            overflow: hidden;
-            background-color: #04296d;
-        }
-
         body 
         {
             margin: 0;
-        }
-
-        .content 
-        {
-            padding: 30px;
-            max-width: 600px;
-            margin: 0 auto;
         }
 
         .wifi_set 
@@ -83,6 +115,18 @@
             color: #120707;
             font-weight: bold;
         }
+
+        .sidebar-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 30px;
+            cursor: pointer;
+            color: white;
+            background-color: transparent;
+            border: none;
+            outline: none;
+        }
     </style>
     <title>ESP32 Web Server</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -93,6 +137,14 @@
     <div class="topnav">
         <h1>ESP32 WebSocket Server</h1>
     </div>
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+    <div class="sidebar" id="sidebar">
+        <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#settings">Settings</a></li>
+            <li><a href="#about">About</a></li>
+        </ul>
+    </div>
     <div class="content">
         <div class="card">
             <!-- Wifi设置 -->
@@ -101,20 +153,17 @@
             <p>wifi密码 <input id="wifi_pwd" name="wifi_pwd" maxlength="63" type="password" class="input-txt" /> </p>
             <p><button id="wifi_set" class="wifi_set">确认</button></p>
 
-            <!--文件上传  -->
+            <!-- 文件上传 -->
+            <h3>OTA更新</h3>
             <input id="FileUpload" name="FileUpload" type="file" />
-            <button id="UpLoadBtn" type="submit">更新</button>
-            <!-- <button id="UpLoadBtn" type="menu">更新</button> -->
+            <button id="UpLoadBtn" type="button" onclick="uploadFile()">上传固件</button>
 
-             <!--温度获取  -->
+            <!--温度获取  -->
             <p class="state">温度: <span id="state"></span></p>
             <p class="state2">高度: <span id="state2"></span></p>
 
-            <input type="datetime-local" >
-
-
+            <input type="datetime-local">
         </div>
-    </div>
     </div>
     <script>
         var gateway = `ws://${window.location.hostname}/ws`;
@@ -127,7 +176,7 @@
             websocket = new WebSocket(gateway);
             websocket.onopen = onOpen;
             websocket.onclose = onClose;
-            websocket.onmessage = onMessage; // <-- add this line
+            websocket.onmessage = onMessage;
         }
         function onOpen(event) 
         {
@@ -136,36 +185,76 @@
         function onClose(event) 
         {
             console.log('Connection closed');
-            // setTimeout(initWebSocket, 2000);
         }
-        function onMessage(event) 
-        {
-            console.log(event.data);
-            document.getElementById('state').innerHTML = event.data;
+        function onMessage(event) {
+            try {
+                var jsonData = JSON.parse(event.data);
+                console.log('Received JSON:', jsonData);
+                document.getElementById('state').textContent = jsonData.temperature;
+            } catch (e) {
+                console.error('Error parsing JSON:', e);
+            }
         }
         function onLoad(event) 
         {
             initWebSocket();
-            initButton();
-            TempHdl = setInterval(GetTemperature,3000);//定时间隔调用
-        }
-        function initButton() 
-        {
-            document.getElementById('wifi_set').addEventListener('click', toggle);
-        }
-        function toggle() 
-        {
-            var Dat = 0XA0;
-            var pwd = document.getElementById("wifi_name").value;
-            var name = document.getElementById("wifi_pwd").value;
-            websocket.send(parseInt(Dat)+"wifi-name:"+name);
-            websocket.send(Dat+"wifi-pwd:"+pwd);
-            clearInterval(TempHdl);//停止定时调用
+            document.getElementById('wifi_set').addEventListener('click', sendJsonData);
         }
         function GetTemperature() 
         {
             websocket.send("GetTemp");
 
+        }
+        function sendJsonData() {
+            var jsonData = {
+                wifiName: document.getElementById("wifi_name").value,
+                wifiPassword: document.getElementById("wifi_pwd").value
+            };
+
+            var jsonString = JSON.stringify(jsonData);
+            websocket.send(jsonString);
+            console.log('Sent JSON:', jsonString);
+        }
+
+        function toggleSidebar() {
+            var sidebar = document.getElementById("sidebar");
+            if (sidebar.style.width === "200px") {
+                sidebar.style.width = "0";
+            } else {
+                sidebar.style.width = "200px";
+            }
+        }
+
+        // 添加点击事件监听器
+        document.addEventListener('click', function(event) {
+            var sidebar = document.getElementById("sidebar");
+            var toggleButton = document.querySelector('.sidebar-toggle');
+            
+            // 检查点击是否在侧边栏或切换按钮上
+            if (!sidebar.contains(event.target) && !toggleButton.contains(event.target)) {
+                sidebar.style.width = "0"; // 隐藏侧边栏
+            }
+        });
+
+        function uploadFile() {
+            var fileInput = document.getElementById('FileUpload');
+            var file = fileInput.files[0];
+            if (!file) {
+                alert("请选择一个文件进行上传");
+                return;
+            }
+
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                var fileData = event.target.result;
+                websocket.send(fileData);
+                alert('文件上传成功');
+            };
+            reader.onerror = function() {
+                alert('文件读取失败');
+            };
+
+            reader.readAsArrayBuffer(file);
         }
     </script>
 </body>
